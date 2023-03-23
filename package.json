@@ -1,0 +1,14 @@
+{
+    "name": "mstch",
+    "description": "",
+    "version": "0.0.1",
+    "scripts": {
+        "test": "jest test.js"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.18.0",
+        "@babel/plugin-transform-runtime": "^7.18.0",
+        "@babel/preset-env": "^7.18.10",
+        "jest": "^29.4.3"
+    }
+}
