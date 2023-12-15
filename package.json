@@ -1,0 +1,16 @@
+{
+    "name": "vhtm",
+    "version": "0.0.0",
+    "description": "",
+    "license": "MIT",
+    "author": "Josemi Juanes <hello@josemi.xyz>",
+    "homepage": "https://www.josemi.xyz/vhtm",
+    "bugs": "https://github.com/jmjuanes/vhtm/issues",
+    "repository": "https://github.com/jmjuanes/vhtm",
+    "main": "index.js",
+    "files": [
+        "README.md",
+        "LICENSE",
+        "index.js"
+    ]
+}
