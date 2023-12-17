@@ -1,6 +1,6 @@
 {
     "name": "mikel",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "description": "Micro HTML template literals toolkit",
     "license": "MIT",
     "author": "Josemi Juanes <hello@josemi.xyz>",
