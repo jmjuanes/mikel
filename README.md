@@ -29,7 +29,9 @@ $ yarn add mikel
 
 ## API
 
-### `html`
+### Core
+
+#### `html`
 
 The `html` method is a JavaScript template tag that generates a template object. This object encapsulates both the template string and the values that will populate the template, providing a clean and organized way to manage dynamic content.
 
@@ -40,7 +42,7 @@ const name = "Mikel";
 const myTemplate = html`<p>Hello, ${name}!</p>`;
 ```
 
-### `render(template)`
+#### `render(template)`
 
 The `render` function takes a template object as its input and efficiently transforms it into an HTML element.
 
@@ -49,6 +51,42 @@ import {render} from "mikel";
 
 const renderedElement = render(myTemplate);
 document.body.appendChild(renderedElement);
+```
+
+### Helpers
+
+#### `classMap(classObj)`
+
+The `classMap` helper is a function that takes an object as input, where keys represent class names, and values indicate whether the class should be included (`true` values) or excluded (`false` values). It returns a string containing the concatenated class names for the truthy values in the input object.
+
+```javascript
+import {html, classMap} from "mikel";
+
+const className = classMap({
+    "is-active": true,
+    "is-disabled": false,
+    "custom-class": true,
+});
+
+html`<div class="${className}"></div>`;
+// class="is-active custom-class"
+```
+
+#### `styleMap(styleObj)`
+
+The `styleMap`` helper is a function that takes an object as input, where keys represent CSS attribute names, and values represent corresponding attribute values. It returns a valid CSS style string based on the input object.
+
+```javascript
+import {styleMap} from "mikel";
+
+const styles = styleMap({
+    "font-size": "16px",
+    "color": "blue",
+    "background-color": "lightgray",
+});
+
+console.log(styles);
+// Output: 'font-size: 16px; color: blue; background-color: lightgray;'
 ```
 
 ## License

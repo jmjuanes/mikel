@@ -1,3 +1,6 @@
+// Convert an string in camelCase format to kebab-case
+const camelToKebabCase = str => str.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
+
 // Render html string
 const renderHtml = htmlString => {
     const template = document.createElement("template");
@@ -78,4 +81,14 @@ export const render = template => {
 export const mount = (parent, template) => {
     parent.replaceChildren();
     parent.appendChild(render(template));
+};
+
+// Classmap helper
+export const classMap = classList => {
+    return Object.keys(classList || {}).filter(k => !!classList[k]).join(" ");
+};
+
+// Stylemap helper
+export const styleMap = styleList => {
+    return Object.keys(styleList || {}).map(k => `${camelToKebabCase(k)}:${styleList[k]};`).join("");
 };
