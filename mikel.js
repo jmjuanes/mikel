@@ -1,3 +1,5 @@
+const MIKEL_TEMPLATE_TYPE = Symbol.for("mikel.template");
+
 // Convert an string in camelCase format to kebab-case
 const camelToKebabCase = str => str.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
 
@@ -27,30 +29,41 @@ const registerElementEvents = (element, callback) => {
     });
 };
 
-// Returns a HTML template object
-export const html = (literal, ...values) => {
-    return {literal, values};
+// Check if the provided object is a valid template object
+const isValidTemplateObject = obj => {
+    return typeof obj === "object" && obj?.["$$typeof"] === MIKEL_TEMPLATE_TYPE;
+};
+
+const getStringValue = value => {
+    return [value].flat().map(v => (v ?? "").toString()).join("").replace("'", `\'`);
 };
 
 // Compile a template object
-export const render = template => {
+const compile = template => {
     const {literal, values} = template;
     let result = "", events = [];
+    // Internal method to process inner templates and append them to our current
+    // result and events
+    const processInteralTemplate = innerTemplate => {
+        const [_result, _events] = compile(innerTemplate);
+        result = result + _result;
+        events.push(..._events);
+    };
     values.forEach((value, index) => {
-        let lit = literal[index];
+        const lit = literal[index];
         result = result + lit;
-        // Check if value is an array of items --> join them to a single string
-        if (value && Array.isArray(value)) {
-            value = value.join("");
+        // Check for a template object
+        if (value && isValidTemplateObject(value)) {
+            return processInteralTemplate(value);
         }
-        // Check if we are inside a HTML tag
+        // TODO: we would need to check if we are inside a HTML tag
         if (lit.endsWith("=") || lit.endsWith(`="`)) {
             const isEventAttritube = lit.split(" ").pop().startsWith("on");
             if (isEventAttritube) {
                 events.push(value);
             }
             // Get the value to replace
-            const replacedVal = (value ?? "").toString().replace("'", `\'`);
+            const replacedVal = getStringValue(value);
             if (lit.endsWith("=")) {
                 result = result + `"${replacedVal}"`;
             }
@@ -58,15 +71,38 @@ export const render = template => {
                 result = result + replacedVal;
             }
         }
+        else if (value && Array.isArray(value)) {
+            value.forEach(v => {
+                if (v && isValidTemplateObject(v)) {
+                    return processInteralTemplate(v);
+                }
+                // Check for string value
+                else if (typeof v === "string" && !!v) {
+                    result = result + v;
+                }
+            });
+        }
         else {
-            // TODO: we would need to check the type of value
-            result = result + value;
+            result = result + (value || "").toString();
         }
     });
     // Append last literal item
     result = result + literal[literal.length - 1];
-    // return {result, events};
-    // Renderize element
+    return [result, events];
+};
+
+// Returns a HTML template object
+export const html = (literal, ...values) => {
+    return {
+        $$typeof: MIKEL_TEMPLATE_TYPE,
+        literal: literal || [],
+        values: values || [],
+    };
+};
+
+// Compile a template object
+export const render = template => {
+    const [result, events] = compile(template);
     const element = renderHtml(result.trim());
     registerElementEvents(element, (child, eventName) => {
         const eventListener = events.shift();
