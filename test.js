@@ -40,6 +40,61 @@ describe("html", () => {
         expect(handleClick1).not.toHaveBeenCalled();
         expect(handleClick2).toHaveBeenCalled();
     });
+
+    it("should support nested literal templates", () => {
+        const button = () => {
+            return html`<button class="btn">Click me!</button>`;
+        };
+        const el = render(html`
+            <div align="center">
+                ${button()}
+            </div>
+        `);
+
+        expect(el.querySelector("button.btn")).not.toBeNull();
+        expect(el.querySelector("button.btn").tagName).toEqual("BUTTON");
+        expect(el.querySelector("button.btn").textContent).toEqual("Click me!");
+    });
+
+    it("should support events in nested literal templates", () => {
+        const handleButton1Click = jest.fn();
+        const handleButton2Click = jest.fn();
+        const handleButton3Click = jest.fn();
+        const button = () => {
+            return html`<button class="btn" onClick="${handleButton2Click}">Click me!</button>`;
+        };
+        const el = render(html`
+            <div align="center">
+                <button onClick="${handleButton1Click}">Click</button>
+                ${button()}
+                <button onClick="${handleButton3Click}">Click</button>
+            </div>
+        `);
+
+        el.querySelector("button.btn").click();
+        expect(Array.from(el.querySelectorAll("button"))).toHaveLength(3);
+        expect(handleButton2Click).toHaveBeenCalled();
+    });
+
+    it("shoudl support nested literals in arrays", () => {
+        const button = () => html`<button>Click me!</button>`;
+        const el = render(html`
+            <div align="center">
+                ${[button(), button(), button()]}
+            </div>
+        `);
+
+        expect(Array.from(el.querySelectorAll("button"))).toHaveLength(3);
+    });
+
+    it("should not add falsy values", () => {
+        const el = render(html`
+            <div>Value is: <span>${false}</span></div>
+        `);
+
+        expect(el.textContent).toEqual("Value is: ");
+        expect(el.querySelector("span").textContent).toEqual("");
+    });
 });
 
 describe("classMap", () => {
