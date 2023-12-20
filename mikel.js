@@ -1,4 +1,7 @@
 const MIKEL_TEMPLATE_TYPE = Symbol.for("mikel.template");
+const NODE_TEXT_TYPE = Symbol.for("node.text");
+const NODE_COMMENT_TYPE = Symbol.for("node.comment");
+const NODE_HTML_TYPE = Symbol.for("node.html");
 
 // Convert an string in camelCase format to kebab-case
 const camelToKebabCase = str => str.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
@@ -6,11 +9,42 @@ const camelToKebabCase = str => str.replace(/[A-Z]/g, letter => `-${letter.toLow
 // Get unique values
 const unique = list => Array.from(new Set(list || []));
 
+// Gets the node type
+const getNodeType = node => {
+    if (node.nodeType === 3) {
+        return NODE_TEXT_TYPE;
+    }
+	else if (node.nodeType === 8) {
+        return NODE_COMMENT_TYPE;
+    }
+    else if (node.nodeType === 1) {
+        // return NODE_HTML_TYPE;
+        return node.tagName.toLowerCase();
+    }
+    return null;
+};
+
 // Render html string
 const renderHtml = htmlString => {
     const template = document.createElement("template");
     template.innerHTML = htmlString;
-    return template.content;
+    return cleanHtml(template.content);
+};
+
+// Remove useless nodes
+// Based on https://www.sitepoint.com/removing-useless-nodes-from-the-dom/
+const cleanHtml = node => {
+    Array.from(node.childNodes).forEach(child => {
+        const type = getNodeType(child);
+        const value = child.nodeValue;
+        if (type === NODE_COMMENT_TYPE || (type === NODE_TEXT_TYPE && !/\S/.test(value) && value.includes("\n"))) {
+            node.removeChild(child);
+        }
+        else if (type && type !== NODE_TEXT_TYPE) {
+            cleanHtml(child);
+        }
+    });
+    return node;
 };
 
 const registerElementEvents = (element, callback) => {

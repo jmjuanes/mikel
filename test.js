@@ -77,7 +77,7 @@ describe("html", () => {
         expect(handleButton2Click).toHaveBeenCalled();
     });
 
-    it("shoudl support nested literals in arrays", () => {
+    it("should support nested literals in arrays", () => {
         const button = () => html`<button>Click me!</button>`;
         render(parent, html`
             <div align="center">
@@ -95,6 +95,14 @@ describe("html", () => {
 
         expect(parent.textContent).toEqual("Value is: ");
         expect(parent.querySelector("span").textContent).toEqual("");
+    });
+    
+    it("should remove useless nodes", () => {
+        render(parent, html`
+            <div>Hello</div>
+            <div>World</div>
+        `);
+        expect(Array.from(parent.childNodes)).toHaveLength(2);
     });
 });
 
