@@ -42,15 +42,14 @@ const name = "Mikel";
 const myTemplate = html`<p>Hello, ${name}!</p>`;
 ```
 
-#### `render(template)`
+#### `render(DOMElement, template)`
 
-The `render` function takes a template object as its input and efficiently transforms it into an HTML element.
+The `render` function takes a DOM element and a template and render it inside the DOM element.
 
 ```javascript
-import {render} from "mikel";
+import {html, render} from "mikel";
 
-const renderedElement = render(myTemplate);
-document.body.appendChild(renderedElement);
+render(document.body, html`<div>Hello world!</div>`);
 ```
 
 ### Helpers
@@ -74,7 +73,7 @@ html`<div class="${className}"></div>`;
 
 #### `styleMap(styleObj)`
 
-The `styleMap`` helper is a function that takes an object as input, where keys represent CSS attribute names, and values represent corresponding attribute values. It returns a valid CSS style string based on the input object.
+The `styleMap` helper is a function that takes an object as input, where keys represent CSS attribute names, and values represent corresponding attribute values. It returns a valid CSS style string based on the input object.
 
 ```javascript
 import {styleMap} from "mikel";
