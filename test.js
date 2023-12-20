@@ -1,18 +1,24 @@
 import {html, render, classMap, styleMap} from "./mikel.js";
 
 describe("html", () => {
-    it("should render a basic element", () => {
-        const el = render(html`<div class="test"></div>`);
+    let parent = null;
 
-        expect(el).toBeDefined();
-        expect(el.tagName.toLowerCase()).toEqual("div");
-        expect(Array.from(el.classList)).toContain("test");
+    beforeEach(() => {
+        parent = document.createElement("div");
+    });
+
+    it("should render a basic element", () => {
+        render(parent, html`<div class="test"></div>`);
+
+        expect(Array.from(parent.childNodes)).toHaveLength(1);
+        expect(parent.firstChild.tagName.toLowerCase()).toEqual("div");
+        expect(Array.from(parent.firstChild.classList)).toContain("test");
     });
 
     it("should set text attributes", () => {
         const className = "test";
-        const el = render(html`<button class="${className}"></button>`);
-        expect(Array.from(el.classList)).toContain(className);
+        render(parent, html`<button class="${className}"></button>`);
+        expect(Array.from(parent.querySelector("button").classList)).toContain(className);
     });
     
     // it("should set boolean attributes", () => {
@@ -28,15 +34,12 @@ describe("html", () => {
     it("should set events", () => {
         const handleClick1 = jest.fn();
         const handleClick2 = jest.fn();
-        const el = render(html`
-            <div>
-                <div id="test1" onClick="${handleClick1}"></div>
-                <div id="test2" onClick="${handleClick2}"></div>
-            </div>
+        render(parent, html`
+            <div id="test1" onClick="${handleClick1}"></div>
+            <div id="test2" onClick="${handleClick2}"></div>
         `);
 
-        // parent.querySelector(`div#test1`).click();
-        el.querySelector(`div#test2`).click();
+        parent.querySelector(`div#test2`).click();
         expect(handleClick1).not.toHaveBeenCalled();
         expect(handleClick2).toHaveBeenCalled();
     });
@@ -45,15 +48,15 @@ describe("html", () => {
         const button = () => {
             return html`<button class="btn">Click me!</button>`;
         };
-        const el = render(html`
+        render(parent, html`
             <div align="center">
                 ${button()}
             </div>
         `);
 
-        expect(el.querySelector("button.btn")).not.toBeNull();
-        expect(el.querySelector("button.btn").tagName).toEqual("BUTTON");
-        expect(el.querySelector("button.btn").textContent).toEqual("Click me!");
+        expect(parent.querySelector("button.btn")).not.toBeNull();
+        expect(parent.querySelector("button.btn").tagName).toEqual("BUTTON");
+        expect(parent.querySelector("button.btn").textContent).toEqual("Click me!");
     });
 
     it("should support events in nested literal templates", () => {
@@ -63,37 +66,35 @@ describe("html", () => {
         const button = () => {
             return html`<button class="btn" onClick="${handleButton2Click}">Click me!</button>`;
         };
-        const el = render(html`
-            <div align="center">
-                <button onClick="${handleButton1Click}">Click</button>
-                ${button()}
-                <button onClick="${handleButton3Click}">Click</button>
-            </div>
+        render(parent, html`
+            <button onClick="${handleButton1Click}">Click</button>
+            ${button()}
+            <button onClick="${handleButton3Click}">Click</button>
         `);
 
-        el.querySelector("button.btn").click();
-        expect(Array.from(el.querySelectorAll("button"))).toHaveLength(3);
+        parent.querySelector("button.btn").click();
+        expect(Array.from(parent.querySelectorAll("button"))).toHaveLength(3);
         expect(handleButton2Click).toHaveBeenCalled();
     });
 
     it("shoudl support nested literals in arrays", () => {
         const button = () => html`<button>Click me!</button>`;
-        const el = render(html`
+        render(parent, html`
             <div align="center">
                 ${[button(), button(), button()]}
             </div>
         `);
 
-        expect(Array.from(el.querySelectorAll("button"))).toHaveLength(3);
+        expect(Array.from(parent.querySelectorAll("button"))).toHaveLength(3);
     });
 
     it("should not add falsy values", () => {
-        const el = render(html`
+        render(parent, html`
             <div>Value is: <span>${false}</span></div>
         `);
 
-        expect(el.textContent).toEqual("Value is: ");
-        expect(el.querySelector("span").textContent).toEqual("");
+        expect(parent.textContent).toEqual("Value is: ");
+        expect(parent.querySelector("span").textContent).toEqual("");
     });
 });
 
