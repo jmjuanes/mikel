@@ -128,6 +128,25 @@ const compile = template => {
     return [result, events];
 };
 
+export const diff = (source, target) => {
+    const sourceNodes = Array.from(source.childNodes);
+    const targetNodes = Array.from(target.childNodes);
+    // 1. Check if source is empty
+    if (sourceNodes.length === 0) {
+        return targetNodes.forEach(node => {
+            source.appendChild(node);
+        });
+    }
+    const parent = sourceNodes[0].parentNode;
+    // 2. Check if source has more dom nodes
+    if (sourceNodes.length > targetNodes.length) {
+        const count = sourceNodes.length - targetNodes.length;
+        for (let i = count; i > 0; i--) {
+            parent.removeChild(sourceNodes[sourceNodes.length - i]);
+        }
+    }
+};
+
 // Returns a HTML template object
 export const html = (literal, ...values) => {
     return {
