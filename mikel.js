@@ -10,7 +10,7 @@ const unique = list => Array.from(new Set(list || []));
 const renderHtml = htmlString => {
     const template = document.createElement("template");
     template.innerHTML = htmlString;
-    return template.content.firstChild;
+    return template.content;
 };
 
 const registerElementEvents = (element, callback) => {
@@ -104,7 +104,7 @@ export const html = (literal, ...values) => {
 };
 
 // Compile a template object
-export const render = template => {
+export const render = (parent, template) => {
     const [result, events] = compile(template);
     const element = renderHtml(result.trim());
     registerElementEvents(element, (child, eventName) => {
@@ -113,7 +113,14 @@ export const render = template => {
             child.addEventListener(eventName, eventListener);
         }
     });
-    return element;
+    // Check for clearing parent
+    if (parent.hasChildNodes()) {
+        parent.replaceChildren();
+    }
+    // Append child nodes
+    Array.from(element.childNodes).forEach(child => {
+        parent.appendChild(child);
+    });
 };
 
 // Mount a template object
