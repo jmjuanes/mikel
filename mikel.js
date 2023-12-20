@@ -136,3 +136,11 @@ export const styleMap = styleList => {
         .map(k => `${camelToKebabCase(k)}:${styleList[k]};`)
         .join("");
 };
+
+export default {
+    html,
+    render,
+    mount,
+    classMap,
+    styleMap,
+};
