@@ -111,6 +111,16 @@ describe("classMap", () => {
     it("should return an empty string if no class object is provided", () => {
         expect(classMap()).toEqual("");
     });
+
+    it("should return unique classnames", () => {
+        const className = classMap({
+            "class1": true,
+            "class2 class1": true,
+            "class3 class2": true,
+        });
+
+        expect(className).toEqual("class1 class2 class3");
+    });
 });
 
 describe("styleMap", () => {

@@ -3,6 +3,9 @@ const MIKEL_TEMPLATE_TYPE = Symbol.for("mikel.template");
 // Convert an string in camelCase format to kebab-case
 const camelToKebabCase = str => str.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
 
+// Get unique values
+const unique = list => Array.from(new Set(list || []));
+
 // Render html string
 const renderHtml = htmlString => {
     const template = document.createElement("template");
@@ -121,10 +124,15 @@ export const mount = (parent, template) => {
 
 // Classmap helper
 export const classMap = classList => {
-    return Object.keys(classList || {}).filter(k => !!classList[k]).join(" ");
+    const classNames = Object.keys(classList || {})
+        .filter(k => !!classList[k])
+        .map(k => k.split(" "));
+    return unique(classNames.flat()).join(" ");
 };
 
 // Stylemap helper
 export const styleMap = styleList => {
-    return Object.keys(styleList || {}).map(k => `${camelToKebabCase(k)}:${styleList[k]};`).join("");
+    return Object.keys(styleList || {})
+        .map(k => `${camelToKebabCase(k)}:${styleList[k]};`)
+        .join("");
 };
