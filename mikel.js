@@ -231,20 +231,7 @@ export const render = (parent, template) => {
             child[eventName] = eventListener;
         }
     });
-    // Check for clearing parent
-    if (parent.hasChildNodes()) {
-        parent.replaceChildren();
-    }
-    // Append child nodes
-    Array.from(element.childNodes).forEach(child => {
-        parent.appendChild(child);
-    });
-};
-
-// Mount a template object
-export const mount = (parent, template) => {
-    parent.replaceChildren();
-    parent.appendChild(render(template));
+    diff(parent, element);
 };
 
 // Classmap helper
@@ -265,7 +252,6 @@ export const styleMap = styleList => {
 export default {
     html,
     render,
-    mount,
     classMap,
     styleMap,
 };
