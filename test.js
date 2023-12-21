@@ -131,6 +131,19 @@ describe("diff", () => {
         diff(source, target);
         expect(Array.from(source.childNodes)).toHaveLength(0);
     });
+
+    it("should patch attributes in source", () => {
+        const handleClick = jest.fn();
+        render(source, html`<div></div>`);
+        render(target, html`
+            <div data-id="test" class="test" onClick="${handleClick}" style="color:red;"></div>
+        `);
+        diff(source, target);
+        expect(source.firstChild.dataset.id).toEqual("test");
+        expect(Array.from(source.firstChild.classList)).toContain("test");
+        expect(source.firstChild.onclick).toEqual(handleClick);
+        expect(source.firstChild.getAttribute("style")).toEqual("color:red;");
+    });
 });
 
 describe("classMap", () => {
