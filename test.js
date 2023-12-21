@@ -1,4 +1,4 @@
-import {html, render, classMap, styleMap} from "./mikel.js";
+import {html, render, diff, classMap, styleMap} from "./mikel.js";
 
 describe("html", () => {
     let parent = null;
@@ -103,6 +103,46 @@ describe("html", () => {
             <div>World</div>
         `);
         expect(Array.from(parent.childNodes)).toHaveLength(2);
+    });
+});
+
+describe("diff", () => {
+    let source = null, target = null;
+    beforeEach(() => {
+        source = document.createElement("div");
+        target = document.createElement("div");
+    });
+
+    it("should add all nodes from target if source is empty", () => {
+        render(target, html`
+            <div id="el1"></div>
+            <div id="el2"></div>
+        `);
+        expect(Array.from(source.childNodes)).toHaveLength(0);
+        diff(source, target);
+        expect(Array.from(source.childNodes)).toHaveLength(2);
+        expect(source.querySelector("div#el1")).not.toBeNull();
+        expect(source.querySelector("div#el2")).not.toBeNull();
+    });
+
+    it("should remove extra dom nodes in source", () => {
+        render(source, html`<div></div><div></div>`);
+        expect(Array.from(source.childNodes)).toHaveLength(2);
+        diff(source, target);
+        expect(Array.from(source.childNodes)).toHaveLength(0);
+    });
+
+    it("should patch attributes in source", () => {
+        const handleClick = jest.fn();
+        render(source, html`<div></div>`);
+        render(target, html`
+            <div data-id="test" class="test" onClick="${handleClick}" style="color:red;"></div>
+        `);
+        diff(source, target);
+        expect(source.firstChild.dataset.id).toEqual("test");
+        expect(Array.from(source.firstChild.classList)).toContain("test");
+        expect(source.firstChild.onclick).toEqual(handleClick);
+        expect(source.firstChild.getAttribute("style")).toEqual("color:red;");
     });
 });
 
