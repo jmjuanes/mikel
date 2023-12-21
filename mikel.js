@@ -3,6 +3,14 @@ const NODE_TEXT_TYPE = Symbol.for("node.text");
 const NODE_COMMENT_TYPE = Symbol.for("node.comment");
 const NODE_HTML_TYPE = Symbol.for("node.html");
 
+// Private list with all available events
+const eventsNames = [];
+for (let eventName in window) {
+    if (eventName && eventName.startsWith("on")) {
+        eventsNames.push(eventName);
+    }
+}
+
 // Convert an string in camelCase format to kebab-case
 const camelToKebabCase = str => str.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
 
@@ -22,6 +30,20 @@ const getNodeType = node => {
         return node.tagName.toLowerCase();
     }
     return null;
+};
+
+// Gets node attributes
+const getNodeAttributes = node => {
+    return Object.fromEntries(Array.from(node?.attributes || []).map(item => {
+        return [item.name, item.value];
+    }));
+};
+
+const getNodeListeners = node => {
+    const eventsListeners = eventsNames
+        .filter(e => typeof node[e] === "function")
+        .map(eventName => ([eventName, node[eventName]]));
+    return Object.fromEntries(eventsListeners);
 };
 
 // Render html string
@@ -54,7 +76,7 @@ const registerElementEvents = (element, callback) => {
             const name = attrs.item(i).name;
             if (name.startsWith("on")) {
                 element.removeAttribute(name);
-                callback(element, name.slice(2).toLowerCase());
+                callback(element, name.toLowerCase());
             }
         }
     }
@@ -145,6 +167,54 @@ export const diff = (source, target) => {
             parent.removeChild(sourceNodes[sourceNodes.length - i]);
         }
     }
+    // 3. Iterate over all child nodes of target
+    targetNodes.forEach((targetChild, index) => {
+        const sourceChild = sourceNodes[index];
+        // 3.1 Check if source child is not defined
+        if (!sourceChild) {
+            return parent.appendChild(targetChild);
+        }
+        // 3.2 Check if nodes are differente
+        if (getNodeType(sourceChild) !== getNodeType(targetChild)) {
+            return parent.replaceChild(targetChild, sourceChild);
+        }
+        // 3.3 Check if they are text nodes
+        if (getNodeType(targetChild) === NODE_TEXT_TYPE) {
+            sourceChild.textContent = targetChild.textContent;
+            return;
+        }
+        // 3.4 Patch attributes
+        const sourceAttributes = getNodeAttributes(sourceChild);
+        const targetAttributes = getNodeAttributes(targetChild);
+        Object.keys(targetAttributes).forEach(key => {
+            // If the attribute is not present in sourcedom then add it
+            // If exists but have different value, update the attribute
+            if (sourceAttributes[key] !== targetAttributes[key]) {
+                sourceChild.setAttribute(key, targetAttributes[key]);
+            }
+        });
+        // Remove attributes in source that are not in target
+        Object.keys(sourceAttributes).forEach(key => {
+            if (typeof targetAttributes[key] === "undefined") {
+                sourceChild.removeAttribute(key);
+            }
+        });
+        // 3.6 Patch events listeners
+        const sourceListeners = getNodeListeners(sourceChild);
+        const targetListeners = getNodeListeners(targetChild);
+        Object.keys(targetListeners).forEach(key => {
+            sourceChild[key] = targetListeners[key];
+        });
+        Object.keys(sourceListeners).forEach(key => {
+            if (typeof targetListeners[key] !== "function") {
+                delete sourceChild[key];
+            }
+        });
+        // 3.7 Check if target has child nodes
+        if (targetChild.hasChildNodes()) {
+            diff(sourceChild, targetChild);
+        }
+    });
 };
 
 // Returns a HTML template object
@@ -163,7 +233,7 @@ export const render = (parent, template) => {
     registerElementEvents(element, (child, eventName) => {
         const eventListener = events.shift();
         if (typeof eventListener === "function") {
-            child.addEventListener(eventName, eventListener);
+            child[eventName] = eventListener;
         }
     });
     // Check for clearing parent
