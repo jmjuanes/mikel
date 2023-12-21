@@ -4,12 +4,7 @@ const NODE_COMMENT_TYPE = Symbol.for("node.comment");
 const NODE_HTML_TYPE = Symbol.for("node.html");
 
 // Private list with all available events
-const eventsNames = [];
-for (let eventName in window) {
-    if (eventName && eventName.startsWith("on")) {
-        eventsNames.push(eventName);
-    }
-}
+const eventsNames = Object.keys(window).filter(n => n && n.startsWith("on"));
 
 // Convert an string in camelCase format to kebab-case
 const camelToKebabCase = str => str.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
