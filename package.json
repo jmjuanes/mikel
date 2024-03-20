@@ -1,14 +1,28 @@
 {
-    "name": "mstch",
-    "description": "",
-    "version": "0.0.1",
+    "name": "mikel",
+    "description": "Micro mustache implementation with zero dependencies",
+    "version": "0.0.0",
+    "author": {
+        "name": "Josemi Juanes",
+        "email": "hello@josemi.xyz"
+    },
+    "license": "MIT",
+    "repository": "https://github.com/jmjuanes/mikel",
+    "bugs": "https://github.com/jmjuanes/mikel/issues",
     "scripts": {
         "test": "jest test.js"
     },
+    "keywords": [
+        "mustache",
+        "templating"
+    ],
+    "files": [
+        "README.md",
+        "LICENSE",
+        "index.js"
+    ],
     "devDependencies": {
-        "@babel/core": "^7.18.0",
-        "@babel/plugin-transform-runtime": "^7.18.0",
-        "@babel/preset-env": "^7.18.10",
-        "jest": "^29.4.3"
+        "@babel/preset-env": "^7.24.3",
+        "jest": "^29.7.0"
     }
 }
