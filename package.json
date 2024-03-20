@@ -1,7 +1,7 @@
 {
     "name": "mikel",
     "description": "Micro mustache implementation with zero dependencies",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "author": {
         "name": "Josemi Juanes",
         "email": "hello@josemi.xyz"
