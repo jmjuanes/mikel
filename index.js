@@ -52,10 +52,7 @@ const compile = (tokens, output, ctx, index, section) => {
     return i;
 };
 
-const render = (str, ctx, output=[]) => {
-    compile(str.split(/\{\{|\}\}/), output, ctx || {}, 0, "");
+export default (str, ctx = {}, output = []) => {
+    compile(str.split(/\{\{|\}\}/), output, ctx, 0, "");
     return output.join("").replace(/\n/g, "\\n");
 };
-
-export default render;
-
