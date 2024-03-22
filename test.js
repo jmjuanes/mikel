@@ -1,60 +1,62 @@
+import {describe, it} from "node:test";
+import assert from "node:assert";
 import m from "./index.js";
 
 describe("{{ xyz }}", () => {
     it("should replace variables", () => {
         const data = {name: "Bob"};
-        expect(m("Hello {{ name }}!", data)).toEqual("Hello Bob!");
+        assert.equal(m("Hello {{ name }}!", data), "Hello Bob!");
     });
 
     it("should escape variables", () => {
         const data = {tag: "<div>"};
-        expect(m("Tag is {{ tag }}", data)).toEqual("Tag is &lt;div&gt;");
+        assert.equal(m("Tag is {{ tag }}", data), "Tag is &lt;div&gt;");
     });
 });
 
 describe("{{! xyz }}", () => {
     it("should not escape variables", () => {
         const data = {tag: "<div>"};
-        expect(m("Tag is {{! tag }}", data)).toEqual("Tag is <div>");
+        assert.equal(m("Tag is {{! tag }}", data), "Tag is <div>");
     });
 });
 
 describe("{{# xyz }}", () => {
     it("should be displayed when truthy", () => {
         const data = {visible: true};
-        expect(m("{{# visible}}Yes!{{/ visible}}", data)).toEqual("Yes!");
+        assert.equal(m("{{# visible}}Yes!{{/ visible}}", data), "Yes!");
     });
 
     it("should not be visible when falsy", () => {
         const data = {visible: false};
-        expect(m("{{# visible}}Yes!{{/ visible}}", data)).toEqual("");
+        assert.equal(m("{{# visible}}Yes!{{/ visible}}", data), "");
     });
 
     it("should not be visible when null", () => {
         const data = {name: null};
-        expect(m("{{#name}}Hello {{name}}{{/name}}", data)).toEqual("");
+        assert.equal(m("{{#name}}Hello {{name}}{{/name}}", data), "");
     });
 
     it("should not be visible when undefined", () => {
         const data = {};
-        expect(m("{{#name}}Hello {{name}}{{/name}}", data)).toEqual("");
+        assert.equal(m("{{#name}}Hello {{name}}{{/name}}", data), "");
     });
 
     it("should parse variables inside", () => {
         const data = {visible: true, name: "Bob"};
-        expect(m("{{#visible}}Hello {{name}}!{{/visible}}", data)).toEqual("Hello Bob!");
+        assert.equal(m("{{#visible}}Hello {{name}}!{{/visible}}", data), "Hello Bob!");
     });
 
     it("should support nested conditionals", () => {
         const data = {visible1: true, visible2: true, name: "Bob"};
-        expect(m("{{#visible1}}{{#visible2}}{{name}}{{/visible2}}{{/visible1}}", data)).toEqual("Bob");
+        assert.equal(m("{{#visible1}}{{#visible2}}{{name}}{{/visible2}}{{/visible1}}", data), "Bob");
     });
 
     it("should iterate simple arrays", () => {
         const data = {
             items: ["1", "2", "3"],
         };
-        expect(m("{{#items}}{{.}}{{/items}}", data)).toEqual("123");
+        assert.equal(m("{{#items}}{{.}}{{/items}}", data), "123");
     });
 
     it("should iterate arrays of objects", () => {
@@ -62,7 +64,7 @@ describe("{{# xyz }}", () => {
             items: [{name: "Susan"},{name: "Bob"}],
             name: "Phil",
         };
-        expect(m("{{#items}}{{name}}-{{/items}}", data)).toEqual("Susan-Bob-");
+        assert.equal(m("{{#items}}{{name}}-{{/items}}", data), "Susan-Bob-");
     });
 
     it("should throw an error for unmatched end of section", () => {
@@ -71,7 +73,7 @@ describe("{{# xyz }}", () => {
             m("{{#name}}Hello {{name}}!{{/foo}}", data);
         }
         catch (error) {
-            expect(error.message).toEqual("Unmatched section end: {{/foo}}");
+            assert.equal(error.message, "Unmatched section end: {{/foo}}");
         }
     });
 });
@@ -79,12 +81,12 @@ describe("{{# xyz }}", () => {
 describe("{{^ xyz }}", () => {
     it("should be rendered if variable is falsy", () => {
         const data = {visible: false};
-        expect(m("{{^visible}}Yeah!{{/visible}}", data)).toEqual("Yeah!");
+        assert.equal(m("{{^visible}}Yeah!{{/visible}}", data), "Yeah!");
     });
 
     it("should not be rendered if variable is truthy", () => {
         const data = {visible: true};
-        expect(m("{{^visible}}Yeah!{{/visible}}", data)).toEqual("");
+        assert.equal(m("{{^visible}}Yeah!{{/visible}}", data), "");
     });
 });
 
