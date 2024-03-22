@@ -54,5 +54,5 @@ const compile = (tokens, output, ctx, index, section) => {
 
 export default (str, ctx = {}, output = []) => {
     compile(str.split(/\{\{|\}\}/), output, ctx, 0, "");
-    return output.join("").replace(/\n/g, "\\n");
+    return output.join("");
 };
