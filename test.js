@@ -105,4 +105,8 @@ describe("{{> xyz }}", () => {
         };
         assert.equal(m("Message: '{{> foo}}'", data, {partials}), "Message: 'Hello Bob!'");
     });
+
+    it("should ignore partial section if partial is not defined", () => {
+        assert.equal(m("Hello {{> foo}}", {}, {}), "Hello ");
+    });
 });
