@@ -1,6 +1,6 @@
 {
     "name": "mikel",
-    "description": "Micro mustache implementation with zero dependencies",
+    "description": "Micro templating library with zero dependencies",
     "version": "0.2.1",
     "type": "module",
     "author": {

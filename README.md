@@ -3,7 +3,7 @@
 ![npm version](https://badgen.net/npm/v/mikel?labelColor=1d2734&color=21bf81)
 ![license](https://badgen.net/github/license/jmjuanes/mikel?labelColor=1d2734&color=21bf81)
 
-Mikel is a lightweight implementation of the Mustache templating system in JavaScript, designed to be concise and simple. With less than 60 lines of code, it offers a convenient way to render templates using data.
+Mikel is a lightweight templating library based on the [Mustache](https://mustache.github.io) syntax, designed to be concise and easy to use. It provides a simple way to render templates using data objects, supporting features such as variables, partials, conditional sections, and looping. With a focus on simplicity and minimalism, Mikel offers a tiny yet powerful solution for generating dynamic content in JavaScript applications.
 
 ## Installation
 
