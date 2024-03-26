@@ -41,10 +41,9 @@ const compile = (tokens, output, ctx, opt, index, section) => {
         }
         else if (tokens[i].startsWith(">")) {
             const t = tokens[i].slice(1).trim();
-            if (typeof opt?.partials?.[t] !== "string") {
-                throw new Error(`Partial '${t}' not found`);
+            if (typeof opt?.partials?.[t] === "string") {
+                compile(opt.partials[t].split(tags), output, ctx, opt, 0, "");
             }
-            compile(opt.partials[t].split(tags), output, ctx, opt, 0, "");
         }
         else if (tokens[i].startsWith("/")) {
             if (tokens[i].slice(1).trim() !== section) {
