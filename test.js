@@ -90,3 +90,12 @@ describe("{{^ xyz }}", () => {
     });
 });
 
+describe("{{> xyz }}", () => {
+    it("should render provided partials", () => {
+        const data = {name: "Bob"};
+        const partials = {
+            foo: "Hello {{name}}!",
+        };
+        assert.equal(m("Message: '{{> foo}}'", data, {partials}), "Message: 'Hello Bob!'");
+    });
+});
