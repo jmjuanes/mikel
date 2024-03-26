@@ -92,6 +92,13 @@ describe("{{^ xyz }}", () => {
 
 describe("{{> xyz }}", () => {
     it("should render provided partials", () => {
+        const partials = {
+            foo: "Hello World!",
+        };
+        assert.equal(m("Message: '{{> foo}}'", {}, {partials}), "Message: 'Hello World!'");
+    });
+
+    it("should forward context to partials", () => {
         const data = {name: "Bob"};
         const partials = {
             foo: "Hello {{name}}!",
