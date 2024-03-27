@@ -87,6 +87,25 @@ const result = m("{{> hello}}", data, {partials});
 // Output: 'Hello Bob!'
 ```
 
+#### Custom context in partials (added in v0.3.1)
+
+You can provide a custom context for the partial by specifying a field of the data: `{{> partialName dataField}}`.
+
+```javascript
+const data = {
+    currentUser: {
+        name: "John Doe",
+        email: "john@example.com",
+    },
+};
+const partials = {
+    user: "{{name}} <{{email}}>",
+};
+
+const result = m("User: {{> user currentUser}}", data, {partials});
+// Output: 'User: John Doe <john@example.com>'
+```
+
 ## API
 
 ### `m(template, data[, options])`
