@@ -109,4 +109,16 @@ describe("{{> xyz }}", () => {
     it("should ignore partial section if partial is not defined", () => {
         assert.equal(m("Hello {{> foo}}", {}, {}), "Hello ");
     });
+
+    it("should allow to provide custom context to partial", () => {
+        const data = {
+            author: {
+                name: "Bob",
+            },
+        };
+        const partials = {
+            foo: "Hello {{name}}!",
+        };
+        assert.equal(m("Message: '{{> foo author}}'", data, {partials}), "Message: 'Hello Bob!'");
+    });
 });
