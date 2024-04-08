@@ -67,6 +67,13 @@ describe("{{# xyz }}", () => {
         assert.equal(m("{{#items}}{{name}}-{{/items}}", data), "Susan-Bob-");
     });
 
+    it("should not iterate over an empty array", () => {
+        const data = {
+            items: [],
+        };
+        assert.equal(m("List of items: {{#items}}{{.}},{{/items}}", data), "List of items: ");
+    });
+
     it("should throw an error for unmatched end of section", () => {
         const data = {name: "Bob"};
         try {
