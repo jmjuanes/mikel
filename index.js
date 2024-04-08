@@ -30,8 +30,8 @@ const compile = (tokens, output, ctx, opt, index, section) => {
             const negate = tokens[i].startsWith("^");
             if (!negate && value && Array.isArray(value)) {
                 const j = i + 1;
-                value.forEach(item => {
-                    i = compile(tokens, output, item, opt, j, t);
+                (value.length > 0 ? value : [""]).forEach(item => {
+                    i = compile(tokens, value.length > 0 ? output : [], item, opt, j, t);
                 });
             }
             else {
