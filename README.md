@@ -68,7 +68,9 @@ const result = m("{{^isAdmin}}You are not Admin{{/isAdmin}}", data);
 // Output: 'You are not Admin'
 ```
 
-### Partials (added in v0.3.0)
+### Partials 
+
+> This feature was added in `v0.3.0`
 
 Partials allow you to include separate templates within your main template. Use the greater than symbol `>` followed by the partial name inside double curly braces `{{> partialName }}`.
 
@@ -87,7 +89,9 @@ const result = m("{{> hello}}", data, {partials});
 // Output: 'Hello Bob!'
 ```
 
-#### Custom context in partials (added in v0.3.1)
+#### Custom context in partials
+
+> This feature was added in `v0.3.1`.
 
 You can provide a custom context for the partial by specifying a field of the data: `{{> partialName dataField}}`.
 
@@ -106,7 +110,9 @@ const result = m("User: {{> user currentUser}}", data, {partials});
 // Output: 'User: John Doe <john@example.com>'
 ```
 
-### Built-in helpers (added in v0.4.0)
+### Built-in helpers
+
+> Added in `v0.4.0`.
 
 Helpers allows you to execute special functions within blocks or sections of your template. Mikel currently supports the following built-in helpers:
 
@@ -194,6 +200,8 @@ console.log(m("{{#unless isAdmin}}Hello guest{{/unless}}", data)); // --> 'Hello
 ```
 
 ### At-Variables
+
+> Added in `v0.4.0`.
 
 At-Variables in Mikel provide convenient access to special values within your templates. These variables, denoted by the `@` symbol, allow users to interact with specific data contexts or values.
 
