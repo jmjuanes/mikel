@@ -126,6 +126,16 @@ const data = {
 console.log(m("{{#each users}}{{.}}, {{/each}}", data)); // --> 'John, Alice, Bob, '
 ```
 
+When looping throug arrays, you can use the variable `@index` to access to the current index of the item in the array:
+
+```javascript
+const data = {
+    users: ["John", "Alice", "Bob"],
+};
+
+console.log(m("{{#each users}}{{@index}}: {{.}}, {{/each}}", data)); // --> '0: John, 1: Alice, 2: Bob, '
+```
+
 The `each` helper can also iterate over objects:
 
 ```javascript
@@ -135,7 +145,20 @@ const data = {
     },
 };
 
-console.log(m("{{#each values}}{{@key}}: {{.}}{{/each}}", data)); // --> 'foo: bar'
+console.log(m("{{#each values}}{{.}}{{/each}}", data)); // --> 'bar'
+```
+
+When looping throug objects, you can use the variable `@key` to access to the current key in the object, and the variable `@value` to access to the corresponding value:
+
+```javascript
+const data = {
+    values: {
+        foo: "0",
+        bar: "1"
+    },
+};
+
+console.log(m("{{#each values}}{{@key}}: {{@value}}, {{/each}}", data)); // --> 'foo: 0, bar: 1, '
 ```
 
 #### if
