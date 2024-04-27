@@ -106,7 +106,7 @@ const result = m("User: {{> user currentUser}}", data, {partials});
 // Output: 'User: John Doe <john@example.com>'
 ```
 
-#### Built-in helpers (added in v0.4.0)
+### Built-in helpers (added in v0.4.0)
 
 Helpers allows you to execute special functions within blocks or sections of your template. Mikel currently supports the following built-in helpers:
 
