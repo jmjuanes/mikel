@@ -106,6 +106,70 @@ const result = m("User: {{> user currentUser}}", data, {partials});
 // Output: 'User: John Doe <john@example.com>'
 ```
 
+### Built-in helpers (added in v0.4.0)
+
+Helpers allows you to execute special functions within blocks or sections of your template. Mikel currently supports the following built-in helpers:
+
+#### each
+
+The `each` helper iterates over an array and renders the block for each item in the array.
+
+Syntax: `{{#each arrayName}} ... {{/each}}`.
+
+Example:
+
+```javascript
+const data = {
+    users: ["John", "Alice", "Bob"],
+};
+
+console.log(m("{{#each users}}{{.}}, {{/each}}", data)); // --> 'John, Alice, Bob, '
+```
+
+The `each` helper can also iterate over objects:
+
+```javascript
+const data = {
+    values: {
+        foo: "bar",
+    },
+};
+
+console.log(m("{{#each values}}{{@key}}: {{.}}{{/each}}", data)); // --> 'foo: bar'
+```
+
+#### if
+
+The `if` helper renders the block only if the condition is truthy.
+
+Syntax: `{{#if condition}} ... {{/if}}`
+
+Example:
+
+```javascript
+const data = {
+    isAdmin: true;
+};
+
+console.log(m("{{#if isAdmin}}Hello admin{{/if}}", data)); // --> 'Hello admin'
+```
+
+#### unless
+
+The `unless` helper renders the block only if the condition is falsy.
+
+Syntax: `{{#unless condition}} ... {{/unless}}`
+
+Example:
+
+```javascript
+const data = {
+    isAdmin: false
+};
+
+console.log(m("{{#unless isAdmin}}Hello guest{{/unless}}", data)); // --> 'Hello guest'
+```
+
 ## API
 
 ### `m(template, data[, options])`

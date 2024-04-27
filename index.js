@@ -12,21 +12,50 @@ const escape = str => {
 };
 
 const get = (ctx, path) => {
-    return path === "." ? ctx : (path.split(".").reduce((p, k) => p?.[k], ctx) || "");
+    return (path === "." ? ctx : path.split(".").reduce((p, k) => p?.[k], ctx)) || "";
 };
 
-const compile = (tokens, output, ctx, opt, index, section) => {
+const helpers = new Map(Object.entries({
+    "#each": (value, options) => {
+        return (typeof value === "object" ? Object.entries(value || {}) : [])
+            .map((item, index) => options.fn(item[1], {index: index, key: item[0], value: item[1]}))
+            .join("");
+    },
+    "#if": (value, options) => !!value ? options.fn(options.context) : "",
+    "#unless": (value, options) => !!!value ? options.fn(options.context) : "",
+}));
+
+const compile = (tokens, output, context, opt, index = 0, section = "", vars = {}) => {
     let i = index;
     while (i < tokens.length) {
         if (i % 2 === 0) {
             output.push(tokens[i]);
         }
+        else if (tokens[i].startsWith("@")) {
+            output.push(vars?.[tokens[i].slice(1).trim() || "_"] ?? "");
+        }
         else if (tokens[i].startsWith("!")) {
-            output.push(get(ctx, tokens[i].slice(1).trim()));
+            output.push(get(context, tokens[i].slice(1).trim()));
+        }
+        else if (tokens[i].startsWith("#") && helpers.has(tokens[i].trim().split(" ")[0])) {
+            const [t, v] = tokens[i].slice(1).trim().split(" ");
+            const j = i + 1;
+            output.push(helpers.get("#" + t)(get(context, v), {
+                context: context,
+                globalOptions: opt,
+                fn: (blockContext = {}, blockVars = {}, blockOutput = []) => {
+                    i = compile(tokens, blockOutput, blockContext, opt, j, t, blockVars);
+                    return blockOutput.join("");
+                },
+            }));
+            // Make sure that this block has been executed
+            if (i + 1 === j) {
+                i = compile(tokens, [], {}, opt, j, t);
+            }
         }
         else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
             const t = tokens[i].slice(1).trim();
-            const value = get(ctx, t);
+            const value = get(context, t);
             const negate = tokens[i].startsWith("^");
             if (!negate && value && Array.isArray(value)) {
                 const j = i + 1;
@@ -36,13 +65,13 @@ const compile = (tokens, output, ctx, opt, index, section) => {
             }
             else {
                 const includeOutput = (!negate && !!value) || (negate && !!!value);
-                i = compile(tokens, includeOutput ? output : [], ctx, opt, i + 1, t);
+                i = compile(tokens, includeOutput ? output : [], context, opt, i + 1, t);
             }
         }
         else if (tokens[i].startsWith(">")) {
             const [t, v] = tokens[i].slice(1).trim().split(" ");
             if (typeof opt?.partials?.[t] === "string") {
-                compile(opt.partials[t].split(tags), output, v ? get(ctx, v) : ctx, opt, 0, "");
+                compile(opt.partials[t].split(tags), output, v ? get(context, v) : context, opt, 0, "");
             }
         }
         else if (tokens[i].startsWith("/")) {
@@ -52,14 +81,14 @@ const compile = (tokens, output, ctx, opt, index, section) => {
             break;
         }
         else {
-            output.push(escape(get(ctx, tokens[i].trim())));
+            output.push(escape(get(context, tokens[i].trim())));
         }
         i = i + 1;
     }
     return i;
 };
 
-export default (str, ctx = {}, opt = {}, output = []) => {
-    compile(str.split(tags), output, ctx, opt, 0, "");
+export default (str, context = {}, opt = {}, output = []) => {
+    compile(str.split(tags), output, context, opt, 0, "");
     return output.join("");
 };
