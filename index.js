@@ -7,53 +7,55 @@ const escapedChars = {
     "'": "&#039;",
 };
 
-const getIterableValues = values => {
-    if (!!values && typeof values === "object" && Object.keys(values).length > 0) {
-        return Object.entries(values);
-    }
-    return [null];
-};
-
 const escape = str => {
     return str.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 };
 
-const get = (data, path) => {
-    return path === "." ? data : (path.split(".").reduce((p, k) => p?.[k], data) || "");
+const get = (ctx, path) => {
+    return (path === "." ? ctx : path.split(".").reduce((p, k) => p?.[k], ctx)) || "";
 };
 
-const compile = (tokens, output, data, opt, index = 0, section = "", ctx = {}) => {
+const helpers = new Map(Object.entries({
+    "#each": (value, options) => {
+        return (typeof value === "object" ? Object.entries(value || {}) : [])
+            .map((item, index) => options.fn(item[1], {index: index, key: item[0], value: item[1]}))
+            .join("");
+    },
+    "#if": (value, options) => !!value ? options.fn(options.context) : "",
+    "#unless": (value, options) => !!!value ? options.fn(options.context) : "",
+}));
+
+const compile = (tokens, output, context, opt, index = 0, section = "", vars = {}) => {
     let i = index;
     while (i < tokens.length) {
         if (i % 2 === 0) {
             output.push(tokens[i]);
         }
         else if (tokens[i].startsWith("@")) {
-            const k = tokens[i].slice(1).trim();
-            if (typeof ctx[k] !== "undefined") {
-                output.push(ctx[k]);
-            }
+            output.push(vars?.[tokens[i].slice(1).trim() || "_"] ?? "");
         }
         else if (tokens[i].startsWith("!")) {
-            output.push(get(data, tokens[i].slice(1).trim()));
+            output.push(get(context, tokens[i].slice(1).trim()));
         }
-        else if (tokens[i].startsWith("#each ")) {
+        else if (tokens[i].startsWith("#") && helpers.has(tokens[i].trim().split(" ")[0])) {
             const [t, v] = tokens[i].slice(1).trim().split(" ");
             const j = i + 1;
-            getIterableValues(get(data, v)).forEach(item => {
-                const [k, v] = (item || [0, ""]);
-                i = compile(tokens, !!item ? output : [], v, opt, j, t, {index: k, key: k, value: v});
-            });
-        }
-        else if (tokens[i].startsWith("#if ") || tokens[i].startsWith("#unless ")) {
-            const [t, v] = tokens[i].slice(1).trim().split(" ");
-            const value = get(data, v);
-            const includeOutput = (t === "if" && !!value) || (t === "unless" && !!!value);
-            i = compile(tokens, includeOutput ? output : [], data, opt, i + 1, t);
+            output.push(helpers.get("#" + t)(get(context, v), {
+                context: context,
+                globalOptions: opt,
+                fn: (blockContext = {}, blockVars = {}, blockOutput = []) => {
+                    i = compile(tokens, blockOutput, blockContext, opt, j, t, blockVars);
+                    return blockOutput.join("");
+                },
+            }));
+            // Make sure that this block has been executed
+            if (i + 1 === j) {
+                i = compile(tokens, [], {}, opt, j, t);
+            }
         }
         else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
             const t = tokens[i].slice(1).trim();
-            const value = get(data, t);
+            const value = get(context, t);
             const negate = tokens[i].startsWith("^");
             if (!negate && value && Array.isArray(value)) {
                 const j = i + 1;
@@ -63,13 +65,13 @@ const compile = (tokens, output, data, opt, index = 0, section = "", ctx = {}) =
             }
             else {
                 const includeOutput = (!negate && !!value) || (negate && !!!value);
-                i = compile(tokens, includeOutput ? output : [], data, opt, i + 1, t);
+                i = compile(tokens, includeOutput ? output : [], context, opt, i + 1, t);
             }
         }
         else if (tokens[i].startsWith(">")) {
             const [t, v] = tokens[i].slice(1).trim().split(" ");
             if (typeof opt?.partials?.[t] === "string") {
-                compile(opt.partials[t].split(tags), output, v ? get(data, v) : data, opt, 0, "");
+                compile(opt.partials[t].split(tags), output, v ? get(context, v) : context, opt, 0, "");
             }
         }
         else if (tokens[i].startsWith("/")) {
@@ -79,14 +81,14 @@ const compile = (tokens, output, data, opt, index = 0, section = "", ctx = {}) =
             break;
         }
         else {
-            output.push(escape(get(data, tokens[i].trim())));
+            output.push(escape(get(context, tokens[i].trim())));
         }
         i = i + 1;
     }
     return i;
 };
 
-export default (str, data = {}, opt = {}, output = []) => {
-    compile(str.split(tags), output, data, opt, 0, "");
+export default (str, context = {}, opt = {}, output = []) => {
+    compile(str.split(tags), output, context, opt, 0, "");
     return output.join("");
 };
