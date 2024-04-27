@@ -1,7 +1,7 @@
 {
     "name": "mikel",
     "description": "Micro templating library with zero dependencies",
-    "version": "0.3.2",
+    "version": "0.4.0",
     "type": "module",
     "author": {
         "name": "Josemi Juanes",
@@ -20,7 +20,7 @@
         "test": "node test.js"
     },
     "keywords": [
-        "mustache",
+        "template",
         "templating"
     ],
     "files": [
