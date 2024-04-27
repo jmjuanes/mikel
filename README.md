@@ -193,6 +193,37 @@ const data = {
 console.log(m("{{#unless isAdmin}}Hello guest{{/unless}}", data)); // --> 'Hello guest'
 ```
 
+### Variables
+
+Variables in Mikel provide convenient access to special values within your templates. These variables, denoted by the `@` symbol, allow users to interact with specific data contexts or values.
+
+#### @root
+
+The `@root` variable grants access to the root data context provided to the template. It enables users to retrieve values from the top-level data object.
+
+Example:
+
+```javascript
+const data = {
+    name: "World",
+};
+
+console.log(m("Hello, {{@root.name}}!", data)); // -> 'Hello, World!'
+```
+
+#### @index
+
+The `@index` variable facilitates access to the current index of the item when iterating over an array using the `#each` helper. It aids in dynamic rendering and indexing within loops.
+
+#### @key
+
+The `@key` variable allows users to retrieve the current key of the object entry when looping through an object using the `#each` helper. It provides access to object keys for dynamic rendering and customization.
+
+#### @value
+
+The `@value` variable allows users to retrieve the current value of the object entry when iterating over an object using the `#each` helper. It simplifies access to object values for dynamic rendering and data manipulation.
+
+
 ## API
 
 ### `m(template, data[, options])`
