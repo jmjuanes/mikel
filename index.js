@@ -69,9 +69,15 @@ const compile = (tokens, output, context, opt, index = 0, section = "", vars = {
             }
         }
         else if (tokens[i].startsWith(">")) {
-            const [t, v] = tokens[i].slice(1).trim().split(" ");
-            if (typeof opt?.partials?.[t] === "string") {
-                compile(opt.partials[t].split(tags), output, v ? get(context, v) : context, opt, 0, "", vars);
+            const [t, v] = tokens[i].replace(/^[>]{1,2}/, "").trim().split(" ");
+            const value = v ? get(context, v) : context;
+            if (tokens[i].startsWith(">>")) {
+                const o = [];
+                i = compile(tokens, o, context, opt, i + 1, t, vars);
+                compile((opt?.layouts?.[t] || "").split(tags), output, value, opt, 0, "", {...vars, content: o.join("")});
+            }
+            else if (typeof opt?.partials?.[t] === "string") {
+                compile(opt.partials[t].split(tags), output, value, opt, 0, "", vars);
             }
         }
         else if (tokens[i].startsWith("/")) {
