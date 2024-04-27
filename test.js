@@ -130,7 +130,7 @@ describe("{{> xyz }}", () => {
     });
 });
 
-describe("{{#each }}", () => {
+describe("[helpers] {{#each }}", () => {
     it("should do nothing if value is not an array or object", () => {
         assert.equal(m("x{{#each values}}{{.}}{{/each}}x", {values: null}), "xx");
         assert.equal(m("x{{#each values}}{{.}}{{/each}}x", {values: []}), "xx");
@@ -146,5 +146,25 @@ describe("{{#each }}", () => {
     it("should iterate over an object", () => {
         assert.equal(m("{{#each values}}{{.}},{{/each}}", {values: {foo: "bar"}}), "bar,");
         assert.equal(m("{{#each values}}{{@key}}:{{@value}},{{/each}}", {values: {foo: "bar"}}), "foo:bar,");
+    });
+});
+
+describe("[helpers] {{#if }}", () => {
+    it("should include content if value is true", () => {
+        assert.equal(m("_{{#if value}}Yes!{{/if}}_", {value: true}), "_Yes!_");
+    });
+
+    it("should not include content if value is false", () => {
+        assert.equal(m("_{{#if value}}Yes!{{/if}}_", {value: false}), "__");
+    });
+});
+
+describe("[helpers] {{#unless }}", () => {
+    it("should not include content if value is true", () => {
+        assert.equal(m("_{{#unless value}}Yes!{{/unless}}_", {value: true}), "__");
+    });
+
+    it("should include content if value is false", () => {
+        assert.equal(m("_{{#unless value}}Yes!{{/unless}}_", {value: false}), "_Yes!_");
     });
 });

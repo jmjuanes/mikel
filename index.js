@@ -45,6 +45,12 @@ const compile = (tokens, output, data, opt, index = 0, section = "", ctx = {}) =
                 i = compile(tokens, !!item ? output : [], v, opt, j, t, {index: k, key: k, value: v});
             });
         }
+        else if (tokens[i].startsWith("#if ") || tokens[i].startsWith("#unless ")) {
+            const [t, v] = tokens[i].slice(1).trim().split(" ");
+            const value = get(data, v);
+            const includeOutput = (t === "if" && !!value) || (t === "unless" && !!!value);
+            i = compile(tokens, includeOutput ? output : [], data, opt, i + 1, t);
+        }
         else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
             const t = tokens[i].slice(1).trim();
             const value = get(data, t);
