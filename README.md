@@ -154,7 +154,7 @@ When looping throug objects, you can use the variable `@key` to access to the cu
 const data = {
     values: {
         foo: "0",
-        bar: "1"
+        bar: "1",
     },
 };
 
@@ -171,7 +171,7 @@ Example:
 
 ```javascript
 const data = {
-    isAdmin: true;
+    isAdmin: true,
 };
 
 console.log(m("{{#if isAdmin}}Hello admin{{/if}}", data)); // --> 'Hello admin'
@@ -187,15 +187,15 @@ Example:
 
 ```javascript
 const data = {
-    isAdmin: false
+    isAdmin: false,
 };
 
 console.log(m("{{#unless isAdmin}}Hello guest{{/unless}}", data)); // --> 'Hello guest'
 ```
 
-### Variables
+### At-Variables
 
-Variables in Mikel provide convenient access to special values within your templates. These variables, denoted by the `@` symbol, allow users to interact with specific data contexts or values.
+At-Variables in Mikel provide convenient access to special values within your templates. These variables, denoted by the `@` symbol, allow users to interact with specific data contexts or values.
 
 #### @root
 
