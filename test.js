@@ -168,3 +168,27 @@ describe("[helpers] {{#unless }}", () => {
         assert.equal(m("_{{#unless value}}Yes!{{/unless}}_", {value: false}), "_Yes!_");
     });
 });
+
+describe("[at-variable] {{@root}}", () => {
+    it("should reference the global context", () => {
+        assert.equal(m("{{#each values}}{{@root.key}}{{/each}}", {values: ["a", "b"], key: "c"}), "cc");
+    });
+});
+
+describe("[at-variable] {{@index}}", () => {
+    it("sould reference current index in the array", () => {
+        assert.equal(m("{{#each values}}{{@index}}{{/each}}", {values: ["a", "b", "c"]}), "012");
+    });
+});
+
+describe("[at-variable] {{@key}}", () => {
+    it("sshould reference current key when looping throug an object", () => {
+        assert.equal(m("{{#each values}}{{@key}},{{/each}}", {values: {foo: 1, bar: 2}}), "foo,bar,");
+    });
+});
+
+describe("[at-variable] {{@value}}", () => {
+    it("sshould reference current value when looping throug an object", () => {
+        assert.equal(m("{{#each values}}{{@value}},{{/each}}", {values: {foo: 1, bar: 2}}), "1,2,");
+    });
+});

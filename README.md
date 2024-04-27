@@ -68,7 +68,9 @@ const result = m("{{^isAdmin}}You are not Admin{{/isAdmin}}", data);
 // Output: 'You are not Admin'
 ```
 
-### Partials (added in v0.3.0)
+### Partials 
+
+> This feature was added in `v0.3.0`
 
 Partials allow you to include separate templates within your main template. Use the greater than symbol `>` followed by the partial name inside double curly braces `{{> partialName }}`.
 
@@ -87,7 +89,9 @@ const result = m("{{> hello}}", data, {partials});
 // Output: 'Hello Bob!'
 ```
 
-#### Custom context in partials (added in v0.3.1)
+#### Custom context in partials
+
+> This feature was added in `v0.3.1`.
 
 You can provide a custom context for the partial by specifying a field of the data: `{{> partialName dataField}}`.
 
@@ -106,7 +110,9 @@ const result = m("User: {{> user currentUser}}", data, {partials});
 // Output: 'User: John Doe <john@example.com>'
 ```
 
-### Built-in helpers (added in v0.4.0)
+### Built-in helpers
+
+> Added in `v0.4.0`.
 
 Helpers allows you to execute special functions within blocks or sections of your template. Mikel currently supports the following built-in helpers:
 
@@ -126,6 +132,16 @@ const data = {
 console.log(m("{{#each users}}{{.}}, {{/each}}", data)); // --> 'John, Alice, Bob, '
 ```
 
+When looping throug arrays, you can use the variable `@index` to access to the current index of the item in the array:
+
+```javascript
+const data = {
+    users: ["John", "Alice", "Bob"],
+};
+
+console.log(m("{{#each users}}{{@index}}: {{.}}, {{/each}}", data)); // --> '0: John, 1: Alice, 2: Bob, '
+```
+
 The `each` helper can also iterate over objects:
 
 ```javascript
@@ -135,7 +151,20 @@ const data = {
     },
 };
 
-console.log(m("{{#each values}}{{@key}}: {{.}}{{/each}}", data)); // --> 'foo: bar'
+console.log(m("{{#each values}}{{.}}{{/each}}", data)); // --> 'bar'
+```
+
+When looping throug objects, you can use the variable `@key` to access to the current key in the object, and the variable `@value` to access to the corresponding value:
+
+```javascript
+const data = {
+    values: {
+        foo: "0",
+        bar: "1",
+    },
+};
+
+console.log(m("{{#each values}}{{@key}}: {{@value}}, {{/each}}", data)); // --> 'foo: 0, bar: 1, '
 ```
 
 #### if
@@ -148,7 +177,7 @@ Example:
 
 ```javascript
 const data = {
-    isAdmin: true;
+    isAdmin: true,
 };
 
 console.log(m("{{#if isAdmin}}Hello admin{{/if}}", data)); // --> 'Hello admin'
@@ -164,11 +193,44 @@ Example:
 
 ```javascript
 const data = {
-    isAdmin: false
+    isAdmin: false,
 };
 
 console.log(m("{{#unless isAdmin}}Hello guest{{/unless}}", data)); // --> 'Hello guest'
 ```
+
+### At-Variables
+
+> Added in `v0.4.0`.
+
+At-Variables in Mikel provide convenient access to special values within your templates. These variables, denoted by the `@` symbol, allow users to interact with specific data contexts or values.
+
+#### @root
+
+The `@root` variable grants access to the root data context provided to the template. It is always defined and enables users to retrieve values from the top-level data object.
+
+Example:
+
+```javascript
+const data = {
+    name: "World",
+};
+
+console.log(m("Hello, {{@root.name}}!", data)); // -> 'Hello, World!'
+```
+
+#### @index
+
+The `@index` variable facilitates access to the current index of the item when iterating over an array using the `#each` helper. It aids in dynamic rendering and indexing within loops.
+
+#### @key
+
+The `@key` variable allows users to retrieve the current key of the object entry when looping through an object using the `#each` helper. It provides access to object keys for dynamic rendering and customization.
+
+#### @value
+
+The `@value` variable allows users to retrieve the current value of the object entry when iterating over an object using the `#each` helper. It simplifies access to object values for dynamic rendering and data manipulation.
+
 
 ## API
 
