@@ -168,3 +168,9 @@ describe("[helpers] {{#unless }}", () => {
         assert.equal(m("_{{#unless value}}Yes!{{/unless}}_", {value: false}), "_Yes!_");
     });
 });
+
+describe("[variables] {{@root}}", () => {
+    it("should reference the global context", () => {
+        assert.equal(m("{{#each values}}{{@root.key}}{{/each}}", {values: ["a", "b"], key: "c"}), "cc");
+    });
+});
