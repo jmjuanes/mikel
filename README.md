@@ -199,7 +199,7 @@ Variables in Mikel provide convenient access to special values within your templ
 
 #### @root
 
-The `@root` variable grants access to the root data context provided to the template. It enables users to retrieve values from the top-level data object.
+The `@root` variable grants access to the root data context provided to the template. It is always defined and enables users to retrieve values from the top-level data object.
 
 Example:
 
