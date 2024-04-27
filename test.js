@@ -174,3 +174,21 @@ describe("[variables] {{@root}}", () => {
         assert.equal(m("{{#each values}}{{@root.key}}{{/each}}", {values: ["a", "b"], key: "c"}), "cc");
     });
 });
+
+describe("[variables] {{@index}}", () => {
+    it("sould reference current index in the array", () => {
+        assert.equal(m("{{#each values}}{{@index}}{{/each}}", {values: ["a", "b", "c"]}), "012");
+    });
+});
+
+describe("[variables] {{@key}}", () => {
+    it("sshould reference current key when looping throug an object", () => {
+        assert.equal(m("{{#each values}}{{@key}},{{/each}}", {values: {foo: 1, bar: 2}}), "foo,bar,");
+    });
+});
+
+describe("[variables] {{@value}}", () => {
+    it("sshould reference current value when looping throug an object", () => {
+        assert.equal(m("{{#each values}}{{@value}},{{/each}}", {values: {foo: 1, bar: 2}}), "1,2,");
+    });
+});
