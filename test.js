@@ -130,6 +130,48 @@ describe("{{> xyz }}", () => {
     });
 });
 
+describe("{{>> xyz }}", () => {
+    it("sould render provided layout", () => {
+        const layouts = {
+            test: "Hello World!",
+        };
+        assert.equal(m("{{>> test}}{{/test}}", {}, {layouts}), "Hello World!");
+    });
+
+    it("should include layout content", () => {
+        const layouts = {
+            hello: "Hello {{@content}}!",
+        };
+        assert.equal(m("{{>> hello}}Bob{{/hello}}", {}, {layouts}), "Hello Bob!");
+    });
+    
+    it("should forward global context", () => {
+        const data = {
+            name: "Bob",
+        };
+        const layouts = {
+            hello: "Hello {{name}}!",
+        };
+        assert.equal(m("{{>> hello}}{{/hello}}", data, {layouts}), "Hello Bob!");
+    });
+
+    it("should ignore layout and content if layout is not defined", () => {
+        assert.equal(m("!{{>> hello}}Bob{{/hello}}!", {}, {}), "!!");
+    });
+
+    it("should allow to provide custom context to layout", () => {
+        const data = {
+            contact: {
+                name: "Bob",
+            },
+        };
+        const layouts = {
+            hello: "Hello {{name}}!",
+        };
+        assert.equal(m("{{>> hello contact}}{{/hello}}", data, {layouts}), "Hello Bob!");
+    });
+});
+
 describe("[helpers] {{#each }}", () => {
     it("should do nothing if value is not an array or object", () => {
         assert.equal(m("x{{#each values}}{{.}}{{/each}}x", {values: null}), "xx");
