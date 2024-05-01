@@ -7,23 +7,22 @@ const escapedChars = {
     "'": "&#039;",
 };
 
-const escape = str => {
-    return str.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
-};
+const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 
-const get = (ctx, path) => {
-    return (path === "." ? ctx : path.split(".").reduce((p, k) => p?.[k], ctx)) ?? "";
-};
+const get = (c, p) => (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c)) ?? "";
 
 const helpers = new Map(Object.entries({
-    "#each": (value, options) => {
+    "each": ({value, fn}) => {
         return (typeof value === "object" ? Object.entries(value || {}) : [])
-            .map((item, index) => options.fn(item[1], {index: index, key: item[0], value: item[1]}))
+            .map((item, index) => fn(item[1], {index: index, key: item[0], value: item[1]}))
             .join("");
     },
-    "#if": (value, options) => !!value ? options.fn(options.context) : "",
-    "#unless": (value, options) => !!!value ? options.fn(options.context) : "",
+    "if": ({value, fn, context}) => !!value ? fn(context) : "",
+    "unless": ({value, fn, context}) => !!!value ? fn(context) : "",
 }));
+
+const hasHelper = (n, o) => helpers.has(n) || typeof o?.helpers?.[n] === "function";
+const getHelper = (n, o) => helpers.get(n) || o?.helpers?.[n];
 
 const compile = (tokens, output, context, opt, index = 0, section = "", vars = {}) => {
     let i = index;
@@ -37,12 +36,14 @@ const compile = (tokens, output, context, opt, index = 0, section = "", vars = {
         else if (tokens[i].startsWith("!")) {
             output.push(get(context, tokens[i].slice(1).trim()));
         }
-        else if (tokens[i].startsWith("#") && helpers.has(tokens[i].trim().split(" ")[0])) {
+        else if (tokens[i].startsWith("#") && hasHelper(tokens[i].slice(1).trim().split(" ")[0], opt)) {
             const [t, v] = tokens[i].slice(1).trim().split(" ");
             const j = i + 1;
-            output.push(helpers.get("#" + t)(get(context, v), {
+            output.push(getHelper(t, opt)({
                 context: context,
-                globalOptions: opt,
+                key: v || ".",
+                value: get(context, v || "."),
+                options: opt,
                 fn: (blockContext = {}, blockVars = {}, blockOutput = []) => {
                     i = compile(tokens, blockOutput, blockContext, opt, j, t, {root: vars.root, ...blockVars});
                     return blockOutput.join("");
