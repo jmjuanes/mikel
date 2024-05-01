@@ -130,7 +130,7 @@ describe("{{> xyz }}", () => {
     });
 });
 
-describe("[helpers] {{#each }}", () => {
+describe("{{#each }}", () => {
     it("should do nothing if value is not an array or object", () => {
         assert.equal(m("x{{#each values}}{{.}}{{/each}}x", {values: null}), "xx");
         assert.equal(m("x{{#each values}}{{.}}{{/each}}x", {values: []}), "xx");
@@ -149,7 +149,7 @@ describe("[helpers] {{#each }}", () => {
     });
 });
 
-describe("[helpers] {{#if }}", () => {
+describe("{{#if }}", () => {
     it("should include content if value is true", () => {
         assert.equal(m("_{{#if value}}Yes!{{/if}}_", {value: true}), "_Yes!_");
     });
@@ -159,7 +159,7 @@ describe("[helpers] {{#if }}", () => {
     });
 });
 
-describe("[helpers] {{#unless }}", () => {
+describe("{{#unless }}", () => {
     it("should not include content if value is true", () => {
         assert.equal(m("_{{#unless value}}Yes!{{/unless}}_", {value: true}), "__");
     });
@@ -169,26 +169,41 @@ describe("[helpers] {{#unless }}", () => {
     });
 });
 
-describe("[at-variable] {{@root}}", () => {
+describe("{{@root}}", () => {
     it("should reference the global context", () => {
         assert.equal(m("{{#each values}}{{@root.key}}{{/each}}", {values: ["a", "b"], key: "c"}), "cc");
     });
 });
 
-describe("[at-variable] {{@index}}", () => {
-    it("sould reference current index in the array", () => {
+describe("{{@index}}", () => {
+    it("should reference current index in the array", () => {
         assert.equal(m("{{#each values}}{{@index}}{{/each}}", {values: ["a", "b", "c"]}), "012");
     });
 });
 
-describe("[at-variable] {{@key}}", () => {
-    it("sshould reference current key when looping throug an object", () => {
+describe("{{@key}}", () => {
+    it("should reference current key when looping throug an object", () => {
         assert.equal(m("{{#each values}}{{@key}},{{/each}}", {values: {foo: 1, bar: 2}}), "foo,bar,");
     });
 });
 
-describe("[at-variable] {{@value}}", () => {
-    it("sshould reference current value when looping throug an object", () => {
+describe("{{@value}}", () => {
+    it("should reference current value when looping throug an object", () => {
         assert.equal(m("{{#each values}}{{@value}},{{/each}}", {values: {foo: 1, bar: 2}}), "1,2,");
+    });
+});
+
+describe("{{@customVariable}}", () => {
+    const options = {
+        variables: {
+            foo: "bar",
+        },
+    };
+    it("should allow providing custom at-variables", () => {
+        assert.equal(m("Hello, {{@foo}}", {}, options), "Hello, bar");
+    });
+
+    it("should be available in helpers", () => {
+        assert.equal(m("{{#each values}}{{@foo}}:{{.}},{{/each}}", {values: [1, 2]}, options), "bar:1,bar:2,");
     });
 });

@@ -32,7 +32,7 @@ const compile = (tokens, output, context, opt, index = 0, section = "", vars = {
             output.push(tokens[i]);
         }
         else if (tokens[i].startsWith("@")) {
-            output.push(get(vars || {}, tokens[i].slice(1).trim() ?? "_") ?? "");
+            output.push(get({...(opt?.variables), ...vars}, tokens[i].slice(1).trim() ?? "_") ?? "");
         }
         else if (tokens[i].startsWith("!")) {
             output.push(get(context, tokens[i].slice(1).trim()));
