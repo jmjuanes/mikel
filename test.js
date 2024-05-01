@@ -169,6 +169,17 @@ describe("{{#unless }}", () => {
     });
 });
 
+describe("{{#customHelper }}", () => {
+    it("should allow to execute a simple custom helper", () => {
+        const options = {
+            helpers: {
+                hello: ({value}) => `Hello ${value}!!`,
+            },
+        };
+        assert.equal(m("{{#hello name}}{{/hello}}", {name: "Bob"}, options), "Hello Bob!!");
+    });
+});
+
 describe("{{@root}}", () => {
     it("should reference the global context", () => {
         assert.equal(m("{{#each values}}{{@root.key}}{{/each}}", {values: ["a", "b"], key: "c"}), "cc");
