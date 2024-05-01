@@ -176,19 +176,34 @@ describe("[at-variable] {{@root}}", () => {
 });
 
 describe("[at-variable] {{@index}}", () => {
-    it("sould reference current index in the array", () => {
+    it("should reference current index in the array", () => {
         assert.equal(m("{{#each values}}{{@index}}{{/each}}", {values: ["a", "b", "c"]}), "012");
     });
 });
 
 describe("[at-variable] {{@key}}", () => {
-    it("sshould reference current key when looping throug an object", () => {
+    it("should reference current key when looping throug an object", () => {
         assert.equal(m("{{#each values}}{{@key}},{{/each}}", {values: {foo: 1, bar: 2}}), "foo,bar,");
     });
 });
 
 describe("[at-variable] {{@value}}", () => {
-    it("sshould reference current value when looping throug an object", () => {
+    it("should reference current value when looping throug an object", () => {
         assert.equal(m("{{#each values}}{{@value}},{{/each}}", {values: {foo: 1, bar: 2}}), "1,2,");
+    });
+});
+
+describe("custom at-variables", () => {
+    const options = {
+        variables: {
+            foo: "bar",
+        },
+    };
+    it("should allow providing custom at-variables", () => {
+        assert.equal(m("Hello, {{@foo}}", {}, options), "Hello, bar");
+    });
+
+    it("should be available in helpers", () => {
+        assert.equal(m("{{#each values}}{{@foo}}:{{.}},{{/each}}", {values: [1, 2]}, options), "bar:1,bar:2,");
     });
 });
