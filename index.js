@@ -7,13 +7,9 @@ const escapedChars = {
     "'": "&#039;",
 };
 
-const escape = str => {
-    return str.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
-};
+const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 
-const get = (ctx, path) => {
-    return (path === "." ? ctx : path.split(".").reduce((p, k) => p?.[k], ctx)) ?? "";
-};
+const get = (c, p) => (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c)) ?? "";
 
 const helpers = new Map(Object.entries({
     "each": ({value, fn}) => {
@@ -25,12 +21,8 @@ const helpers = new Map(Object.entries({
     "unless": ({value, fn, context}) => !!!value ? fn(context) : "",
 }));
 
-const hasHelper = (name, options) => {
-    return helpers.has(name) || typeof options?.helpers?.[name] === "function";
-};
-const getHelper = (name, options) => {
-    return helpers.get(name) || options?.helpers?.[name];
-};
+const hasHelper = (n, o) => helpers.has(n) || typeof o?.helpers?.[n] === "function";
+const getHelper = (n, o) => helpers.get(n) || o?.helpers?.[n];
 
 const compile = (tokens, output, context, opt, index = 0, section = "", vars = {}) => {
     let i = index;
@@ -49,8 +41,8 @@ const compile = (tokens, output, context, opt, index = 0, section = "", vars = {
             const j = i + 1;
             output.push(getHelper(t, opt)({
                 context: context,
-                key: v || "",
-                value: !!v ? get(context, v) : null,
+                key: v || ".",
+                value: get(context, v || "."),
                 options: opt,
                 fn: (blockContext = {}, blockVars = {}, blockOutput = []) => {
                     i = compile(tokens, blockOutput, blockContext, opt, j, t, {root: vars.root, ...blockVars});
