@@ -16,13 +16,13 @@ const get = (ctx, path) => {
 };
 
 const helpers = new Map(Object.entries({
-    "#each": (value, options) => {
+    "#each": ({value, fn}) => {
         return (typeof value === "object" ? Object.entries(value || {}) : [])
-            .map((item, index) => options.fn(item[1], {index: index, key: item[0], value: item[1]}))
+            .map((item, index) => fn(item[1], {index: index, key: item[0], value: item[1]}))
             .join("");
     },
-    "#if": (value, options) => !!value ? options.fn(options.context) : "",
-    "#unless": (value, options) => !!!value ? options.fn(options.context) : "",
+    "#if": ({value, fn, context}) => !!value ? fn(context) : "",
+    "#unless": ({value, fn, context}) => !!!value ? fn(context) : "",
 }));
 
 const compile = (tokens, output, context, opt, index = 0, section = "", vars = {}) => {
@@ -40,9 +40,11 @@ const compile = (tokens, output, context, opt, index = 0, section = "", vars = {
         else if (tokens[i].startsWith("#") && helpers.has(tokens[i].trim().split(" ")[0])) {
             const [t, v] = tokens[i].slice(1).trim().split(" ");
             const j = i + 1;
-            output.push(helpers.get("#" + t)(get(context, v), {
+            output.push(helpers.get("#" + t)({
                 context: context,
-                globalOptions: opt,
+                key: v || "",
+                value: !!v ? get(context, v) : null,
+                options: opt,
                 fn: (blockContext = {}, blockVars = {}, blockOutput = []) => {
                     i = compile(tokens, blockOutput, blockContext, opt, j, t, {root: vars.root, ...blockVars});
                     return blockOutput.join("");
