@@ -199,6 +199,41 @@ const data = {
 console.log(m("{{#unless isAdmin}}Hello guest{{/unless}}", data)); // --> 'Hello guest'
 ```
 
+### Custom Helpers
+
+> Added in `v0.5.0`.
+
+Custom helpers should be provided as an object in the `options.helpers` field, where each key represents the name of the helper and the corresponding value is a function defining the helper's behavior.
+
+Example:
+
+```javascript
+const template = "{{#greeting name}}{{/greeting}}";
+const data = {
+    name: "World!",
+};
+const options = {
+    helpers: {
+        customHelper: ({context, value, key, options, fn}) => {
+            return `Hello, ${value}!`;
+        },
+    },
+};
+
+const result = m(template, data, options);
+console.log(result); // Output: "Hello, World!"
+```
+
+Custom helper functions receive a single object parameter containing the following fields:
+
+- `context`: The current context (data) where the helper has been executed.
+- `value`: The current value passed to the helper.
+- `key`: The field used to extract the value from the current context.
+- `options`: The global options object.
+- `fn`: A function that executes the template provided in the helper block and returns a string with the evaluated template in the provided context.
+
+The helper function must return a string, which will be injected into the result string.
+
 ### Variables
 
 > Added in `v0.4.0`.
@@ -263,6 +298,7 @@ Render the given template string with the provided data object.
 - `options` (object): An object containing the following optional values:
     - `partials` (object): An object containing the available partials.
     - `variables` (object): An object containing custom data variables.
+    - `helpers` (object): An object containing custom helpers.
 
 Returns: A string with the rendered output.
 
