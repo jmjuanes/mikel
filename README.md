@@ -199,11 +199,11 @@ const data = {
 console.log(m("{{#unless isAdmin}}Hello guest{{/unless}}", data)); // --> 'Hello guest'
 ```
 
-### At-Variables
+### Data variables
 
 > Added in `v0.4.0`.
 
-At-Variables in Mikel provide convenient access to special values within your templates. These variables, denoted by the `@` symbol, allow users to interact with specific data contexts or values.
+Data Variables in Mikel provide convenient access to special values within your templates. These variables, denoted by the `@` symbol, allow users to interact with specific data contexts or values.
 
 #### @root
 
@@ -231,6 +231,26 @@ The `@key` variable allows users to retrieve the current key of the object entry
 
 The `@value` variable allows users to retrieve the current value of the object entry when iterating over an object using the `#each` helper. It simplifies access to object values for dynamic rendering and data manipulation.
 
+### Custom data variables
+
+> Added in `v0.5.0`
+
+Mikel allows users to define custom data variables, providing enhanced flexibility and customization options for templates. These custom data variables can be accessed within the template using the `@` character.
+
+Custom data variables should be provided in the `options.variables` field of the options object when rendering a template. Each custom data variable should be defined as a key-value pair, where the key represents the variable name and the value represents the data associated with that variable.
+
+Example:
+
+```javascript
+const result = m("Hello, {{@customVariable}}!", {}, {
+    variables: {
+        customVariable: "World",
+    },
+});
+console.log(result); // --> 'Hello, World!'
+```
+
+In this example, the custom data variable `customVariable` is defined with the value `"World"`, and it can be accessed in the template using `@customVariable`.
 
 ## API
 
@@ -242,6 +262,7 @@ Render the given template string with the provided data object.
 - `data` (object): The data object containing the values to render.
 - `options` (object): An object containing the following optional values:
     - `partials` (object): An object containing the available partials.
+    - `variables` (object): An object containing custom data variables.
 
 Returns: A string with the rendered output.
 
