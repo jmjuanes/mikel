@@ -199,7 +199,7 @@ const data = {
 console.log(m("{{#unless isAdmin}}Hello guest{{/unless}}", data)); // --> 'Hello guest'
 ```
 
-### Data variables
+### Variables
 
 > Added in `v0.4.0`.
 
@@ -231,7 +231,7 @@ The `@key` variable allows users to retrieve the current key of the object entry
 
 The `@value` variable allows users to retrieve the current value of the object entry when iterating over an object using the `#each` helper. It simplifies access to object values for dynamic rendering and data manipulation.
 
-### Custom data variables
+### Custom variables
 
 > Added in `v0.5.0`
 
