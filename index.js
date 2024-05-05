@@ -85,10 +85,17 @@ const compile = (tokens, output, context, partials, helpers, vars, index = 0, se
     return i;
 };
 
-export default (str, context = {}, opt = {}, output = []) => {
+// @description main compiler function
+const mikel = (str, context = {}, opt = {}, output = []) => {
     const partials = Object.assign({}, opt.partials || {});
     const helpers = Object.assign({}, defaultHelpers, opt.helpers || {});
     const variables = Object.assign({}, opt.variables || {}, {root: context});
     compile(str.split(tags), output, context, partials, helpers, variables, 0, "");
     return output.join("");
 };
+
+// @description assign utilities
+mikel.escape = escape;
+mikel.get = get;
+
+export default mikel;
