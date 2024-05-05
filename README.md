@@ -289,7 +289,7 @@ In this example, the custom data variable `customVariable` is defined with the v
 
 ## API
 
-### `m(template, data[, options])`
+### `mikel(template, data[, options])`
 
 Render the given template string with the provided data object.
 
@@ -303,15 +303,23 @@ Render the given template string with the provided data object.
 Returns: A string with the rendered output.
 
 ```javascript
-import m from "mikel";
+import mikel from "mikel";
 
 const data = {
     name: "World",
 };
 
-const result = m("Hello, {{name}}!", data);
+const result = mikel("Hello, {{name}}!", data);
 console.log(result); // Output: "Hello, World!"
 ```
+
+### `mikel.escape(str)`
+
+This function converts special HTML characters `&`, `<`, `>`, `"`, and `'` to their corresponding HTML entities.
+
+### `mikel.get(object, path)`
+
+This function returns the value in `object` following the provided `path` string.
 
 ## License
 
