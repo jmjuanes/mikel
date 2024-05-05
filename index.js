@@ -11,7 +11,7 @@ const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 
 const get = (c, p) => (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c)) ?? "";
 
-const helpers = new Map(Object.entries({
+const defaultHelpers = {
     "each": ({value, fn}) => {
         return (typeof value === "object" ? Object.entries(value || {}) : [])
             .map((item, index) => fn(item[1], {index: index, key: item[0], value: item[1]}))
@@ -19,39 +19,35 @@ const helpers = new Map(Object.entries({
     },
     "if": ({value, fn, context}) => !!value ? fn(context) : "",
     "unless": ({value, fn, context}) => !!!value ? fn(context) : "",
-}));
+};
 
-const hasHelper = (n, o) => helpers.has(n) || typeof o?.helpers?.[n] === "function";
-const getHelper = (n, o) => helpers.get(n) || o?.helpers?.[n];
-
-const compile = (tokens, output, context, opt, index = 0, section = "", vars = {}) => {
+const compile = (tokens, output, context, partials, helpers, vars, index = 0, section = "") => {
     let i = index;
     while (i < tokens.length) {
         if (i % 2 === 0) {
             output.push(tokens[i]);
         }
         else if (tokens[i].startsWith("@")) {
-            output.push(get({...(opt?.variables), ...vars}, tokens[i].slice(1).trim() ?? "_") ?? "");
+            output.push(get(vars, tokens[i].slice(1).trim() ?? "_") ?? "");
         }
         else if (tokens[i].startsWith("!")) {
             output.push(get(context, tokens[i].slice(1).trim()));
         }
-        else if (tokens[i].startsWith("#") && hasHelper(tokens[i].slice(1).trim().split(" ")[0], opt)) {
+        else if (tokens[i].startsWith("#") && typeof helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
             const [t, v] = tokens[i].slice(1).trim().split(" ");
             const j = i + 1;
-            output.push(getHelper(t, opt)({
+            output.push(helpers[t]({
                 context: context,
                 key: v || ".",
                 value: get(context, v || "."),
-                options: opt,
                 fn: (blockContext = {}, blockVars = {}, blockOutput = []) => {
-                    i = compile(tokens, blockOutput, blockContext, opt, j, t, {root: vars.root, ...blockVars});
+                    i = compile(tokens, blockOutput, blockContext, partials, helpers, {...vars, ...blockVars, root: vars.root}, j, t);
                     return blockOutput.join("");
                 },
             }));
             // Make sure that this block has been executed
             if (i + 1 === j) {
-                i = compile(tokens, [], {}, opt, j, t, vars);
+                i = compile(tokens, [], {}, partials, helpers, vars, j, t);
             }
         }
         else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
@@ -61,18 +57,18 @@ const compile = (tokens, output, context, opt, index = 0, section = "", vars = {
             if (!negate && value && Array.isArray(value)) {
                 const j = i + 1;
                 (value.length > 0 ? value : [""]).forEach(item => {
-                    i = compile(tokens, value.length > 0 ? output : [], item, opt, j, t, vars);
+                    i = compile(tokens, value.length > 0 ? output : [], item, partials, helpers, vars, j, t);
                 });
             }
             else {
                 const includeOutput = (!negate && !!value) || (negate && !!!value);
-                i = compile(tokens, includeOutput ? output : [], context, opt, i + 1, t, vars);
+                i = compile(tokens, includeOutput ? output : [], context, partials, helpers, vars, i + 1, t);
             }
         }
         else if (tokens[i].startsWith(">")) {
             const [t, v] = tokens[i].slice(1).trim().split(" ");
-            if (typeof opt?.partials?.[t] === "string") {
-                compile(opt.partials[t].split(tags), output, v ? get(context, v) : context, opt, 0, "", vars);
+            if (typeof partials[t] === "string") {
+                compile(partials[t].split(tags), output, v ? get(context, v) : context, partials, helpers, vars, 0, "");
             }
         }
         else if (tokens[i].startsWith("/")) {
@@ -90,6 +86,9 @@ const compile = (tokens, output, context, opt, index = 0, section = "", vars = {
 };
 
 export default (str, context = {}, opt = {}, output = []) => {
-    compile(str.split(tags), output, context, opt, 0, "", {root: context});
+    const partials = Object.assign({}, opt.partials || {});
+    const helpers = Object.assign({}, defaultHelpers, opt.helpers || {});
+    const variables = Object.assign({}, opt.variables || {}, {root: context});
+    compile(str.split(tags), output, context, partials, helpers, variables, 0, "");
     return output.join("");
 };
