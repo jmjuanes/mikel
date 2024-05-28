@@ -266,6 +266,18 @@ The `@key` variable allows users to retrieve the current key of the object entry
 
 The `@value` variable allows users to retrieve the current value of the object entry when iterating over an object using the `#each` helper. It simplifies access to object values for dynamic rendering and data manipulation.
 
+#### @first
+
+> Added in `v0.7.0`.
+
+The `@first` variable allows to check if the current iteration using the `#each` helper is the first item in the array or object.
+
+#### @last
+
+> Added in `v0.7.0`.
+
+The `@last` variable allows to check if the current iteration using the `#each` helper is the last item in the array or object.
+
 ### Custom variables
 
 > Added in `v0.5.0`
