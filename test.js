@@ -147,6 +147,14 @@ describe("{{#each }}", () => {
         assert.equal(m("{{#each values}}{{.}},{{/each}}", {values: {foo: "bar"}}), "bar,");
         assert.equal(m("{{#each values}}{{@key}}:{{@value}},{{/each}}", {values: {foo: "bar"}}), "foo:bar,");
     });
+
+    it("should register @first variable", () => {
+        assert.equal(m("{{#each values}}{{.}}:{{@first}};{{/each}}", {values: [0, 1, 2]}), "0:true;1:false;2:false;");
+    });
+
+    it("should register @last variable", () => {
+        assert.equal(m("{{#each values}}{{.}}:{{@last}};{{/each}}", {values: [0, 1, 2]}), "0:false;1:false;2:true;");
+    });
 });
 
 describe("{{#if }}", () => {

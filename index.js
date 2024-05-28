@@ -13,8 +13,9 @@ const get = (c, p) => (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c))
 
 const defaultHelpers = {
     "each": ({value, fn}) => {
-        return (typeof value === "object" ? Object.entries(value || {}) : [])
-            .map((item, index) => fn(item[1], {index: index, key: item[0], value: item[1]}))
+        const items = (typeof value === "object" ? Object.entries(value || {}) : []);
+        return items
+            .map((item, index) => fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
             .join("");
     },
     "if": ({value, fn, context}) => !!value ? fn(context) : "",
