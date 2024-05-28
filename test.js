@@ -165,6 +165,10 @@ describe("{{#if }}", () => {
     it("should not include content if value is false", () => {
         assert.equal(m("_{{#if value}}Yes!{{/if}}_", {value: false}), "__");
     });
+
+    it("should read value from runtime variables", () => {
+        assert.equal(m("{{#each items}}{{#if @first}}.{{/if}}{{.}}{{/each}}", {items: [0, 1, 2]}), ".012");
+    });
 });
 
 describe("{{#unless }}", () => {
@@ -174,6 +178,10 @@ describe("{{#unless }}", () => {
 
     it("should include content if value is false", () => {
         assert.equal(m("_{{#unless value}}Yes!{{/unless}}_", {value: false}), "_Yes!_");
+    });
+
+    it("should read value from runtime variables", () => {
+        assert.equal(m("{{#each items}}{{.}}{{#unless @last}},{{/unless}}{{/each}}", {items: [0, 1, 2]}), "0,1,2");
     });
 });
 
