@@ -40,7 +40,7 @@ const compile = (tokens, output, context, partials, helpers, vars, index = 0, se
             output.push(helpers[t]({
                 context: context,
                 key: v || ".",
-                value: v.startsWith("@") ? get(vars, v.slice(1)) : get(context, v || "."),
+                value: (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(context, v || "."),
                 fn: (blockContext = {}, blockVars = {}, blockOutput = []) => {
                     i = compile(tokens, blockOutput, blockContext, partials, helpers, {...vars, ...blockVars, root: vars.root}, j, t);
                     return blockOutput.join("");
