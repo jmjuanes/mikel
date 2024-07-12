@@ -343,14 +343,15 @@ In this example, the custom function `fullName` is defined to take two arguments
 
 ### `mikel(template, data[, options])`
 
-Render the given template string with the provided data object.
+Render the given template string with the provided data object and options.
 
-- `template` (string): The Mustache template string.
-- `data` (object): The data object containing the values to render.
-- `options` (object): An object containing the following optional values:
-    - `partials` (object): An object containing the available partials.
-    - `variables` (object): An object containing custom data variables.
-    - `helpers` (object): An object containing custom helpers.
+- `template` (string): the template string.
+- `data` (object): the data object containing the values to render.
+- `options` (object): an object containing the following optional values:
+    - `partials` (object): an object containing the available partials.
+    - `variables` (object): an object containing custom data variables.
+    - `helpers` (object): an object containing custom helpers.
+    - `functions` (object): and object containing custom functions.
 
 Returns: A string with the rendered output.
 
