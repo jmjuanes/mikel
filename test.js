@@ -234,3 +234,24 @@ describe("{{@customVariable}}", () => {
         assert.equal(m("{{#each values}}{{@foo}}:{{.}},{{/each}}", {values: [1, 2]}, options), "bar:1,bar:2,");
     });
 });
+
+describe("{{=function }}", () => {
+    const options = {
+        functions: {
+            toUpperCase: value => value.toUpperCase(),
+            concat: (a, b) => a + " " + b,
+        },
+    };
+
+    it("should allow executing a function to return a value", () => {
+        assert.equal(m("{{=toUpperCase value}}!!", {value: "Bob"}, options), "BOB!!");
+    });
+
+    it("should support multiple arguments", () => {
+        assert.equal(m("{{=concat a b}}", {a: "Hello", b: "World"}, options), "Hello World");
+    });
+
+    it("should render nothing if no function is provided", () => {
+        assert.equal(m("Result: {{=noop value}}", {value: "a"}), "Result: ");
+    });
+});
