@@ -12,14 +12,13 @@ const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 const get = (c, p) => (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c)) ?? "";
 
 const defaultHelpers = {
-    "each": ({value, fn}) => {
-        const items = (typeof value === "object" ? Object.entries(value || {}) : []);
-        return items
-            .map((item, index) => fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
+    "each": (value, opt) => {
+        return (typeof value === "object" ? Object.entries(value || {}) : [])
+            .map((item, index, items) => opt.fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
             .join("");
     },
-    "if": ({value, fn, context}) => !!value ? fn(context) : "",
-    "unless": ({value, fn, context}) => !!!value ? fn(context) : "",
+    "if": (value, opt) => !!value ? opt.fn(opt.context) : "",
+    "unless": (value, opt) => !!!value ? opt.fn(opt.context) : "",
 };
 
 const compile = (tokens, output, context, partials, helpers, vars, fn = {}, index = 0, section = "") => {
@@ -35,12 +34,10 @@ const compile = (tokens, output, context, partials, helpers, vars, fn = {}, inde
             output.push(get(context, tokens[i].slice(1).trim()));
         }
         else if (tokens[i].startsWith("#") && typeof helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
-            const [t, v] = tokens[i].slice(1).trim().split(" ");
+            const [t, ...args] = tokens[i].slice(1).trim().split(" ");
             const j = i + 1;
-            output.push(helpers[t]({
+            output.push(helpers[t](...args.map(v => (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(context, v || ".")), {
                 context: context,
-                key: v || ".",
-                value: (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(context, v || "."),
                 fn: (blockContext = {}, blockVars = {}, blockOutput = []) => {
                     i = compile(tokens, blockOutput, blockContext, partials, helpers, {...vars, ...blockVars, root: vars.root}, fn, j, t);
                     return blockOutput.join("");
