@@ -22,7 +22,7 @@ const defaultHelpers = {
     "unless": ({value, fn, context}) => !!!value ? fn(context) : "",
 };
 
-const compile = (tokens, output, context, partials, helpers, vars, index = 0, section = "") => {
+const compile = (tokens, output, context, partials, helpers, vars, fn = {}, index = 0, section = "") => {
     let i = index;
     while (i < tokens.length) {
         if (i % 2 === 0) {
@@ -42,13 +42,13 @@ const compile = (tokens, output, context, partials, helpers, vars, index = 0, se
                 key: v || ".",
                 value: (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(context, v || "."),
                 fn: (blockContext = {}, blockVars = {}, blockOutput = []) => {
-                    i = compile(tokens, blockOutput, blockContext, partials, helpers, {...vars, ...blockVars, root: vars.root}, j, t);
+                    i = compile(tokens, blockOutput, blockContext, partials, helpers, {...vars, ...blockVars, root: vars.root}, fn, j, t);
                     return blockOutput.join("");
                 },
             }));
-            // Make sure that this block has been executed
+            // Make sure that this block is executed at least once
             if (i + 1 === j) {
-                i = compile(tokens, [], {}, partials, helpers, vars, j, t);
+                i = compile(tokens, [], {}, {}, {}, {}, {}, j, t);
             }
         }
         else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
@@ -58,18 +58,24 @@ const compile = (tokens, output, context, partials, helpers, vars, index = 0, se
             if (!negate && value && Array.isArray(value)) {
                 const j = i + 1;
                 (value.length > 0 ? value : [""]).forEach(item => {
-                    i = compile(tokens, value.length > 0 ? output : [], item, partials, helpers, vars, j, t);
+                    i = compile(tokens, value.length > 0 ? output : [], item, partials, helpers, vars, fn, j, t);
                 });
             }
             else {
                 const includeOutput = (!negate && !!value) || (negate && !!!value);
-                i = compile(tokens, includeOutput ? output : [], context, partials, helpers, vars, i + 1, t);
+                i = compile(tokens, includeOutput ? output : [], context, partials, helpers, vars, fn, i + 1, t);
             }
         }
         else if (tokens[i].startsWith(">")) {
             const [t, v] = tokens[i].slice(1).trim().split(" ");
             if (typeof partials[t] === "string") {
-                compile(partials[t].split(tags), output, v ? get(context, v) : context, partials, helpers, vars, 0, "");
+                compile(partials[t].split(tags), output, v ? get(context, v) : context, partials, helpers, vars, fn, 0, "");
+            }
+        }
+        else if (tokens[i].startsWith("=")) {
+            const [t, ...args] = tokens[i].slice(1).trim().split(" ");
+            if (typeof fn[t] === "function") {
+                output.push(fn[t](...args.map(v => (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(context, v || "."))) || "");
             }
         }
         else if (tokens[i].startsWith("/")) {
@@ -91,7 +97,7 @@ const mikel = (str, context = {}, opt = {}, output = []) => {
     const partials = Object.assign({}, opt.partials || {});
     const helpers = Object.assign({}, defaultHelpers, opt.helpers || {});
     const variables = Object.assign({}, opt.variables || {}, {root: context});
-    compile(str.split(tags), output, context, partials, helpers, variables, 0, "");
+    compile(str.split(tags), output, context, partials, helpers, variables, opt.functions || {}, 0, "");
     return output.join("");
 };
 

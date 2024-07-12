@@ -288,7 +288,7 @@ The `@last` variable allows to check if the current iteration using the `#each` 
 
 ### Custom runtime variables
 
-> Added in `v0.5.0`
+> Added in `v0.5.0`.
 
 Mikel allows users to define custom data variables, providing enhanced flexibility and customization options for templates. These custom data variables can be accessed within the template using the `@` character.
 
@@ -307,18 +307,51 @@ console.log(result); // --> 'Hello, World!'
 
 In this example, the custom data variable `customVariable` is defined with the value `"World"`, and it can be accessed in the template using `@customVariable`.
 
+### Functions
+
+> Added in `v0.8.0`.
+
+Mikel allows users to define custom functions that can be used within templates to perform dynamic operations. Functions can be invoked in the template using the `=` character, followed by the function name and the variables to be provided to the function. Variables should be separated by spaces.
+
+Functions should be provided in the `options.functions` field of the options object when rendering a template. Each function is defined by a name and a corresponding function that performs the desired operation.
+
+Example:
+
+```javascript
+const data = {
+    user: {
+        firstName: "John",
+        lastName: "Doe",
+    },
+};
+const options = {
+    functions: {
+        fullName: (firstName, lastName) => {
+            return `${firstName} ${lastName}`;
+        }
+    },
+};
+
+const result = m("My name is: {{=fullName user.firstName user.lastName}}", data, options);
+console.log(result); // --> "My name is: John Doe"
+```
+
+In this example, the custom function `fullName` is defined to take two arguments, `firstName` and `lastName`, and return the full name. The template then uses this function to concatenate and render the full name.
+
+
 ## API
 
 ### `mikel(template, data[, options])`
 
-Render the given template string with the provided data object.
+Render the given template string with the provided data object and options.
 
-- `template` (string): The Mustache template string.
-- `data` (object): The data object containing the values to render.
-- `options` (object): An object containing the following optional values:
-    - `partials` (object): An object containing the available partials.
-    - `variables` (object): An object containing custom data variables.
-    - `helpers` (object): An object containing custom helpers.
+- `template` (string): the template string.
+- `data` (object): the data object containing the values to render.
+- `options` (object): an object containing the following optional values:
+    - `partials` (object): an object containing the available partials.
+    - `variables` (object): an object containing custom data variables.
+    - `helpers` (object): an object containing custom helpers.
+    - `functions` (object): and object containing custom functions.
 
 Returns: A string with the rendered output.
 
