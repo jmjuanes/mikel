@@ -189,10 +189,19 @@ describe("{{#customHelper }}", () => {
     it("should allow to execute a simple custom helper", () => {
         const options = {
             helpers: {
-                hello: ({value}) => `Hello ${value}!!`,
+                hello: value => `Hello ${value}!!`,
             },
         };
         assert.equal(m("{{#hello name}}{{/hello}}", {name: "Bob"}, options), "Hello Bob!!");
+    });
+
+    it("should allow to provide multiple values to custom helper", () => {
+        const options = {
+            helpers: {
+                concat: (a, b) => [a, b].join(" "),
+            },
+        };
+        assert.equal(m("{{#concat a b}}{{/concat}}!", {a: "hello", b: "world"}, options), "hello world!");
     });
 });
 
