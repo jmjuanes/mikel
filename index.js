@@ -45,7 +45,7 @@ const compile = (tokens, output, context, partials, helpers, vars, fn = {}, inde
             }));
             // Make sure that this block is executed at least once
             if (i + 1 === j) {
-                i = compile(tokens, [], {}, {}, {}, {}, {}, j, t);
+                i = compile(tokens, [], {}, {}, helpers, {}, {}, j, t);
             }
         }
         else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
