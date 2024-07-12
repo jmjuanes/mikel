@@ -214,7 +214,7 @@ const data = {
 };
 const options = {
     helpers: {
-        customHelper: ({context, value, key, options, fn}) => {
+        customHelper: value => {
             return `Hello, ${value}!`;
         },
     },
@@ -224,15 +224,32 @@ const result = m(template, data, options);
 console.log(result); // Output: "Hello, World!"
 ```
 
-Custom helper functions receive a single object parameter containing the following fields:
+Custom helper functions receive multiple arguments, where the first N arguments are the variables with the helper is called in the template, and the last argument is an options object containing the following keys:
 
-- `context`: The current context (data) where the helper has been executed.
-- `value`: The current value passed to the helper.
-- `key`: The field used to extract the value from the current context.
-- `options`: The global options object.
-- `fn`: A function that executes the template provided in the helper block and returns a string with the evaluated template in the provided context.
+- `context`: the current context (data) where the helper has been executed.
+- `fn`: a function that executes the template provided in the helper block and returns a string with the evaluated template in the provided context.
 
-The helper function must return a string, which will be injected into the result string.
+The helper function must return a string, which will be injected into the result string. Example:
+
+```javascript
+const data = {
+    items: [
+        { name: "John" },
+        { name: "Alice" },
+        { name: "Bob" },
+    ],
+};
+const options = {
+    helpers: {
+        customEach: (items, opt) => {
+            return items.map((item, index) => opt.fn({ ...item, index: index})).join("");
+        },
+    },
+};
+
+const result = m("{{#customEach items}}{{index}}: {{name}}, {{/customEach}}", data, options);
+console.log(result); // --> "0: John, 1: Alice, 2: Bob,"
+```
 
 ### Runtime Variables
 
