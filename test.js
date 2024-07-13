@@ -203,6 +203,17 @@ describe("{{#customHelper }}", () => {
         };
         assert.equal(m("{{#concat a b}}{{/concat}}!", {a: "hello", b: "world"}, options), "hello world!");
     });
+
+    it("should allow to provide fixed arguments values", () => {
+        const options = {
+            helpers: {
+                customEqual: (arg1, arg2, opt) => arg1 === arg2 ? opt.fn(opt.context) : "",
+            },
+        };
+        assert.equal(m(`{{#customEqual value "yes"}}Yes!!{{/customEqual}}`, {value: "yes"}, options), "Yes!!");
+        assert.equal(m(`{{#customEqual value "no"}}Yes!!{{/customEqual}}`, {value: "yes"}, options), "");
+        assert.equal(m(`{{#customEqual value false}}Yes!!{{/customEqual}}`, {value: "yes"}, options), "");
+    });
 });
 
 describe("{{@root}}", () => {
@@ -262,5 +273,9 @@ describe("{{=function }}", () => {
 
     it("should render nothing if no function is provided", () => {
         assert.equal(m("Result: {{=noop value}}", {value: "a"}), "Result: ");
+    });
+
+    it("should allow to provide fixed arguments values", () => {
+        assert.equal(m(`{{=concat "Hello" "World"}}!`, {}, options), "Hello World!");
     });
 });
