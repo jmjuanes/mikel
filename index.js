@@ -11,6 +11,13 @@ const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 
 const get = (c, p) => (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c)) ?? "";
 
+const parse = (v, context = {}, vars = {}) => {
+    if ((v.startsWith(`"`) && v.endsWith(`"`)) || /^-?\d*\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
+        return JSON.parse(v);
+    }
+    return (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(context, v || ".");
+};
+
 const defaultHelpers = {
     "each": (value, opt) => {
         return (typeof value === "object" ? Object.entries(value || {}) : [])
@@ -34,9 +41,9 @@ const compile = (tokens, output, context, partials, helpers, vars, fn = {}, inde
             output.push(get(context, tokens[i].slice(1).trim()));
         }
         else if (tokens[i].startsWith("#") && typeof helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
-            const [t, ...args] = tokens[i].slice(1).trim().split(" ");
+            const [t, ...args] = tokens[i].slice(1).trim().match(/(?:[^\s"]+|"[^"]*")+/g);
             const j = i + 1;
-            output.push(helpers[t](...args.map(v => (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(context, v || ".")), {
+            output.push(helpers[t](...args.map(v => parse(v, context, vars)), {
                 context: context,
                 fn: (blockContext = {}, blockVars = {}, blockOutput = []) => {
                     i = compile(tokens, blockOutput, blockContext, partials, helpers, {...vars, ...blockVars, root: vars.root}, fn, j, t);
@@ -70,9 +77,9 @@ const compile = (tokens, output, context, partials, helpers, vars, fn = {}, inde
             }
         }
         else if (tokens[i].startsWith("=")) {
-            const [t, ...args] = tokens[i].slice(1).trim().split(" ");
+            const [t, ...args] = tokens[i].slice(1).trim().match(/(?:[^\s"]+|"[^"]*")+/g);
             if (typeof fn[t] === "function") {
-                output.push(fn[t](...args.map(v => (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(context, v || "."))) || "");
+                output.push(fn[t](...args.map(v => parse(v, context, vars))) || "");
             }
         }
         else if (tokens[i].startsWith("/")) {
@@ -101,5 +108,6 @@ const mikel = (str, context = {}, opt = {}, output = []) => {
 // @description assign utilities
 mikel.escape = escape;
 mikel.get = get;
+mikel.parse = parse;
 
 export default mikel;
