@@ -199,6 +199,26 @@ const data = {
 console.log(m("{{#unless isAdmin}}Hello guest{{/unless}}", data)); // --> 'Hello guest'
 ```
 
+#### eq
+
+> Added in `v0.9.0`.
+
+The `eq` helper renders the blocks only if the two values provided as argument are equal. Example:
+
+```javascript
+console.log(m(`{{#eq name "bob"}}Hello bob{{/eq}}`, {name: "bob"})); // --> 'Hello bob'
+```
+
+#### ne
+
+> Added in `v0.9.0`.
+
+The `ne` helper renders the block only if the two values provided as argument are not equal. Example:
+
+```javascript
+console.log(m(`{{#ne name "bob"}}Not bob{{/ne}}`, {name: "John"})); // --> 'Not bob'
+```
+
 ### Custom Helpers
 
 > Added in `v0.5.0`.
