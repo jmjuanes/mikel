@@ -185,6 +185,34 @@ describe("{{#unless }}", () => {
     });
 });
 
+describe("{{#eq }}", () => {
+    it("should render block if two values are equal", () => {
+        assert.equal(m(`{{#eq value "a"}}yes!{{/eq}}`, {value: "a"}), "yes!");
+        assert.equal(m(`{{#eq value true}}yes!{{/eq}}`, {value: true}), "yes!");
+        assert.equal(m(`{{#eq value 0}}yes!{{/eq}}`, {value: 0}), "yes!");
+    });
+
+    it("should not render block if two values are not equal", () => {
+        assert.equal(m(`{{#eq value "a"}}yes!{{/eq}}`, {value: "b"}), "");
+        assert.equal(m(`{{#eq value true}}yes!{{/eq}}`, {value: false}), "");
+        assert.equal(m(`{{#eq value 0}}yes!{{/eq}}`, {value: 1}), "");
+    });
+});
+
+describe("{{#ne }}", () => {
+    it("should not render block if two values are equal", () => {
+        assert.equal(m(`{{#ne value "a"}}yes!{{/ne}}`, {value: "a"}), "");
+        assert.equal(m(`{{#ne value true}}yes!{{/ne}}`, {value: true}), "");
+        assert.equal(m(`{{#ne value 0}}yes!{{/ne}}`, {value: 0}), "");
+    });
+
+    it("should render block if two values are not equal", () => {
+        assert.equal(m(`{{#ne value "a"}}yes!{{/ne}}`, {value: "b"}), "yes!");
+        assert.equal(m(`{{#ne value true}}yes!{{/ne}}`, {value: false}), "yes!");
+        assert.equal(m(`{{#ne value 0}}yes!{{/ne}}`, {value: 1}), "yes!");
+    });
+});
+
 describe("{{#customHelper }}", () => {
     it("should allow to execute a simple custom helper", () => {
         const options = {
