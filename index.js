@@ -32,7 +32,8 @@ const yamlParser = (str = "") => {
                 level = level - 1;
             }
             const isArrayItem = line.trim().startsWith("-");
-            let [key, value] = line.trim().split(":").map(v => v.trim());
+            // TODO: improve the regex to capture the line structure
+            let [_, key, value] = (line.trim().match(/^([^:"]*):(.*)$/m) || ["", line]).map(v => v.trim());
             // Check if is a new item of the array
             if (isArrayItem) {
                 key = key.replace(/^(- *)/m, "");
