@@ -383,10 +383,12 @@ describe("utils", () => {
                 `link2: "https://www.example2.com"`,
                 `items:`,
                 `  - "https://www.example3.com"`,
+                `  - key: "https://www.example4.com"`,
             ]);
             assert.equal(json.link1, "https://www.example1.com");
             assert.equal(json.link2, "https://www.example2.com");
             assert.equal(json.items[0], "https://www.example3.com");
+            assert.equal(json.items[1].key, "https://www.example4.com");
         });
     });
 
