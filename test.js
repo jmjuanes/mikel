@@ -376,6 +376,15 @@ describe("utils", () => {
             assert.equal(json.items[2].items[1], "bar");
             assert.equal(json.foo, "bar");
         });
+
+        it("should support ':' characters in value", () => {
+            const json = yaml([
+                `link1: "https://www.example1.com"`,
+                `link2: "https://www.example2.com"`,
+            ]);
+            assert.equal(json.link1, "https://www.example1.com");
+            assert.equal(json.link2, "https://www.example2.com");
+        });
     });
 
     describe("frontmatter", () => {
