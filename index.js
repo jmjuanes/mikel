@@ -91,6 +91,7 @@ const defaultHelpers = {
     "unless": (value, opt) => !!!value ? opt.fn(opt.context) : "",
     "eq": (a, b, opt) => a === b ? opt.fn(opt.context) : "",
     "ne": (a, b, opt) => a !== b ? opt.fn(opt.context) : "",
+    "with": (value, opt) => opt.fn(value),
 };
 
 const compile = (tokens, output, context, partials, helpers, vars, fn = {}, index = 0, section = "") => {
