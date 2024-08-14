@@ -214,6 +214,18 @@ describe("templating", () => {
         });
     });
 
+    describe("{{#with }}", () => {
+        it("should change the context of the block", () => {
+            const data = {
+                value: "no",
+                subdata: {
+                    value: "yes",
+                },
+            };
+            assert.equal(m("result: {{#with subdata}}{{value}}{{/with}}", data), "result: yes");
+        });
+    });
+
     describe("{{#customHelper }}", () => {
         it("should allow to execute a simple custom helper", () => {
             const options = {
