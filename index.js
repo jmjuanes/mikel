@@ -81,17 +81,31 @@ const frontmatter = (str = "", parser = null) => {
     return {body, data};
 };
 
-const defaultHelpers = {
-    "each": (value, opt) => {
-        return (typeof value === "object" ? Object.entries(value || {}) : [])
-            .map((item, index, items) => opt.fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
-            .join("");
-    },
-    "if": (value, opt) => !!value ? opt.fn(opt.context) : "",
-    "unless": (value, opt) => !!!value ? opt.fn(opt.context) : "",
-    "eq": (a, b, opt) => a === b ? opt.fn(opt.context) : "",
-    "ne": (a, b, opt) => a !== b ? opt.fn(opt.context) : "",
-    "with": (value, opt) => opt.fn(value),
+// @description create a new instance of mikel
+const create = (template = "", options = {}) => {
+    // initialize internal context
+    // TODO: we want to allow overwrite default helpers?
+    const helpers = Object.assign(options?.helpers || {}, {
+        "each": (value, opt) => {
+            return (typeof value === "object" ? Object.entries(value || {}) : [])
+                .map((item, index, items) => opt.fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
+                .join("");
+        },
+        "if": (value, opt) => !!value ? opt.fn(opt.context) : "",
+        "unless": (value, opt) => !!!value ? opt.fn(opt.context) : "",
+        "eq": (a, b, opt) => a === b ? opt.fn(opt.context) : "",
+        "ne": (a, b, opt) => a !== b ? opt.fn(opt.context) : "",
+        "with": (value, opt) => opt.fn(value),
+    });
+    const partials = options?.partials || {};
+    const functions = options?.functions || {};
+
+
+
+    const compileTemplate = (data, output = []) => {
+        return null;
+    };
+    return compileTemplate;
 };
 
 const compile = (tokens, output, context, partials, helpers, vars, fn = {}, index = 0, section = "") => {
@@ -163,12 +177,13 @@ const compile = (tokens, output, context, partials, helpers, vars, fn = {}, inde
 };
 
 // @description main compiler function
-const mikel = (str, context = {}, opt = {}, output = []) => {
-    const partials = Object.assign({}, opt.partials || {});
-    const helpers = Object.assign({}, defaultHelpers, opt.helpers || {});
-    const variables = Object.assign({}, opt.variables || {}, {root: context});
-    compile(str.split(tags), output, context, partials, helpers, variables, opt.functions || {}, 0, "");
-    return output.join("");
+const mikel = (template = "", data = {}, options = {}) => {
+    return create(template, options)(data);
+    // const partials = Object.assign({}, opt.partials || {});
+    // const helpers = Object.assign({}, defaultHelpers, opt.helpers || {});
+    // const variables = Object.assign({}, opt.variables || {}, {root: context});
+    // compile(str.split(tags), output, context, partials, helpers, variables, opt.functions || {}, 0, "");
+    // return output.join("");
 };
 
 // @description assign utilities
