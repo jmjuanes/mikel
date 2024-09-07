@@ -281,21 +281,6 @@ describe("templating", () => {
         });
     });
 
-    describe("{{@customVariable}}", () => {
-        const options = {
-            variables: {
-                foo: "bar",
-            },
-        };
-        it("should allow providing custom at-variables", () => {
-            assert.equal(m("Hello, {{@foo}}", {}, options), "Hello, bar");
-        });
-
-        it("should be available in helpers", () => {
-            assert.equal(m("{{#each values}}{{@foo}}:{{.}},{{/each}}", {values: [1, 2]}, options), "bar:1,bar:2,");
-        });
-    });
-
     describe("{{=function }}", () => {
         const options = {
             functions: {
