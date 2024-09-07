@@ -1,5 +1,4 @@
 const tags = /\{\{|\}\}/;
-const endl = "\n";
 const escapedChars = {
     "&": "&amp;",
     "<": "&lt;",
@@ -19,56 +18,6 @@ const parse = (v, context = {}, vars = {}) => {
     return (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(context, v || ".");
 };
 
-// @description tiny yaml parser
-const yamlParser = (str = "") => {
-    const lines = str.split(endl), result = {}, levels = [{ctx: result, indent: 0}];
-    let level = 0, i = 0;
-    while (i < lines.length) {
-        const line = lines[i] || "";
-        if (!!line.trim() && !line.trim().startsWith("#")) {
-            const indent = (line.match(/^( *)/m)?.[0] || "").length;
-            while(level > 0 && indent < levels[level].indent) {
-                levels.pop();
-                level = level - 1;
-            }
-            const isArrayItem = line.trim().startsWith("-");
-            // TODO: improve the regex to capture the line structure
-            let [_, key, value] = (line.trim().match(/^([^:"]*):(.*)$/m) || ["", line]).map(v => v.trim());
-            // Check if is a new item of the array
-            if (isArrayItem) {
-                key = key.replace(/^(- *)/m, "");
-                if (typeof value === "undefined") {
-                    value = key;
-                }
-                else {
-                    const newIndent = (line.slice(0, line.indexOf(key))).length;
-                    levels[level].ctx.push({});
-                    levels.push({ctx: levels[level].ctx[levels[level].ctx.length - 1], indent: newIndent});
-                    level = level + 1;
-                }
-            }
-            // Check for empty value --> entering into a nested object or array
-            if (!value) {
-                const nextLine = lines[i + 1] || "";
-                const nextIndent = (nextLine.match(/^( *)/m)?.[0] || "").length;
-                levels[level].ctx[key] = nextLine.trim().startsWith("-") ? [] : {};
-                if (nextIndent > levels[level].indent) {
-                    levels.push({ctx: levels[level].ctx[key], indent: nextIndent});
-                    level = level + 1;
-                }
-            }
-            else if(value && Array.isArray(levels[level].ctx)) {
-                levels[level].ctx.push(JSON.parse(value));
-            }
-            else if (value) {
-                levels[level].ctx[key] = JSON.parse(value);
-            }
-        }
-        i = i + 1;
-    }
-    return result;
-};
-
 // @description tiny front-matter parser
 const frontmatter = (str = "", parser = null) => {
     let body = (str || "").trim(), data = {};
@@ -76,7 +25,7 @@ const frontmatter = (str = "", parser = null) => {
     if (matches?.length === 2 && matches[0].index === 0) {
         const front = body.substring(0 + matches[0][1].length, matches[1].index).trim();
         body = body.substring(matches[1].index + matches[1][1].length).trim();
-        data = typeof parser === "function" ? parser(front) : yamlParser(front);
+        data = typeof parser === "function" ? parser(front) : front;
     }
     return {body, data};
 };
@@ -190,7 +139,6 @@ mikel.create = create;
 mikel.escape = escape;
 mikel.get = get;
 mikel.parse = parse;
-mikel.yaml = yamlParser;
 mikel.frontmatter = frontmatter;
 
 export default mikel;
