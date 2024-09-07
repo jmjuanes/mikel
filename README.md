@@ -340,27 +340,6 @@ The `@last` variable allows to check if the current iteration using the `#each` 
 {{#each items}}{{@index}}:{{.}} {{#unless @last}},{{/unless}}{{/each}}
 ```
 
-### Custom runtime variables
-
-> Added in `v0.5.0`.
-
-Mikel allows users to define custom data variables, providing enhanced flexibility and customization options for templates. These custom data variables can be accessed within the template using the `@` character.
-
-Custom data variables should be provided in the `options.variables` field of the options object when rendering a template. Each custom data variable should be defined as a key-value pair, where the key represents the variable name and the value represents the data associated with that variable.
-
-Example:
-
-```javascript
-const result = m("Hello, {{@customVariable}}!", {}, {
-    variables: {
-        customVariable: "World",
-    },
-});
-console.log(result); // --> 'Hello, World!'
-```
-
-In this example, the custom data variable `customVariable` is defined with the value `"World"`, and it can be accessed in the template using `@customVariable`.
-
 ### Functions
 
 > Added in `v0.8.0`.
@@ -403,7 +382,6 @@ Render the given template string with the provided data object and options.
 - `data` (object): the data object containing the values to render.
 - `options` (object): an object containing the following optional values:
     - `partials` (object): an object containing the available partials.
-    - `variables` (object): an object containing custom data variables.
     - `helpers` (object): an object containing custom helpers.
     - `functions` (object): and object containing custom functions.
 
@@ -418,6 +396,71 @@ const data = {
 
 const result = mikel("Hello, {{name}}!", data);
 console.log(result); // Output: "Hello, World!"
+```
+
+### `mikel.create(template [, options])`
+
+Allows to create an isolated instance of mikel, useful when you want to compile the same template using different data. The `template` argument is the template string, and the optional `options` argument is the same options object that you can pass to `mikel` method.
+
+It returns a function that you can call with the data to compile the template.
+
+```javascript
+import mikel from "mikel";
+
+const template = mikel.create("Hello, {{name}}!");
+
+console.log(template({name: "Bob"})); // --> "Hello, Bob!"
+console.log(template({name: "Susan"})); // --> "Hello, Susan!"
+```
+
+It also exposes the following additional methods:
+
+#### `template.addHelper(helperName, helperFn)`
+
+Allows to register a new helper instead of using the `options` object.
+
+```javascript
+template.addHelper("foo", () => { ... });
+```
+
+#### `template.removeHelper(helperName)`
+
+Removes a previously added helper.
+
+```javascript
+template.removeHelper("foo");
+```
+
+#### `template.addPartial(partialName, partialCode)`
+
+Registers a new partial instead of using the `options` object.
+
+```javascript
+template.addPartial("bar", " ... ");
+```
+
+#### `template.removePartial(partialName)`
+
+Removes a previously added partial.
+
+```javascript
+template.removePartial("bar");
+```
+
+#### `template.addFunction(fnName, fn)`
+
+Registers a new function instead of using the `options` object.
+
+```javascript
+template.addFunction("foo", () => "...");
+```
+
+#### `template.removeFunction(fnName)`
+
+Removes a previously added function.
+
+```javascript
+template.removeFunction("foo");
 ```
 
 ### `mikel.escape(str)`

@@ -281,21 +281,6 @@ describe("templating", () => {
         });
     });
 
-    describe("{{@customVariable}}", () => {
-        const options = {
-            variables: {
-                foo: "bar",
-            },
-        };
-        it("should allow providing custom at-variables", () => {
-            assert.equal(m("Hello, {{@foo}}", {}, options), "Hello, bar");
-        });
-
-        it("should be available in helpers", () => {
-            assert.equal(m("{{#each values}}{{@foo}}:{{.}},{{/each}}", {values: [1, 2]}, options), "bar:1,bar:2,");
-        });
-    });
-
     describe("{{=function }}", () => {
         const options = {
             functions: {
@@ -323,89 +308,6 @@ describe("templating", () => {
 });
 
 describe("utils", () => {
-    describe("yaml", () => {
-        const yaml = lines => m.yaml(lines.join("\n"));
-
-        it("should parse simple key-value yaml", () => {
-            const json = yaml([
-                `string: "hello world"`,
-                `boolean: true`,
-                `number: 123`,
-            ]);
-            assert.equal(typeof json, "object");
-            assert.equal(json.string, "hello world");
-            assert.equal(json.boolean, true);
-            assert.equal(json.number, 123);
-        });
-
-        it("should parse nested objects", () => {
-            const json = yaml([
-                `nested:`,
-                `  key1: "value1"`,
-                `  key2: "value2"`,
-                `  nested:`,
-                `    key1: "value1"`,
-                `no-nested: "another value"`,
-            ]);
-            assert.equal(typeof json.nested, "object");
-            assert.equal(typeof json.nested.nested, "object");
-            assert.equal(json.nested.key1, "value1");
-            assert.equal(json.nested.key2, "value2");
-            assert.equal(json.nested.nested.key1, "value1");
-            assert.equal(json["no-nested"], "another value");
-        });
-
-        it("should parse an array of simple values", () => {
-            const json = yaml([
-                `items:`,
-                `  - "item1"`,
-                `  - "item2"`,
-                `key: "value"`,
-            ]);
-            assert.equal(typeof json.items, "object");
-            assert.equal(json.items.length, 2);
-            assert.equal(json.items[0], "item1");
-            assert.equal(json.items[1], "item2");
-            assert.equal(json.key, "value");
-        });
-
-        it("should parse an array of objects", () => {
-            const json = yaml([
-                `items:`,
-                `  - key1: "value1"`,
-                `    key2: "value2"`,
-                `  - key1: "value3"`,
-                `  - items:`,
-                `      - "foo"`,
-                `      - "bar"`,
-                `foo: "bar"`,
-            ]);
-            assert.equal(typeof json.items, "object");
-            assert.equal(json.items.length, 3);
-            assert.equal(json.items[0].key1, "value1");
-            assert.equal(json.items[0].key2, "value2");
-            assert.equal(json.items[1].key1, "value3");
-            assert.equal(json.items[2].items.length, 2);
-            assert.equal(json.items[2].items[0], "foo");
-            assert.equal(json.items[2].items[1], "bar");
-            assert.equal(json.foo, "bar");
-        });
-
-        it("should support ':' characters in value", () => {
-            const json = yaml([
-                `link1: "https://www.example1.com"`,
-                `link2: "https://www.example2.com"`,
-                `items:`,
-                `  - "https://www.example3.com"`,
-                `  - key: "https://www.example4.com"`,
-            ]);
-            assert.equal(json.link1, "https://www.example1.com");
-            assert.equal(json.link2, "https://www.example2.com");
-            assert.equal(json.items[0], "https://www.example3.com");
-            assert.equal(json.items[1].key, "https://www.example4.com");
-        });
-    });
-
     describe("frontmatter", () => {
         const frontmatter = lines => m.frontmatter(lines.join("\n"));
 
@@ -420,16 +322,12 @@ describe("utils", () => {
         it("should return parsed frontmatter", () => {
             const result = frontmatter([
                 `---`,
-                `key: "value"`,
-                `items:`,
-                `  - "foo"`,
-                `  - "bar"`,
+                `DATA`,
                 `---`,
                 `Hello world`,
             ]);
             assert.equal(result.body, "Hello world");
-            assert.equal(result.data.key, "value");
-            assert.equal(result.data.items[1], "bar");
+            assert.equal(result.data, "DATA");
         });
     });
 });
