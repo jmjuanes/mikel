@@ -75,7 +75,7 @@ const create = (template = "", options = {}) => {
                 }));
                 // Make sure that this block is executed at least once
                 if (i + 1 === j) {
-                    i = compile(tokens, [], {}, {}, helpers, {}, {}, j, t);
+                    i = compile(tokens, [], {}, {}, j, t);
                 }
             }
             else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
