@@ -123,9 +123,12 @@ const create = (template = "", options = {}) => {
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
-        registerHelper: (name, fn) => helpers[name] = fn,
-        registerFunction: (name, fn) => functions[name] = fn,
-        registerPartial: (name, partial) => partials[name] = partial,
+        addHelper: (name, fn) => helpers[name] = fn,
+        removeHelper: name => delete helpers[name],
+        addFunction: (name, fn) => functions[name] = fn,
+        removeFunction: name => delete functions[name],
+        addPartial: (name, partial) => partials[name] = partial,
+        removePartial: name => delete partials[name],
     });
 };
 
