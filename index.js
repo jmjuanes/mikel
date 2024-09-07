@@ -30,22 +30,24 @@ const frontmatter = (str = "", parser = null) => {
     return {body, data};
 };
 
+// @description default helpers
+const defaultHelpers = {
+    "each": (value, opt) => {
+        return (typeof value === "object" ? Object.entries(value || {}) : [])
+            .map((item, index, items) => opt.fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
+            .join("");
+    },
+    "if": (value, opt) => !!value ? opt.fn(opt.context) : "",
+    "unless": (value, opt) => !!!value ? opt.fn(opt.context) : "",
+    "eq": (a, b, opt) => a === b ? opt.fn(opt.context) : "",
+    "ne": (a, b, opt) => a !== b ? opt.fn(opt.context) : "",
+    "with": (value, opt) => opt.fn(value),
+};
+
 // @description create a new instance of mikel
 const create = (template = "", options = {}) => {
     // initialize internal context
-    // TODO: we want to allow overwrite default helpers?
-    const helpers = Object.assign(options?.helpers || {}, {
-        "each": (value, opt) => {
-            return (typeof value === "object" ? Object.entries(value || {}) : [])
-                .map((item, index, items) => opt.fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
-                .join("");
-        },
-        "if": (value, opt) => !!value ? opt.fn(opt.context) : "",
-        "unless": (value, opt) => !!!value ? opt.fn(opt.context) : "",
-        "eq": (a, b, opt) => a === b ? opt.fn(opt.context) : "",
-        "ne": (a, b, opt) => a !== b ? opt.fn(opt.context) : "",
-        "with": (value, opt) => opt.fn(value),
-    });
+    const helpers = Object.assign({}, defaultHelpers, options?.helpers || {});
     const partials = options?.partials || {};
     const functions = options?.functions || {};
     // internal method to compile the template
@@ -118,7 +120,7 @@ const create = (template = "", options = {}) => {
     };
     // entry method to compile the template with the provided data object
     const compileTemplate = (data = {}, output = []) => {
-        compile(template.split(tags), output, data, {}, 0, "");
+        compile(template.split(tags), output, data, {root: data}, 0, "");
         return output.join("");
     };
     // assign api methods and return method to compile the template
