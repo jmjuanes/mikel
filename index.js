@@ -12,7 +12,7 @@ const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 const get = (c, p) => (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c)) ?? "";
 
 const parse = (v, context = {}, vars = {}) => {
-    if ((v.startsWith(`"`) && v.endsWith(`"`)) || /^-?\d*\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
+    if ((v.startsWith(`"`) && v.endsWith(`"`)) || /^-?\d+\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
         return JSON.parse(v);
     }
     return (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(context, v || ".");
