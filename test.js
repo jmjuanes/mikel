@@ -304,6 +304,10 @@ describe("templating", () => {
         it("should allow to provide fixed arguments values", () => {
             assert.equal(m(`{{=concat "Hello" "World"}}!`, {}, options), "Hello World!");
         });
+
+        it("should allow to execute funcions inside helpers blocks", () => {
+            assert.equal(m(`{{#each names}}{{=toUpperCase .}}, {{/each}}`, {names: ["bob", "susan"]}, options), "BOB, SUSAN, ");
+        });
     });
 });
 
