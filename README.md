@@ -239,6 +239,7 @@ console.log(m("{{#with autor}}{{name}} <{{email}}>{{/with}}", data)); // --> 'Bo
 ### Custom Helpers
 
 > Added in `v0.5.0`.
+> Breaking change introduced in `v0.12.0`.
 
 Custom helpers should be provided as an object in the `options.helpers` field, where each key represents the name of the helper and the corresponding value is a function defining the helper's behavior.
 
@@ -251,8 +252,8 @@ const data = {
 };
 const options = {
     helpers: {
-        customHelper: value => {
-            return `Hello, ${value}!`;
+        customHelper: params => {
+            return `Hello, ${params.args[0]}!`;
         },
     },
 };
@@ -261,8 +262,10 @@ const result = m(template, data, options);
 console.log(result); // Output: "Hello, World!"
 ```
 
-Custom helper functions receive multiple arguments, where the first N arguments are the variables with the helper is called in the template, and the last argument is an options object containing the following keys:
+Custom helper functions receive a single object as argument, containing the following keys:
 
+- `args`: an array containing the variables with the helper is called in the template.
+- `opt`: an object containing the keyword arguments provided to the helper.
 - `context`: the current context (data) where the helper has been executed.
 - `fn`: a function that executes the template provided in the helper block and returns a string with the evaluated template in the provided context.
 
@@ -278,8 +281,8 @@ const data = {
 };
 const options = {
     helpers: {
-        customEach: (items, opt) => {
-            return items.map((item, index) => opt.fn({ ...item, index: index})).join("");
+        customEach: ({args, fn}) => {
+            return args[0].map((item, index) => fn({ ...item, index: index})).join("");
         },
     },
 };
@@ -343,10 +346,17 @@ The `@last` variable allows to check if the current iteration using the `#each` 
 ### Functions
 
 > Added in `v0.8.0`.
+> Breaking change introduced in `v0.12.0`.
 
 Mikel allows users to define custom functions that can be used within templates to perform dynamic operations. Functions can be invoked in the template using the `=` character, followed by the function name and the variables to be provided to the function. Variables should be separated by spaces.
 
 Functions should be provided in the `options.functions` field of the options object when rendering a template. Each function is defined by a name and a corresponding function that performs the desired operation.
+
+Functions will receive a single object as argument, containing the following keys:
+
+- `args`: an array containing the variables with the function is called in the template.
+- `opt`: an object containing the keyword arguments provided to the function.
+- `context`: the current context (data) where the function has been executed.
 
 Example:
 
@@ -359,8 +369,8 @@ const data = {
 };
 const options = {
     functions: {
-        fullName: (firstName, lastName) => {
-            return `${firstName} ${lastName}`;
+        fullName: ({args}) => {
+            return `${args[0]} ${args[1]}`;
         }
     },
 };
@@ -368,8 +378,6 @@ const options = {
 const result = m("My name is: {{=fullName user.firstName user.lastName}}", data, options);
 console.log(result); // --> "My name is: John Doe"
 ```
-
-In this example, the custom function `fullName` is defined to take two arguments, `firstName` and `lastName`, and return the full name. The template then uses this function to concatenate and render the full name.
 
 
 ## API
