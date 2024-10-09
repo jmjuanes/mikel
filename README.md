@@ -167,6 +167,17 @@ const data = {
 console.log(m("{{#each values}}{{@key}}: {{@value}}, {{/each}}", data)); // --> 'foo: 0, bar: 1, '
 ```
 
+The `each` helper also supports the following options, provided as keyword arguments:
+- `skip`: number of first items to skip (default is `0`).
+- `limit`: allows to limit the number of items to display (default equals to the length of the items list).
+
+Example:
+
+```javascript
+console.log(m("{{each values limit=2}}{{.}}{{/each}}", {values: [0, 1, 2, 3]})); // --> '01'
+```
+
+
 #### if
 
 The `if` helper renders the block only if the condition is truthy.
