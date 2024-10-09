@@ -329,10 +329,12 @@ describe("templating", () => {
             };
             const options = {
                 functions: {
-                    printName: ({args, opt}) => `Welcome, ${[args[0], opt.surname || ""].filter(Boolean).join(" ")}`,
+                    sayWelcome: ({args, opt}) => {
+                        return `Welcome, ${[args[0], opt.surname || ""].filter(Boolean).join(" ")}`;
+                    },
                 },
             };
-            assert.equal(m("{{=printName name surname=surname}}", data, options), "Welcome, Bob Doe");
+            assert.equal(m("{{=sayWelcome name surname=surname}}", data, options), "Welcome, Bob Doe");
         });
     });
 });
