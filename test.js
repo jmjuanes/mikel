@@ -255,6 +255,15 @@ describe("templating", () => {
             assert.equal(m(`{{#customEqual value "no"}}Yes!!{{/customEqual}}`, {value: "yes"}, options), "");
             assert.equal(m(`{{#customEqual value false}}Yes!!{{/customEqual}}`, {value: "yes"}, options), "");
         });
+
+        it("should allow to provide keyword arguments", () => {
+            const options = {
+                helpers: {
+                    concat: params => params.args.join(params.opt.delimiter || " "),
+                },
+            };
+            assert.equal(m(`{{#concat a b delimiter=","}}{{/concat}}`, {a: "hello", b: "world"}, options), "hello,world");
+        });
     });
 
     describe("{{@root}}", () => {
@@ -285,7 +294,7 @@ describe("templating", () => {
         const options = {
             functions: {
                 toUpperCase: params => params.args[0].toUpperCase(),
-                concat: params => params.args.join(" "),
+                concat: params => params.args.join(params.opt.delimiter || " "),
             },
         };
 
@@ -307,6 +316,25 @@ describe("templating", () => {
 
         it("should allow to execute funcions inside helpers blocks", () => {
             assert.equal(m(`{{#each names}}{{=toUpperCase .}}, {{/each}}`, {names: ["bob", "susan"]}, options), "BOB, SUSAN, ");
+        });
+
+        it("should support keywods in function arguments", () => {
+            assert.equal(m(`{{=concat a b delimiter=","}}`, {a: "Hello", b: "World"}, options), "Hello,World");
+        });
+
+        it("should support context variables as keyword arguments", () => {
+            const data = {
+                name: "Bob",
+                surname: "Doe",
+            };
+            const options = {
+                functions: {
+                    sayWelcome: ({args, opt}) => {
+                        return `Welcome, ${[args[0], opt.surname || ""].filter(Boolean).join(" ")}`;
+                    },
+                },
+            };
+            assert.equal(m("{{=sayWelcome name surname=surname}}", data, options), "Welcome, Bob Doe");
         });
     });
 });
