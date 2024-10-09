@@ -230,7 +230,7 @@ describe("templating", () => {
         it("should allow to execute a simple custom helper", () => {
             const options = {
                 helpers: {
-                    hello: value => `Hello ${value}!!`,
+                    hello: params => `Hello ${params.args[0]}!!`,
                 },
             };
             assert.equal(m("{{#hello name}}{{/hello}}", {name: "Bob"}, options), "Hello Bob!!");
@@ -239,7 +239,7 @@ describe("templating", () => {
         it("should allow to provide multiple values to custom helper", () => {
             const options = {
                 helpers: {
-                    concat: (a, b) => [a, b].join(" "),
+                    concat: params => params.args.join(" "),
                 },
             };
             assert.equal(m("{{#concat a b}}{{/concat}}!", {a: "hello", b: "world"}, options), "hello world!");
@@ -248,7 +248,7 @@ describe("templating", () => {
         it("should allow to provide fixed arguments values", () => {
             const options = {
                 helpers: {
-                    customEqual: (arg1, arg2, opt) => arg1 === arg2 ? opt.fn(opt.context) : "",
+                    customEqual: params => params.args[0] === params.args[1] ? params.fn(params.context) : "",
                 },
             };
             assert.equal(m(`{{#customEqual value "yes"}}Yes!!{{/customEqual}}`, {value: "yes"}, options), "Yes!!");
@@ -284,8 +284,8 @@ describe("templating", () => {
     describe("{{=function }}", () => {
         const options = {
             functions: {
-                toUpperCase: value => value.toUpperCase(),
-                concat: (a, b) => a + " " + b,
+                toUpperCase: params => params.args[0].toUpperCase(),
+                concat: params => params.args.join(" "),
             },
         };
 
