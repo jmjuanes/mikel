@@ -32,16 +32,16 @@ const frontmatter = (str = "", parser = null) => {
 
 // @description default helpers
 const defaultHelpers = {
-    "each": (value, opt) => {
-        return (typeof value === "object" ? Object.entries(value || {}) : [])
-            .map((item, index, items) => opt.fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
+    "each": p => {
+        return (typeof p.args[0] === "object" ? Object.entries(p.args[0] || {}) : [])
+            .map((item, index, items) => p.fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
             .join("");
     },
-    "if": (value, opt) => !!value ? opt.fn(opt.context) : "",
-    "unless": (value, opt) => !!!value ? opt.fn(opt.context) : "",
-    "eq": (a, b, opt) => a === b ? opt.fn(opt.context) : "",
-    "ne": (a, b, opt) => a !== b ? opt.fn(opt.context) : "",
-    "with": (value, opt) => opt.fn(value),
+    "if": p => !!p.args[0] ? p.fn(p.context) : "",
+    "unless": p => !!!p.args[0] ? p.fn(p.context) : "",
+    "eq": p => p.args[0] === p.args[1] ? p.fn(p.context) : "",
+    "ne": p => p.args[0] !== p.args[1] ? p.fn(p.context) : "",
+    "with": p => p.fn(p.args[0]),
 };
 
 // @description create a new instance of mikel
@@ -66,7 +66,8 @@ const create = (template = "", options = {}) => {
             else if (tokens[i].startsWith("#") && typeof helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
                 const [t, ...args] = tokens[i].slice(1).trim().match(/(?:[^\s"]+|"[^"]*")+/g);
                 const j = i + 1;
-                output.push(helpers[t](...args.map(v => parse(v, context, vars)), {
+                output.push(helpers[t]({
+                    args: args.map(v => parse(v, context, vars)),
                     context: context,
                     fn: (blockContext = {}, blockVars = {}, blockOutput = []) => {
                         i = compile(tokens, blockOutput, blockContext, {...vars, ...blockVars, root: vars.root}, j, t);
@@ -102,7 +103,10 @@ const create = (template = "", options = {}) => {
             else if (tokens[i].startsWith("=")) {
                 const [t, ...args] = tokens[i].slice(1).trim().match(/(?:[^\s"]+|"[^"]*")+/g);
                 if (typeof functions[t] === "function") {
-                    output.push(functions[t](...args.map(v => parse(v, context, vars))) || "");
+                    output.push(functions[t]({
+                        args: args.map(v => parse(v, context, vars)),
+                        context: context,
+                    }) || "");
                 }
             }
             else if (tokens[i].startsWith("/")) {
