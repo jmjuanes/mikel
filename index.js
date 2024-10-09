@@ -11,6 +11,18 @@ const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 
 const get = (c, p) => (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c)) ?? "";
 
+// @description parse string arguments
+const parseArgs = (argString = "", context = {}, vars = {}) => {
+    const [t, ...args] = argString.trim().match(/(?:[^\s"]+|"[^"]*")+/g);
+    const argv = args.filter(a => !a.includes("=")).map(a => parse(a, context, vars));
+    const opt = Object.fromEntries(args.filter(a => a.includes("=")).map(a => {
+        const [k, v] = a.split("=");
+        return [k, parse(v, context, vars)];
+    }));
+    return [t, argv, opt];
+};
+
+// @description parse a string value to a native type
 const parse = (v, context = {}, vars = {}) => {
     if ((v.startsWith(`"`) && v.endsWith(`"`)) || /^-?\d+\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
         return JSON.parse(v);
@@ -101,12 +113,10 @@ const create = (template = "", options = {}) => {
                 }
             }
             else if (tokens[i].startsWith("=")) {
-                const [t, ...args] = tokens[i].slice(1).trim().match(/(?:[^\s"]+|"[^"]*")+/g);
+                // const [t, ...args] = tokens[i].slice(1).trim().match(/(?:[^\s"]+|"[^"]*")+/g);
+                const [t, args, opt] = parseArgs(tokens[i].slice(1), context, vars);
                 if (typeof functions[t] === "function") {
-                    output.push(functions[t]({
-                        args: args.map(v => parse(v, context, vars)),
-                        context: context,
-                    }) || "");
+                    output.push(functions[t]({args, opt, context}) || "");
                 }
             }
             else if (tokens[i].startsWith("/")) {
