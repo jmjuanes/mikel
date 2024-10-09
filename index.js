@@ -76,7 +76,6 @@ const create = (template = "", options = {}) => {
                 output.push(get(context, tokens[i].slice(1).trim()));
             }
             else if (tokens[i].startsWith("#") && typeof helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
-                // const [t, ...args] = tokens[i].slice(1).trim().match(/(?:[^\s"]+|"[^"]*")+/g);
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), context, vars);
                 const j = i + 1;
                 output.push(helpers[t]({
@@ -115,7 +114,6 @@ const create = (template = "", options = {}) => {
                 }
             }
             else if (tokens[i].startsWith("=")) {
-                // const [t, ...args] = tokens[i].slice(1).trim().match(/(?:[^\s"]+|"[^"]*")+/g);
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), context, vars);
                 if (typeof functions[t] === "function") {
                     output.push(functions[t]({args, opt, context}) || "");
