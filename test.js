@@ -321,6 +321,19 @@ describe("templating", () => {
         it("should support keywods in function arguments", () => {
             assert.equal(m(`{{=concat a b delimiter=","}}`, {a: "Hello", b: "World"}, options), "Hello,World");
         });
+
+        it("should support context variables as keyword arguments", () => {
+            const data = {
+                name: "Bob",
+                surname: "Doe",
+            };
+            const options = {
+                functions: {
+                    printName: ({args, opt}) => `Welcome, ${[args[0], opt.surname || ""].filter(Boolean).join(" ")}`,
+                },
+            };
+            assert.equal(m("{{=printName name surname=surname}}", data, options), "Welcome, Bob Doe");
+        });
     });
 });
 
