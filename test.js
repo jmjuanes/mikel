@@ -156,6 +156,10 @@ describe("templating", () => {
         it("should register @last variable", () => {
             assert.equal(m("{{#each values}}{{.}}:{{@last}};{{/each}}", {values: [0, 1, 2]}), "0:false;1:false;2:true;");
         });
+
+        it("should allow to limit the number of iterations using the limit option", () => {
+            assert.equal(m("{{#each values limit=2}}{{.}}{{/each}}", {values: [0, 1, 2]}), "01");
+        });
     });
 
     describe("{{#if }}", () => {

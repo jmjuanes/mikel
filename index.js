@@ -45,8 +45,10 @@ const frontmatter = (str = "", parser = null) => {
 // @description default helpers
 const defaultHelpers = {
     "each": p => {
-        return (typeof p.args[0] === "object" ? Object.entries(p.args[0] || {}) : [])
-            .map((item, index, items) => p.fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
+        const items = typeof p.args[0] === "object" ? Object.entries(p.args[0] || {}) : [];
+        const limit = Math.min(items.length, p.opt.limit || items.length);
+        return items.slice(0, limit)
+            .map((item, index) => p.fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
             .join("");
     },
     "if": p => !!p.args[0] ? p.fn(p.context) : "",
