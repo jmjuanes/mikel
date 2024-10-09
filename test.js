@@ -160,6 +160,14 @@ describe("templating", () => {
         it("should allow to limit the number of iterations using the limit option", () => {
             assert.equal(m("{{#each values limit=2}}{{.}}{{/each}}", {values: [0, 1, 2]}), "01");
         });
+
+        it("should allow to change the start index using the skip option", () => {
+            assert.equal(m("{{#each values skip=2}}{{.}}{{/each}}", {values: [0, 1, 2, 3]}), "23");
+        });
+
+        it("should allow to change the start index and limit the number of iterations", () => {
+            assert.equal(m("{{#each values skip=1 limit=2}}{{.}}{{/each}}", {values: [0, 1, 2, 3]}), "12");
+        });
     });
 
     describe("{{#if }}", () => {
