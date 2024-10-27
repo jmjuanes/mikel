@@ -129,6 +129,8 @@ const result = m("User: {{>user userName=name userEmail=email }}", data, {partia
 // Output: 'User: John Doe <john@example.com>'
 ```
 
+Please note that providing keyword arguments and a custom context to a partial is not allowed. In this situation, the keyword arguments won't be taken into account and the partial will be executed only with the custom context.
+
 ### Built-in helpers
 
 > Added in `v0.4.0`.

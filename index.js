@@ -112,7 +112,7 @@ const create = (template = "", options = {}) => {
             else if (tokens[i].startsWith(">")) {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), context, vars);
                 if (typeof partials[t] === "string") {
-                    const newCtx = Object.keys(opt).length > 0 ? opt : (args.length === 1 ? args[0] : context);
+                    const newCtx = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : context);
                     compile(partials[t].split(tags), output, newCtx, vars, 0, "");
                 }
             }
