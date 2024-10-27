@@ -110,6 +110,27 @@ const result = m("User: {{> user currentUser}}", data, {partials});
 // Output: 'User: John Doe <john@example.com>'
 ```
 
+#### Keyword arguments in partials
+
+> This feature was added in `v0.13.0`.
+
+You can provide keyword arguments in partials to generate a new context object using the provided keywords.
+
+```javascript
+const data = {
+    name: "John Doe",
+    email: "john@example.com",
+};
+const partials = {
+    user: "{{userName}} <{{userEmail}}>",
+};
+
+const result = m("User: {{>user userName=name userEmail=email }}", data, {partials});
+// Output: 'User: John Doe <john@example.com>'
+```
+
+Please note that providing keyword arguments and a custom context to a partial is not supported. On this situation, the partial will be evaluated only with the custom context.
+
 ### Built-in helpers
 
 > Added in `v0.4.0`.
