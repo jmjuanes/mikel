@@ -129,6 +129,16 @@ describe("templating", () => {
             };
             assert.equal(m("Message: '{{> foo author}}'", data, {partials}), "Message: 'Hello Bob!'");
         });
+
+        it("should allow to provide keyword arguments to partials", () => {
+            const data = {
+                name: "Bob"
+            };
+            const partials = {
+                foo: "Hello {{userName}}!",
+            };
+            assert.equal(m("{{>foo userName=name}}", data, {partials}), "Hello Bob!");
+        });
     });
 
     describe("{{#each }}", () => {
