@@ -110,9 +110,10 @@ const create = (template = "", options = {}) => {
                 }
             }
             else if (tokens[i].startsWith(">")) {
-                const [t, v] = tokens[i].slice(1).trim().split(" ");
+                const [t, args, opt] = parseArgs(tokens[i].slice(1), context, vars);
                 if (typeof partials[t] === "string") {
-                    compile(partials[t].split(tags), output, v ? get(context, v) : context, vars, 0, "");
+                    const newCtx = Object.keys(opt).length > 0 ? opt : (args.length === 1 ? args[0] : context);
+                    compile(partials[t].split(tags), output, newCtx, vars, 0, "");
                 }
             }
             else if (tokens[i].startsWith("=")) {
