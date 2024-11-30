@@ -71,12 +71,6 @@ const create = (template = "", options = {}) => {
             if (i % 2 === 0) {
                 output.push(tokens[i]);
             }
-            else if (tokens[i].startsWith("@")) {
-                output.push(get(vars, tokens[i].slice(1).trim() ?? "_") ?? "");
-            }
-            else if (tokens[i].startsWith("!")) {
-                output.push(get(context, tokens[i].slice(1).trim()));
-            }
             else if (tokens[i].startsWith("#") && typeof helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), context, vars);
                 const j = i + 1;
@@ -129,7 +123,15 @@ const create = (template = "", options = {}) => {
                 break;
             }
             else {
-                output.push(escape(get(context, tokens[i].trim())));
+                const t = tokens[i].split("||").map(v => {
+                    // check if the returned value should not be escaped
+                    if (v.trim().startsWith("!")) {
+                        return parse(v.trim().slice(1).trim(), context, vars);
+                    }
+                    // escape the returned value
+                    return escape(parse(v.trim(), context, vars));
+                });
+                output.push(t.find(v => !!v) ?? "");
             }
             i = i + 1;
         }

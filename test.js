@@ -13,12 +13,20 @@ describe("templating", () => {
             const data = {tag: "<div>"};
             assert.equal(m("Tag is {{ tag }}", data), "Tag is &lt;div&gt;");
         });
+
+        it("should allow fallback values", () => {
+            assert.equal(m(`Hello {{name || "world"}}!`, {}), "Hello world!");
+        });
     });
 
     describe("{{! xyz }}", () => {
         it("should not escape variables", () => {
             const data = {tag: "<div>"};
             assert.equal(m("Tag is {{! tag }}", data), "Tag is <div>");
+        });
+
+        it("should allow fallback values", () => {
+            assert.equal(m(`Hello {{!name || !"<world>"}}!`, {}), "Hello <world>!");
         });
     });
 

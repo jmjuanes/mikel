@@ -25,6 +25,17 @@ Mikel supports the following syntax for rendering templates:
 
 Use double curly braces `{{ }}` to insert variables into your template. Variables will be replaced with the corresponding values from the data object.
 
+#### Fallback values
+
+> Added in `v0.14.0`.
+
+You can specify a value as a fallback, using the double OR `||` operator and followed by the fallback value.
+
+```javascript
+const result = m(`Hello {{name || "World"}}!`, {});
+// Output: 'Hello World!'
+```
+
 ### Sections
 
 Sections allow for conditional rendering of blocks of content based on the presence or absence of a value in the data object. Use the pound symbol `#` to start a section and the caret `^` to denote an inverted section. End the section with a forward slash `/`.
