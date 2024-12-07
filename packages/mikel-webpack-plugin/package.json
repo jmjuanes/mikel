@@ -1,0 +1,33 @@
+{
+    "name": "mikel-webpack-plugin",
+    "description": "Generate HTML files using the Mikel templating library",
+    "version": "",
+    "type": "module",
+    "author": {
+        "name": "Josemi Juanes",
+        "email": "hello@josemi.xyz"
+    },
+    "license": "MIT",
+    "repository": "https://github.com/jmjuanes/mikel",
+    "bugs": "https://github.com/jmjuanes/mikel/issues",
+    "main": "index.js",
+    "module": "index.js",
+    "exports": {
+        ".": "./index.js",
+        "./package.json": "./package.json"
+    },
+    "keywords": [
+        "webpack",
+        "webpack-plugin",
+        "mikel",
+        "template",
+        "templating"
+    ],
+    "dependencies": {
+        "mikel": "^0.14.0"
+    },
+    "files": [
+        "README.md",
+        "index.js"
+    ]
+}
