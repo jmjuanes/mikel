@@ -16,6 +16,9 @@
         ".": "./index.js",
         "./package.json": "./package.json"
     },
+    "scripts": {
+        "test": "node test.js"
+    },
     "keywords": [
         "webpack",
         "webpack-plugin",
@@ -25,6 +28,9 @@
     ],
     "dependencies": {
         "mikel": "^0.14.0"
+    },
+    "devDependencies": {
+        "webpack": "^5.97.1"
     },
     "files": [
         "README.md",
