@@ -1,6 +1,6 @@
 {
     "name": "mikel-webpack-plugin",
-    "description": "Generate HTML files using the Mikel templating library",
+    "description": "Generate HTML files using the Mikel templating",
     "version": "",
     "type": "module",
     "author": {
