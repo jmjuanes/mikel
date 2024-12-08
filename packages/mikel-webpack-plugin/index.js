@@ -1,60 +1,47 @@
+import fs from "node:fs";
 import path from "node:path";
-// import mikel from "mikel";
+import mikel from "mikel";
 
 // @description global variables
 const PLUGIN_NAME = "MikelWebpackPlugin";
 
-// utility method to generate the HTML content for the given JS and CSS files
-const generateHtml = (jsFiles, cssFiles) => {
-    const cssLinks = cssFiles.map(file => `<link rel="stylesheet" href="${file}">`).join('\n');
-    const jsScripts = jsFiles.map(file => `<script src="${file}"></script>`).join('\n');
-
-    return `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Document</title>
-            ${cssLinks}
-        </head>
-        <body>
-            ${jsScripts}
-        </body>
-        </html>
-    `;
+// @description returns the template content from the given options
+const getTemplateContent = options => {
+    // using options.template to specify the the absolute path to the template file
+    if (typeof options.template === "string") {
+        return fs.readFileSync(options.template, "utf8");
+    }
+    // using templateContent to specify the string content of the template
+    if (typeof options.templateContent === "string") {
+        return options.templateContent;
+    }
+    // Other case: use the default template
+    return fs.readFileSync("./template.html", "utf8");
 };
 
+// @description get the entry names to include in the output HTML
 const getEntryNames = (compilation, includeChunks = []) => {
     const entryNames = Array.from(compilation.entrypoints.keys());
-    if (!includeChunks || includeChunks.length === 0) {
+    // note: empty includeChunks means that no assets will be injected in the generated HTML
+    // if (!includeChunks || includeChunks.length === 0) {
+    if (!includeChunks) {
         return entryNames;
     }
     return entryNames.filter(entryName => !entryName.includes("chunk"));
 };
 
-const getAssets = (compilation, entryNames) => {
-    const publicPath = "./"; 
-    const entryPointPublicPathMap = new Set();
-    const assets = {
-        js: [],
-        css: [],
-    };
+// @description get assets related to the specified entries
+const getAssets = (compilation, entryNames, publicPath = "./") => {
+    const assets = new Set();
     entryNames.forEach(entryName => {
         compilation.entrypoints.get(entryName)
             .getFiles()
             .filter(file => !!compilation.getAsset(file))
             .filter(file => [".js", ".css"].includes(path.extname(file)))
             .map(file => publicPath + file)
-            .forEach(file => {
-                if (!entryPointPublicPathMap.has(file)) {
-                    const ext = path.extname(file).slice(1); // get extension without leading dot
-                    assets[ext].push(file);
-                    entryPointPublicPathMap.add(file);
-                }
-            });
+            .forEach(file => assets.add(file));
     });
-    return assets;
+    return Array.from(assets);
 };
 
 // @description MikelWebpackPlugin class
@@ -66,26 +53,29 @@ export default class MikelWebpackPlugin {
     apply(compiler) {
         const includeChunks = this.options.chunks || ["main"];
         const filename = this.options.filename || "index.html";
+        const template = getTemplateContent(this.options);
         compiler.hooks.compilation.tap(PLUGIN_NAME, compilation => {
             const processAssetsOptions = {
                 name: PLUGIN_NAME,
                 stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
             };
             compilation.hooks.processAssets.tap(processAssetsOptions, () => {
-                    // const jsFiles = Object.keys(assets).filter(file => file.endsWith('.js'));
-                    // const cssFiles = Object.keys(assets).filter(file => file.endsWith('.css'));
-                    // console.log(assets);
-                    // const assetInfo = compilation.assetsInfo.get(jsFiles[0]);
-                    // console.log(assetInfo);
-                    // const entryNames = Array.from(compilation.entrypoints.keys());
+                    const publicPath = this.options.publicPath || "./";
                     const entryNames = getEntryNames(compilation, includeChunks);
-                    console.log(entryNames);
-                    const assets = getAssets(compilation, entryNames);
-                    console.log(assets);
-
-                    const htmlContent = generateHtml(assets.js, assets.css);
-
-                    compilation.emitAsset(filename, new compiler.webpack.sources.RawSource(htmlContent));
+                    const assets = getAssets(compilation, entryNames, publicPath);
+                    // compile the provided template
+                    const pluginData = {
+                        ...(this.options.templateData || {}),
+                        options: this.options,
+                        assets: {
+                            publicPath: publicPath,
+                            css: assets.filter(file => file.endsWith(".css")),
+                            js: assets.filter(file => file.endsWith(".js")),
+                        },
+                    };
+                    const content = mikel(template, pluginData, this.options.templateOptions || {});
+                    // emit the HTML file as a new asset
+                    compilation.emitAsset(filename, new compiler.webpack.sources.RawSource(content));
                 }
             );
         });
