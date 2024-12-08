@@ -27,7 +27,8 @@ const getEntryNames = (compilation, includeChunks = []) => {
     if (!includeChunks) {
         return entryNames;
     }
-    return entryNames.filter(entryName => !entryName.includes("chunk"));
+    // get only entries that are included in the includeChunks array
+    return entryNames.filter(entryName => includeChunks.includes(entryName));
 };
 
 // @description get assets related to the specified entries
@@ -41,7 +42,12 @@ const getAssets = (compilation, entryNames, publicPath = "./") => {
             .map(file => publicPath + file)
             .forEach(file => assets.add(file));
     });
-    return Array.from(assets);
+    // return Array.from(assets);
+    return {
+        publicPath: publicPath,
+        js: Array.from(assets).filter(file => file.endsWith(".js")),
+        css: Array.from(assets).filter(file => file.endsWith(".css")),
+    };
 };
 
 // @description MikelWebpackPlugin class
@@ -67,11 +73,7 @@ export default class MikelWebpackPlugin {
                     const pluginData = {
                         ...(this.options.templateData || {}),
                         options: this.options,
-                        assets: {
-                            publicPath: publicPath,
-                            css: assets.filter(file => file.endsWith(".css")),
-                            js: assets.filter(file => file.endsWith(".js")),
-                        },
+                        assets: assets,
                     };
                     const content = mikel(template, pluginData, this.options.templateOptions || {});
                     // emit the HTML file as a new asset
