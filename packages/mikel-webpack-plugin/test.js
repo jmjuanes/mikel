@@ -34,8 +34,13 @@ describe("MikelWebpackPlugin", () => {
             },
             plugins: [
                 new MikelWebpackPlugin({
-                    title: "Test Document",
+                    title: "App",
                     filename: "app.html",
+                    chunks: ["app"],
+                }),
+                new MikelWebpackPlugin({
+                    title: "Empty file",
+                    filename: "empty.html",
                     chunks: [],
                 }),
             ],
