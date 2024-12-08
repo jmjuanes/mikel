@@ -34,6 +34,7 @@
     },
     "files": [
         "README.md",
-        "index.js"
+        "index.js",
+        "template.html"
     ]
 }
