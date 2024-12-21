@@ -60,6 +60,7 @@ export default class MikelWebpackPlugin {
         const includeChunks = this.options.chunks || ["main"];
         const filename = this.options.filename || "index.html";
         const template = getTemplateContent(this.options);
+        const metaTags = (typeof this.options.meta === "object" && this.options.meta) ? this.options.meta : {};
         compiler.hooks.compilation.tap(PLUGIN_NAME, compilation => {
             const processAssetsOptions = {
                 name: PLUGIN_NAME,
@@ -74,6 +75,7 @@ export default class MikelWebpackPlugin {
                         ...(this.options.templateData || {}),
                         options: this.options,
                         assets: assets,
+                        metaTags: metaTags,
                     };
                     const content = mikel(template, pluginData, this.options.templateOptions || {});
                     // emit the HTML file as a new asset
