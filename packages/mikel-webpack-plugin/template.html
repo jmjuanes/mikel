@@ -10,6 +10,9 @@
     {{#each assets.css}}
     <link rel="stylesheet" href="{{.}}" />
     {{/each}}
+    {{#each linkTags}}
+    <link{{#each .}} {{@key}}="{{@value}}"{{/each}} />
+    {{/each}}
 </head>
 <body>
     {{#each assets.js}}
