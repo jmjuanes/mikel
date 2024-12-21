@@ -5,6 +5,16 @@ import mikel from "mikel";
 // @description global variables
 const PLUGIN_NAME = "MikelWebpackPlugin";
 
+// @description get an array value
+const getArrayValue = (value, defaultValue) => {
+    return value && Array.isArray(value) ? value : defaultValue;
+};
+
+// @description get object value
+const getObjectValue = (value, defaultValue) => {
+    return value && typeof value === "object" ? value : defaultValue;
+};
+
 // @description returns the template content from the given options
 const getTemplateContent = options => {
     // using options.template to specify the the absolute path to the template file
@@ -57,10 +67,9 @@ export default class MikelWebpackPlugin {
     }
 
     apply(compiler) {
-        const includeChunks = this.options.chunks || ["main"];
+        const includeChunks = getArrayValue(this.options.chunks, ["main"]);
         const filename = this.options.filename || "index.html";
         const template = getTemplateContent(this.options);
-        const metaTags = (typeof this.options.meta === "object" && this.options.meta) ? this.options.meta : {};
         compiler.hooks.compilation.tap(PLUGIN_NAME, compilation => {
             const processAssetsOptions = {
                 name: PLUGIN_NAME,
@@ -75,7 +84,8 @@ export default class MikelWebpackPlugin {
                         ...(this.options.templateData || {}),
                         options: this.options,
                         assets: assets,
-                        metaTags: metaTags,
+                        metaTags: getObjectValue(this.options.meta, {}),
+                        linkTags: getArrayValue(this.options.link, []),
                     };
                     const content = mikel(template, pluginData, this.options.templateOptions || {});
                     // emit the HTML file as a new asset
