@@ -51,6 +51,8 @@ This plugin accepts the following options:
 | `templateContent` | `String` | Template content as a string. | `null` |
 | `chunks` | `Array` | List of entry names to include in the HTML. | `["main"]` |
 | `publicPath` | `String` | Public path for the assets. | `"./"` |
+| `meta` | `Object` | Additional `<meta>` tags to include in the `<head>`. Example: `{author: "John Doe"}`. | `{}` |
+| `link` | `Array` | List of `<link>` tags to include in the `<head>`. Example: `[{rel: "icon", href: "/favicon.ico"}] `. |
 | `templateData` | `Object` | Additional data for the template that will be passes to Mikel. | `{}` |
 | `templateOptions` | `Object` | Additional options for the Mikel templating (partials, helpers, and functions). | `{}` |
 
