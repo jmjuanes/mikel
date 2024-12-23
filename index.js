@@ -86,7 +86,7 @@ const defaultHelpers = {
 // @description create a new instance of mikel
 const create = (template = "", options = {}) => {
     const helpers = Object.assign({}, defaultHelpers, options?.helpers || {});
-    const partials = Object.assign({}, inlinePartials, options?.partials || {});
+    const partials = Object.assign({}, options?.partials || {});
     const functions = options?.functions || {};
     // internal method to compile the template
     const compile = (tokens, output, context, vars, index = 0, section = "") => {
