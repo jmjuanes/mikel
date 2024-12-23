@@ -42,31 +42,6 @@ const frontmatter = (str = "", parser = null) => {
     return {body, data};
 };
 
-// @description parse a template string
-// const parseTemplate = (templateStr = "") => {
-//     let i = 0;
-//     const tokens = [], inlinePartials = {}, allTokens = templateStr.split(tags);
-//     while (i < allTokens.length) {
-//         // if current token is a partial token
-//         if (i % 2 !== 0 && allTokens[i].trim().startsWith("<")) {
-//             const name = allTokens[i].trim().slice(1).trim();
-//             const partialTokens = allTokens.slice(i + 1); // skip partial initialization
-//             const lastIndex = partialTokens.findIndex((token, index) => {
-//                 return index % 2 !== 0 && token.trim().startsWith("/" + name);
-//             });
-//             inlinePartials[name] = partialTokens.slice(0, lastIndex);
-//             i = i + lastIndex + 1; // update index
-//         }
-//         // no inline partial token
-//         else {
-//             tokens.push(allTokens[i])
-//         }
-//         i = i + 1;
-//     }
-//     // return parsed template
-//     return [tokens, inlinePartials];
-// };
-
 // @description default helpers
 const defaultHelpers = {
     "each": p => {
@@ -135,7 +110,7 @@ const create = (template = "", options = {}) => {
                 if (typeof partials[t] === "undefined") {
                     partials[t] = partialTokens.slice(0, lastIndex);
                 }
-                i = i + lastIndex + 1; // update index
+                i = i + lastIndex + 1;
             }
             else if (tokens[i].startsWith(">")) {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), context, vars);
