@@ -132,7 +132,7 @@ const create = (template = "", options = {}) => {
                 const lastIndex = partialTokens.findIndex((token, j) => {
                     return j % 2 !== 0 && token.trim().startsWith("/") && token.trim().endsWith(t);
                 });
-                if (typeof partials[t] !== "undefined") {
+                if (typeof partials[t] === "undefined") {
                     partials[t] = partialTokens.slice(0, lastIndex);
                 }
                 i = i + lastIndex + 1; // update index
