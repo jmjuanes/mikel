@@ -149,6 +149,13 @@ describe("templating", () => {
         });
     });
 
+    describe("{{< xyz}}", () => {
+        it("should allow to define inline partials", () => {
+            const template = `{{<foo}}Hello {{name}}!{{/foo}}{{>foo name="Bob"}}`;
+            assert.equal(m(template, {}), "Hello Bob!");
+        });
+    });
+
     describe("{{#each }}", () => {
         it("should do nothing if value is not an array or object", () => {
             assert.equal(m("x{{#each values}}{{.}}{{/each}}x", {values: null}), "xx");
