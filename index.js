@@ -129,7 +129,6 @@ const create = (template = "", options = {}) => {
             }
             else if (tokens[i].startsWith("<")) {
                 const t = tokens[i].slice(1).trim(), partialTokens = tokens.slice(i + 1);
-                const partialTokens = tokens.slice(i + 1); // skip partial initialization
                 const lastIndex = partialTokens.findIndex((token, j) => {
                     return j % 2 !== 0 && token.trim().startsWith("/") && token.trim().endsWith(t);
                 });
