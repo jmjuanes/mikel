@@ -142,6 +142,19 @@ const result = m("User: {{>user userName=name userEmail=email }}", data, {partia
 
 Please note that providing keyword arguments and a custom context to a partial is not supported. On this situation, the partial will be evaluated only with the custom context.
 
+### Inline partials
+
+> Added in `v0.16.0`.
+
+Inline partials allows you to define partials directly in your template. Use the plus symbol `+` followed by the partial name to start the partial definition, and end the partial definition with a slash `/` followed by the partial name. For example, `{{<foo}}` begins a partial definition called `foo`, and `{{/foo}}` ends it.
+
+Example:
+
+```javascript
+const result = m(`{{<foo}}Hello {{name}}!{{/foo}}{{>foo name="Bob"}}`, {});
+// Output: 'Hello Bob!'
+```
+
 ### Built-in helpers
 
 > Added in `v0.4.0`.
