@@ -45,7 +45,7 @@ const frontmatter = (str = "", parser = null) => {
 // @description parse a template string
 const parseTemplate = (templateStr = "") => {
     let i = 0;
-    const tokens, inlinePartials = {}, allTokens = templateStr.split(tags);
+    const tokens = [], inlinePartials = {}, allTokens = templateStr.split(tags);
     while (i < allTokens.length) {
         // if current token is a partial token
         if (i % 2 !== 0 && allTokens[i].trim().startsWith("<")) {
