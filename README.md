@@ -142,9 +142,28 @@ const result = m("User: {{>user userName=name userEmail=email }}", data, {partia
 
 Please note that providing keyword arguments and a custom context to a partial is not supported. On this situation, the partial will be evaluated only with the custom context.
 
+#### Partial blocks
+
+> This feature was added in `v0.16.0`.
+
+You can pass a block to a partial using a greather than symbol `>>` followed by the partial name to start the partial block, and a slash followed by the partial name to end the partial block. The provided block content will be available in the `@content` variable.
+
+Example:
+
+```javascript
+const options = {
+    partials: {
+        foo: "Hello {{@content}}!",
+    },
+};
+
+const result = m("{{>>foo}}Bob{{/foo}}", {}, options);
+// Output: 'Hello Bob!'
+```
+
 ### Inline partials
 
-> Added in `v0.16.0`.
+> This feature was added in `v0.16.0`.
 
 Inline partials allows you to define partials directly in your template. Use the plus symbol `+` followed by the partial name to start the partial definition, and end the partial definition with a slash `/` followed by the partial name. For example, `{{<foo}}` begins a partial definition called `foo`, and `{{/foo}}` ends it.
 
