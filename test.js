@@ -158,7 +158,7 @@ describe("templating", () => {
 
         it("should not overwrite user partials", () => {
             const partials = {
-                foo: "Hola {{name}}",
+                foo: "Hola {{name}}!",
             };
             assert.equal(m(template, {}, {partials}), "Hola Bob!");
         });
