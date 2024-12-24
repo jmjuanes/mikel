@@ -121,7 +121,7 @@ const create = (template = "", options = {}) => {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), context, vars);
                 if (typeof partials[t] === "string") {
                     const newCtx = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : context);
-                    compile(tokenize(partials[i]), output, newCtx, vars, 0, "");
+                    compile(tokenize(partials[t]), output, newCtx, vars, 0, "");
                 }
             }
             else if (tokens[i].startsWith("=")) {
