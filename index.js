@@ -13,7 +13,7 @@ const get = (c, p) => (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c))
 // @description tokenize and untokenize methods
 const tokenize = (str = "") => str.split(/\{\{|\}\}/);
 const untokenize = (ts = [], s = "{{", e = "}}") => {
-    return ts.reduce((p, t, i) => p + (i%2 === 0 && i > 0 ? e : (i > 0) ? s : "") + t, "");
+    return ts.reduce((p, t, i) => p + (i % 2 === 0 ? e : s) + t);
 };
 
 // @description parse string arguments
