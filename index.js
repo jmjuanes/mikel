@@ -1,4 +1,3 @@
-const tags = /\{\{|\}\}/;
 const escapedChars = {
     "&": "&amp;",
     "<": "&lt;",
@@ -10,6 +9,12 @@ const escapedChars = {
 const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 
 const get = (c, p) => (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c)) ?? "";
+
+// @description tokenize and untokenize methods
+const tokenize = (str = "") => str.split(/\{\{|\}\}/);
+const untokenize = (ts = [], s = "{{", e = "}}") => {
+    return ts.reduce((p, t, i) => p + (i % 2 === 0 ? e : s) + t);
+};
 
 // @description parse string arguments
 const parseArgs = (argString = "", context = {}, vars = {}) => {
@@ -60,9 +65,8 @@ const defaultHelpers = {
 
 // @description create a new instance of mikel
 const create = (template = "", options = {}) => {
-    // initialize internal context
     const helpers = Object.assign({}, defaultHelpers, options?.helpers || {});
-    const partials = options?.partials || {};
+    const partials = Object.assign({}, options?.partials || {});
     const functions = options?.functions || {};
     // internal method to compile the template
     const compile = (tokens, output, context, vars, index = 0, section = "") => {
@@ -103,11 +107,21 @@ const create = (template = "", options = {}) => {
                     i = compile(tokens, includeOutput ? output : [], context, vars, i + 1, t);
                 }
             }
+            else if (tokens[i].startsWith("<")) {
+                const t = tokens[i].slice(1).trim(), partialTokens = tokens.slice(i + 1);
+                const lastIndex = partialTokens.findIndex((token, j) => {
+                    return j % 2 !== 0 && token.trim().startsWith("/") && token.trim().endsWith(t);
+                });
+                if (typeof partials[t] === "undefined") {
+                    partials[t] = untokenize(partialTokens.slice(0, lastIndex));
+                }
+                i = i + lastIndex + 1;
+            }
             else if (tokens[i].startsWith(">")) {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), context, vars);
                 if (typeof partials[t] === "string") {
                     const newCtx = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : context);
-                    compile(partials[t].split(tags), output, newCtx, vars, 0, "");
+                    compile(tokenize(partials[t]), output, newCtx, vars, 0, "");
                 }
             }
             else if (tokens[i].startsWith("=")) {
@@ -139,7 +153,7 @@ const create = (template = "", options = {}) => {
     };
     // entry method to compile the template with the provided data object
     const compileTemplate = (data = {}, output = []) => {
-        compile(template.split(tags), output, data, {root: data}, 0, "");
+        compile(tokenize(template), output, data, {root: data}, 0, "");
         return output.join("");
     };
     // assign api methods and return method to compile the template
