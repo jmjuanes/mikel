@@ -118,10 +118,15 @@ const create = (template = "", options = {}) => {
                 i = i + lastIndex + 1;
             }
             else if (tokens[i].startsWith(">")) {
-                const [t, args, opt] = parseArgs(tokens[i].slice(1), context, vars);
+                const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), context, vars);
+                const blockContent = []; // to store partial block content
+                if (tokens[i].startsWith(">>")) {
+                    i = compile(tokens, blockContent, context, vars, i + 1, t);
+                }
                 if (typeof partials[t] === "string") {
                     const newCtx = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : context);
-                    compile(tokenize(partials[t]), output, newCtx, vars, 0, "");
+                    const newVars = {...vars, content: blockContent.join("")};
+                    compile(tokenize(partials[t]), output, newCtx, newVars, 0, "");
                 }
             }
             else if (tokens[i].startsWith("=")) {

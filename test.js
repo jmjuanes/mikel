@@ -164,6 +164,16 @@ describe("templating", () => {
         });
     });
 
+    describe("{{>> xyz}}", () => {
+        it("should allow providing a block to the partial", () => {
+            const partials = {
+                foo: "Hello {{@content}}!",
+            };
+
+            assert.equal(m("{{>>foo}}Bob{{/foo}}", {}, {partials}), "Hello Bob!");
+        });
+    });
+
     describe("{{#each }}", () => {
         it("should do nothing if value is not an array or object", () => {
             assert.equal(m("x{{#each values}}{{.}}{{/each}}x", {values: null}), "xx");
