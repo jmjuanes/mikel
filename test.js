@@ -178,8 +178,16 @@ describe("templating", () => {
             const partials = {
                 foo: "Hello {{@content}}!",
             };
-
             assert.equal(m("{{>>foo}}Bob{{/foo}}", {}, {partials}), "Hello Bob!");
+        });
+    });
+
+    describe("{{!>> xyz}}", () => {
+        it("should escape content of the partial", () => {
+            const partials = {
+                foo: "<b>{{@content}}</b>",
+            };
+            assert.equal(m("{{!>>foo}}<u>Bob</u>{{/foo}}", {}, {partials}, "&lt;b&gt;&lt;u&gt;Bob&lt;/u&gt;&lt;/b&gt;!"));
         });
     });
 
