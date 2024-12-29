@@ -187,7 +187,7 @@ describe("templating", () => {
             const partials = {
                 foo: "<b>{{@content}}</b>",
             };
-            assert.equal(m("{{!>>foo}}<u>Bob</u>{{/foo}}", {}, {partials}, "&lt;b&gt;&lt;u&gt;Bob&lt;/u&gt;&lt;/b&gt;!"));
+            assert.equal(m("{{!>>foo}}<u>Bob</u>{{/foo}}", {}, {partials}), "&lt;b&gt;&lt;u&gt;Bob&lt;/u&gt;&lt;/b&gt;!");
         });
     });
 
