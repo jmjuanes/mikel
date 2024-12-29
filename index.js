@@ -61,6 +61,7 @@ const defaultHelpers = {
     "eq": p => p.args[0] === p.args[1] ? p.fn(p.context) : "",
     "ne": p => p.args[0] !== p.args[1] ? p.fn(p.context) : "",
     "with": p => p.fn(p.args[0]),
+    "escape": p => escape(p.fn(p.context)),
 };
 
 // @description create a new instance of mikel

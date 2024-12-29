@@ -281,6 +281,12 @@ describe("templating", () => {
         });
     });
 
+    describe("{{#escape}}", () => {
+        it("should escape provided content", () => {
+            assert.equal(m("{{#escape}}<b>Hello</b>{{/escape}}"), "&lt;b&gt;Hello&lt;/b&gt;");
+        });
+    });
+
     describe("{{#customHelper }}", () => {
         it("should allow to execute a simple custom helper", () => {
             const options = {

@@ -311,6 +311,16 @@ const data = {
 console.log(m("{{#with autor}}{{name}} <{{email}}>{{/with}}", data)); // --> 'Bob <bob@email.com>'
 ```
 
+#### escape
+
+> Added in `v0.17.0`.
+
+The `escape` helper allows to escape the provided block content.
+
+```javascript
+console.log(m("{{#escape}}<b>Hello World!</b>{{/escape}}")); // --> '&lt;b&gt;Hello World!&lt;/b&gt;
+```
+
 ### Custom Helpers
 
 > Added in `v0.5.0`.
