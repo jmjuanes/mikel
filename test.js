@@ -149,6 +149,15 @@ describe("templating", () => {
         });
     });
 
+    describe("{{!> xyz}}", () => {
+        it("should escape content of the partial", () => {
+            const partials = {
+                foo: "<div>{{name}}</div>",
+            };
+            assert.equal(m(`{{!>foo name="Bob"}}!!`, {}, {partials}), "&lt;div&gt;Bob&lt;/div&gt;!!");
+        });
+    });
+
     describe("{{< xyz}}", () => {
         const template = `{{<foo}}Hello {{name}}!{{/foo}}{{>foo name="Bob"}}`;
 
