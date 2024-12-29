@@ -117,16 +117,18 @@ const create = (template = "", options = {}) => {
                 }
                 i = i + lastIndex + 1;
             }
-            else if (tokens[i].startsWith(">")) {
-                const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), context, vars);
+            else if (tokens[i].startsWith(">") || tokens[i].startsWith("!>")) {
+                const [t, args, opt] = parseArgs(tokens[i].replace(/^!?>{1,2}/, ""), context, vars);
                 const blockContent = []; // to store partial block content
-                if (tokens[i].startsWith(">>")) {
+                if (tokens[i].replace(/^!/, "").startsWith(">>")) {
                     i = compile(tokens, blockContent, context, vars, i + 1, t);
                 }
                 if (typeof partials[t] === "string") {
                     const newCtx = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : context);
                     const newVars = {...vars, content: blockContent.join("")};
-                    compile(tokenize(partials[t]), output, newCtx, newVars, 0, "");
+                    const partialOutput = [];
+                    compile(tokenize(partials[t]), partialOutput, newCtx, newVars, 0, "");
+                    output.push(tokens[i].startsWith("!") ? escape(partialOutput.join("")) : partialOutput.join(""));
                 }
             }
             else if (tokens[i].startsWith("=")) {
