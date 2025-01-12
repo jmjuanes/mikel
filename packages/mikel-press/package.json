@@ -18,6 +18,10 @@
         "./cli.js": "./cli.js",
         "./package.json": "./package.json"
     },
+    "bin": {
+        "mikelpress": "./cli.js",
+        "mikel-press": "./cli.js"
+    },
     "scripts": {
         "test": "node test.js"
     },
