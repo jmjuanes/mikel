@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: [mikel-webpack-plugin]
+        package: [mikel-webpack-plugin, mikel-press]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
