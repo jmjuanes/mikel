@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as path from "node:path";
 import {parseArgs} from "node:util";
 import mikelPress from "./index.js";
