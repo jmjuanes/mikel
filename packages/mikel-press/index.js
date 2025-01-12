@@ -119,9 +119,7 @@ const run = (config = {}) => {
             return [name, new Set()];
         }))),
     };
-    const dispatch = (hookName, args) => {
-        return Array.from(context.hooks[hookName]).forEach(fn => fn.apply(null, args));
-    };
+    const dispatch = (name, args) => Array.from(context.hooks[name]).forEach(fn => fn.apply(null, args));
     // 1. execute plugins
     if (config?.plugins && Array.isArray(config?.plugins)) {
         config.plugins.forEach(plugin => plugin(context));
@@ -154,8 +152,5 @@ const run = (config = {}) => {
     dispatch("done", []);
 };
 
-export default {
-    utils,
-    plugins,
-    run,
-};
+// export
+export default {utils, plugins, run};
