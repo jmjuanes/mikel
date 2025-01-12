@@ -105,13 +105,15 @@ const plugins = {
 
 // @description run mikel press with the provided configuration
 const run = (config = {}) => {
-    // 1. initialize context object
+    // 0. initialize context object
     const context = {
         site: config || {},
         source: path.resolve(process.cwd(), config?.source || "."),
         destination: path.resolve(process.cwd(), config?.destination || "./www"),
         layout: getLayoutContent(config),
     };
+    // 1. initialize mikel instance
+    context.compiler = mikel.create(context.layout.content, config?.mikel || {});
     // 2. read stuff
     context.site.data = utils.readData(path.join(context.source, config?.dataDir || "data"));
     context.site.pages = utils.readPages(path.join(context.source, config?.pagesDir || "pages"), ".html", config?.frontmatter ?? true, c => c);
@@ -122,20 +124,13 @@ const run = (config = {}) => {
     }
     // 4. save pages
     context.site.pages.forEach(page => {
-        const templateData = {
+        context.compiler.addPartial("content", page.content); // register page content as partial
+        const content = context.compiler({
             site: context.site,
             layout: context.layout,
             page: page,
-        };
-        // console.log(`[build] save ${page.url}`);
-        const pageContent = mikel(context.layout.content, templateData, {
-            ...(config?.templateOptions || {}),
-            partials: {
-                ...(config?.templateOptions?.partials || {}),
-                content: page.content,
-            },
         });
-        utils.saveFile(path.join(context.destination, page.url), pageContent);
+        utils.saveFile(path.join(context.destination, page.url), content);
     });
     // 5. save assets
     Object.values(context.site.assets).forEach(asset => {
