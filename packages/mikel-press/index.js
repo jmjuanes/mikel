@@ -96,9 +96,11 @@ const plugins = {
     // plugin to read and include posts in markdown
     posts: (folder = "posts", extension = ".md", parser = null) => {
         return context => {
-            const posts = utils.readPages(path.join(context.source, folder), extension, context.site.frontmatter, parser);
-            context.site.posts = posts; // posts will be accesible in site.posts
-            context.site.pages = [...context.site.pages, ...posts]; // posts will be included as pages also
+            context.hooks.beforeEmit.add(() => {
+                const posts = utils.readPages(path.join(context.source, folder), extension, context.site.frontmatter, parser);
+                context.site.posts = posts; // posts will be accesible in site.posts
+                context.site.pages = [...context.site.pages, ...posts]; // posts will be included as pages also
+            });
         };
     },
 };
@@ -106,22 +108,33 @@ const plugins = {
 // @description run mikel press with the provided configuration
 const run = (config = {}) => {
     // 0. initialize context object
+    const hooks = ["initialize", "compiler", "beforeEmit", "emitPage", "emitAsset", "done"];
     const context = {
         site: config || {},
         source: path.resolve(process.cwd(), config?.source || "."),
         destination: path.resolve(process.cwd(), config?.destination || "./www"),
+        compiler: null,
         layout: getLayoutContent(config),
+        hooks: Object.freeze(Object.fromEntries(hooks.map(name => {
+            return [name, new Set()];
+        }))),
     };
-    // 1. initialize mikel instance
-    context.compiler = mikel.create(context.layout.content, config?.mikel || {});
-    // 2. read stuff
-    context.site.data = utils.readData(path.join(context.source, config?.dataDir || "data"));
-    context.site.pages = utils.readPages(path.join(context.source, config?.pagesDir || "pages"), ".html", config?.frontmatter ?? true, c => c);
-    context.site.assets = utils.readAssets(path.join(context.source, config?.assetsDir || "assets"), config?.frontmatter ?? true);
-    // 3. execute plugins
+    const dispatch = (hookName, args) => {
+        return Array.from(context.hooks[hookName]).forEach(fn => fn.apply(null, args));
+    };
+    // 1. execute plugins
     if (config?.plugins && Array.isArray(config?.plugins)) {
         config.plugins.forEach(plugin => plugin(context));
     }
+    dispatch("initialize", []);
+    // 2. initialize mikel instance
+    context.compiler = mikel.create(context.layout.content, config?.mikel || {});
+    dispatch("compiler", [context.compiler]);
+    // 3. read stuff
+    context.site.data = utils.readData(path.join(context.source, config?.dataDir || "data"));
+    context.site.pages = utils.readPages(path.join(context.source, config?.pagesDir || "pages"), ".html", config?.frontmatter ?? true, c => c);
+    context.site.assets = utils.readAssets(path.join(context.source, config?.assetsDir || "assets"), config?.frontmatter ?? true);
+    dispatch("beforeEmit", []);
     // 4. save pages
     context.site.pages.forEach(page => {
         context.compiler.addPartial("content", page.content); // register page content as partial
@@ -130,12 +143,15 @@ const run = (config = {}) => {
             layout: context.layout,
             page: page,
         });
+        dispatch("emitPage", [page, content]);
         utils.saveFile(path.join(context.destination, page.url), content);
     });
     // 5. save assets
     Object.values(context.site.assets).forEach(asset => {
+        dispatch("emitAsset", [asset]);
         utils.saveFile(path.join(context.destination, asset.url), asset.content);
     });
+    dispatch("done", []);
 };
 
 export default {
