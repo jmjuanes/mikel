@@ -94,10 +94,10 @@ const getLayoutContent = config => {
 // @description plugins
 const plugins = {
     // plugin to read and include posts in markdown
-    posts: (folder = "posts", extension = ".md", parser = null) => {
+    posts: (parser = null) => {
         return context => {
             context.hooks.beforeEmit.add(() => {
-                const posts = utils.readPages(path.join(context.source, folder), extension, context.site.frontmatter, parser);
+                const posts = utils.readPages(path.join(context.source, "posts"), ".md", context.site.frontmatter, parser);
                 context.site.posts = posts; // posts will be accesible in site.posts
                 context.site.pages = [...context.site.pages, ...posts]; // posts will be included as pages also
             });
