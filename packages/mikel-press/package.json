@@ -1,7 +1,7 @@
 {
     "name": "mikel-press",
     "description": "A minimal static site generator based on mikel templating",
-    "version": "",
+    "version": "0.0.1",
     "type": "module",
     "author": {
         "name": "Josemi Juanes",
@@ -34,7 +34,7 @@
         "templating"
     ],
     "dependencies": {
-        "mikel": "*"
+        "mikel": "^0.17.0"
     },
     "files": [
         "README.md",
