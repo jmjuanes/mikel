@@ -6,11 +6,11 @@ import mikel from "mikel";
 const frontmatter = (str = "", options = {}) => {
     let body = (str || "").trim(), attributes = {};
     if (!!options && typeof options === "object") {
-        const matches = Array.from(body.matchAll(new RegExp("^" + (options.separator || "---"), "gm")));
+        const matches = Array.from(body.matchAll(new RegExp("^(" + (options.separator || "---") + " *)", "gm")));
         if (matches?.length === 2 && matches[0].index === 0) {
             const front = body.substring(0 + matches[0][1].length, matches[1].index).trim();
             body = body.substring(matches[1].index + matches[1][1].length).trim();
-            attributes = typeof options.parser === "function" ? options.parser(front) : front;
+            attributes = typeof options.parse === "function" ? options.parse(front) : front;
         }
     }
     return {body, attributes};
@@ -37,7 +37,7 @@ const getLayoutContent = config => {
         content = config.layoutContent || config.templateContent;
     }
     // parse with frontmatter
-    const {body, attributes} = utils.frontmatter(content, config.frontmatter);
+    const {body, attributes} = frontmatter(content, config.frontmatter);
     return {
         content: body,
         data: attributes || {},
@@ -143,7 +143,7 @@ const run = (config = {}) => {
     dispatch("beforeEmit", []);
     // 4. save pages
     context.site.pages.forEach(page => {
-        context.compiler.addPartial("content", page.content); // register page content as partial
+        compiler.addPartial("content", page.content); // register page content as partial
         const content = compiler({
             site: context.site,
             layout: context.layout,
