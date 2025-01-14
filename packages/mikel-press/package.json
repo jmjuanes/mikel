@@ -16,12 +16,7 @@
     "exports": {
         ".": "./index.js",
         "./index.js": "./index.js",
-        "./cli.js": "./cli.js",
         "./package.json": "./package.json"
-    },
-    "bin": {
-        "mikelpress": "./cli.js",
-        "mikel-press": "./cli.js"
     },
     "scripts": {
         "test": "node test.js"
@@ -40,7 +35,6 @@
     "files": [
         "README.md",
         "index.js",
-        "index.d.ts",
-        "cli.js"
+        "index.d.ts"
     ]
 }
