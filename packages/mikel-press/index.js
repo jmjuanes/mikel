@@ -13,14 +13,14 @@ const utils = {
         fs.writeFileSync(filePath, fileContent, "utf8");
     },
     // @description tiny front-matter parser
-    frontmatter: (str = "", parser = null) => {
+    frontmatter: (str = "", options = {}) => {
         let body = (str || "").trim(), attributes = {};
-        if (!!parser) {
-            const matches = Array.from(body.matchAll(/^(--- *)/gm))
+        if (!!options && typeof options === "object") {
+            const matches = Array.from(body.matchAll(new RegExp("^" + (options.separator || "---"), "gm")));
             if (matches?.length === 2 && matches[0].index === 0) {
                 const front = body.substring(0 + matches[0][1].length, matches[1].index).trim();
                 body = body.substring(matches[1].index + matches[1][1].length).trim();
-                attributes = typeof parser === "function" ? parser(front) : front;
+                attributes = typeof options.parser === "function" ? options.parser(front) : front;
             }
         }
         return {body, attributes};
@@ -47,7 +47,8 @@ const utils = {
                     basename: path.basename(file, type),
                     extname: path.extname(file),
                     url: attributes?.permalink || path.join("/", path.basename(file, type) + ".html"),
-                    data: attributes || {},
+                    data: attributes || {}, // DEPRECATED
+                    attributes: attributes || {},
                     content: typeof parse === "function" ? parse(body) : body,
                 };
             });
@@ -63,7 +64,8 @@ const utils = {
                 basename: path.basename(file, path.extname(file)),
                 extname: path.extname(file),
                 url: attributes?.permalink || path.join("/", file),
-                data: attributes || {},
+                data: attributes || {}, // DEPRECATED
+                attributes: attributes || {},
                 content: body,
             };
             const assetName = asset.basename.replaceAll(".", "_").replaceAll("-", "_");
@@ -130,8 +132,8 @@ const run = (config = {}) => {
     dispatch("compiler", [context.compiler]);
     // 3. read stuff
     context.site.data = utils.readData(path.join(context.source, config?.dataDir || "data"));
-    context.site.pages = utils.readPages(path.join(context.source, config?.pagesDir || "pages"), ".html", config?.frontmatter ?? true, c => c);
-    context.site.assets = utils.readAssets(path.join(context.source, config?.assetsDir || "assets"), config?.frontmatter ?? true);
+    context.site.pages = utils.readPages(path.join(context.source, config?.pagesDir || "pages"), ".html", config?.frontmatter, c => c);
+    context.site.assets = utils.readAssets(path.join(context.source, config?.assetsDir || "assets"), config?.frontmatter);
     dispatch("beforeEmit", []);
     // 4. save pages
     context.site.pages.forEach(page => {
