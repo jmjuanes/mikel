@@ -179,5 +179,26 @@ const postsPlugin = (options = {}) => {
     };
 };
 
+// progress plugin
+const progressPlugin = () => {
+    return context => {
+        const timeStart = Date.now();
+        const log = (status, msg) => console.log(`[${new Date().toISOString()}] (${status}) ${msg}`);
+        context.hooks.initialize.add(() => {
+            log("info", `source directory:       ${context.source}`);
+            log("info", `destination directory:  ${context.destination}`);
+        });
+        context.hooks.emitPage.add(page => {
+            log("info", `saving page:  ${page.url} --> ${path.join(context.destination, page.url)}`);
+        });
+        context.hooks.emitAsset.add(asset => {
+            log("info", `saving asset: ${asset.url} --> ${path.join(context.destination, asset.url)}`);
+        });
+        context.hooks.done.add(() => {
+            log("done", `build completed in ${Date.now() - timeStart}ms`);
+        });
+    };
+};
+
 // export
-export default {run, createVirtualPage, frontmatter, postsPlugin};
+export default {run, createVirtualPage, frontmatter, postsPlugin, progressPlugin};
