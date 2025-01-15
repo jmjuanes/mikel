@@ -4,11 +4,6 @@ interface MikelTemplateOptions {
     partials: {[key: string]: string};
 }
 
-interface FrontmatterOptions {
-    separator?: string;
-    parse?: (front: string) => any;
-}
-
 interface FrontmatterResult {
     body: string;
     attributes: any;
@@ -19,15 +14,17 @@ interface VirtualPageOptions {
     file?: string;
     extname?: string;
     basename?: string;
+    frontmatter?: (str: string) => FrontmatterResult;
+    transform?: (str: string) => string;
 }
 
 interface VirtualPage {
-    content: string,
-    attributes: any,
-    name: string,
-    extname: string,
-    basename: string,
-    url: string,
+    content: string;
+    attributes: any;
+    name: string;
+    extname: string;
+    basename: string;
+    url: string;
 }
 
 interface SiteConfig {
@@ -38,13 +35,13 @@ interface SiteConfig {
     dataDir: string;
     pagesDir: string;
     assetsDir: string;
-    frontmatter: Partial<FrontmatterOptions>;
+    frontmatter: (str: string) => FrontmatterResult;
     mikel: Partial<MikelTemplateOptions>;
     plugins: any[];
 }
 
 declare module "mikel-press" {
-    export function frontmatter(str: string, options?: FrontmatterOptions): FrontmatterResult;
+    export function frontmatter(str: string): FrontmatterResult;
     export function createVirtualPage(options: VirtualPageOptions): VirtualPage;
     export function run(config: Partial<SiteConfig>): void;
 }
