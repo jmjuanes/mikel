@@ -51,4 +51,5 @@ declare module "mikel-press" {
     export function run(config: Partial<SiteConfig>): void;
 
     export function postsPlugin(options: PostsPluginOptions): any;
+    export function progressPlugin(): any;
 }
