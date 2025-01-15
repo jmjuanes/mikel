@@ -122,20 +122,6 @@ const readData = folder => {
     return {};
 };
 
-// @description plugins
-const plugins = {
-    // plugin to read and include posts in markdown
-    posts: (options = {}) => {
-        return context => {
-            context.hooks.beforeEmit.add(() => {
-                const posts = readPages(path.join(context.source, options?.dir || "posts"), [".md"], context.site.frontmatter, options?.parser);
-                context.site.posts = posts; // posts will be accesible in site.posts
-                context.site.pages = [...context.site.pages, ...posts]; // posts will be included as pages also
-            });
-        };
-    },
-};
-
 // @description run mikel press with the provided configuration
 const run = (config = {}) => {
     // 0. initialize context object
@@ -182,5 +168,37 @@ const run = (config = {}) => {
     dispatch("done", []);
 };
 
+// plugin to read and include posts in markdown
+const postsPlugin = (options = {}) => {
+    return context => {
+        context.hooks.beforeEmit.add(() => {
+            const posts = readPages(path.join(context.source, options?.dir || "posts"), [".md"], context.site.frontmatter, options?.parser);
+            context.site.posts = posts; // posts will be accesible in site.posts
+            context.site.pages = [...context.site.pages, ...posts]; // posts will be included as pages also
+        });
+    };
+};
+
+// progress plugin
+const progressPlugin = () => {
+    return context => {
+        const timeStart = Date.now();
+        const log = (status, msg) => console.log(`[${new Date().toISOString()}] (${status}) ${msg}`);
+        context.hooks.initialize.add(() => {
+            log("info", `source directory:       ${context.source}`);
+            log("info", `destination directory:  ${context.destination}`);
+        });
+        context.hooks.emitPage.add(page => {
+            log("info", `saving page:  ${page.url} --> ${path.join(context.destination, page.url)}`);
+        });
+        context.hooks.emitAsset.add(asset => {
+            log("info", `saving asset: ${asset.url} --> ${path.join(context.destination, asset.url)}`);
+        });
+        context.hooks.done.add(() => {
+            log("done", `build completed in ${Date.now() - timeStart}ms`);
+        });
+    };
+};
+
 // export
-export default {run, createVirtualPage, frontmatter, plugins};
+export default {run, createVirtualPage, frontmatter, postsPlugin, progressPlugin};
