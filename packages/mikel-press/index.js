@@ -20,7 +20,7 @@ const parseYaml = (str = "") => {
 // @description tiny front-matter parser
 const frontmatter = (str = "") => {
     let body = (str || "").trim(), attributes = {};
-    const matches = Array.from(body.matchAll(new RegExp("^(" + (options.separator || "---") + " *)", "gm")));
+    const matches = Array.from(body.matchAll(/^(--- *)/gm));
     if (matches?.length === 2 && matches[0].index === 0) {
         const front = body.substring(0 + matches[0][1].length, matches[1].index).trim();
         body = body.substring(matches[1].index + matches[1][1].length).trim();
