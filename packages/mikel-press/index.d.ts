@@ -27,6 +27,11 @@ interface VirtualPage {
     url: string;
 }
 
+interface PostsPluginOptions {
+    dir: string;
+    parser: (str: string) => string;
+}
+
 interface SiteConfig {
     source: string;
     destination: string;
@@ -44,4 +49,6 @@ declare module "mikel-press" {
     export function frontmatter(str: string): FrontmatterResult;
     export function createVirtualPage(options: VirtualPageOptions): VirtualPage;
     export function run(config: Partial<SiteConfig>): void;
+
+    export function postsPlugin(options: PostsPluginOptions): any;
 }
