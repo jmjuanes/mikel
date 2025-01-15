@@ -122,20 +122,6 @@ const readData = folder => {
     return {};
 };
 
-// @description plugins
-const plugins = {
-    // plugin to read and include posts in markdown
-    posts: (options = {}) => {
-        return context => {
-            context.hooks.beforeEmit.add(() => {
-                const posts = readPages(path.join(context.source, options?.dir || "posts"), [".md"], context.site.frontmatter, options?.parser);
-                context.site.posts = posts; // posts will be accesible in site.posts
-                context.site.pages = [...context.site.pages, ...posts]; // posts will be included as pages also
-            });
-        };
-    },
-};
-
 // @description run mikel press with the provided configuration
 const run = (config = {}) => {
     // 0. initialize context object
@@ -182,5 +168,16 @@ const run = (config = {}) => {
     dispatch("done", []);
 };
 
+// plugin to read and include posts in markdown
+const postsPlugin = (options = {}) => {
+    return context => {
+        context.hooks.beforeEmit.add(() => {
+            const posts = readPages(path.join(context.source, options?.dir || "posts"), [".md"], context.site.frontmatter, options?.parser);
+            context.site.posts = posts; // posts will be accesible in site.posts
+            context.site.pages = [...context.site.pages, ...posts]; // posts will be included as pages also
+        });
+    };
+};
+
 // export
-export default {run, createVirtualPage, frontmatter, plugins};
+export default {run, createVirtualPage, frontmatter, postsPlugin};
