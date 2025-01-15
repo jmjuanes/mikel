@@ -12,6 +12,7 @@
     "bugs": "https://github.com/jmjuanes/mikel/issues",
     "main": "index.js",
     "module": "index.js",
+    "types": "index.d.ts",
     "exports": {
         ".": "./index.js",
         "./package.json": "./package.json"
@@ -26,6 +27,7 @@
     "files": [
         "README.md",
         "LICENSE",
-        "index.js"
+        "index.js",
+        "index.d.ts"
     ]
 }
