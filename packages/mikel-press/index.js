@@ -2,16 +2,29 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import mikel from "mikel";
 
-// @description tiny front-matter parser
-const frontmatter = (str = "", options = {}) => {
-    let body = (str || "").trim(), attributes = {};
-    if (!!options && typeof options === "object") {
-        const matches = Array.from(body.matchAll(new RegExp("^(" + (options.separator || "---") + " *)", "gm")));
-        if (matches?.length === 2 && matches[0].index === 0) {
-            const front = body.substring(0 + matches[0][1].length, matches[1].index).trim();
-            body = body.substring(matches[1].index + matches[1][1].length).trim();
-            attributes = typeof options.parse === "function" ? options.parse(front) : front;
+// @description tiny yaml parser
+const parseYaml = (str = "") => {
+    const lines = str.split("\n").filter(line => line.trim() !== "" && !line.trim().startsWith("#"));
+    return Object.fromEntries(lines.map(line => {
+        const [key, value] = line.split(":").map(part => part.trim());
+        if (!isNaN(value)) {
+            return [key, Number(value)];
         }
+        if (value === "true" || value === "false" || value === "null") {
+            return [key, JSON.parse(value)];
+        }
+        return [key, value.replaceAll(/^["']|["']$/g, "")];
+    }));
+};
+
+// @description tiny front-matter parser
+const frontmatter = (str = "") => {
+    let body = (str || "").trim(), attributes = {};
+    const matches = Array.from(body.matchAll(new RegExp("^(" + (options.separator || "---") + " *)", "gm")));
+    if (matches?.length === 2 && matches[0].index === 0) {
+        const front = body.substring(0 + matches[0][1].length, matches[1].index).trim();
+        body = body.substring(matches[1].index + matches[1][1].length).trim();
+        attributes = parseYaml(front);
     }
     return {body, attributes};
 };
@@ -49,7 +62,7 @@ const createVirtualPage = (options = {}) => {
     const content = options.content || fs.readFileSync(options.file, "utf8");
     const extname = options.extname || path.extname(options.file || "") || ".html";
     const basename = options.basename || path.basename(options.file || "", extname) || "virtual";
-    const {body, attributes} = frontmatter(content, options.frontmatter);
+    const {body, attributes} = typeof options?.frontmatter == "function" ? options.frontmatter(content) : {body: content, attributes: {}};
     return {
         name: basename + extname,
         basename: basename,
@@ -57,12 +70,12 @@ const createVirtualPage = (options = {}) => {
         url: options.url || attributes?.permalink || path.join("/", basename + extname),
         data: attributes || {}, // DEPRECATED
         attributes: attributes || {},
-        content: typeof options.parse === "function" ? options.parse(body) : body,
+        content: typeof options.transform === "function" ? options.transform(body) : body,
     };
 };
 
 // @description get pages from input folder
-const readPages = (folder, extensions = ".html", fm = null, parse = null) => {
+const readPages = (folder, extensions = ".html", fm = null, transform = null) => {
     const extensionsList = new Set([extensions].flat());
     return fs.readdirSync(folder, "utf8")
         .filter(file => extensionsList.has(path.extname(file)))
@@ -70,7 +83,7 @@ const readPages = (folder, extensions = ".html", fm = null, parse = null) => {
             return createVirtualPage({
                 file: path.join(folder, file),
                 frontmatter: fm,
-                parse: parse,
+                transform: transform,
                 extname: ".html",
             });
         });
