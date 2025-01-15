@@ -49,10 +49,11 @@ const getLayoutContent = config => {
         content = config.layoutContent || config.templateContent;
     }
     // parse with frontmatter
-    const {body, attributes} = frontmatter(content, config.frontmatter);
+    const {body, attributes} = typeof config.frontmatter == "function" ? config.frontmatter(content) : {body: content, attributes: {}};
     return {
         content: body,
         data: attributes || {},
+        attributes: attributes || {},
     };
 };
 
