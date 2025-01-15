@@ -76,40 +76,49 @@ const createVirtualPage = (options = {}) => {
 // @description get pages from input folder
 const readPages = (folder, extensions = ".html", fm = null, transform = null) => {
     const extensionsList = new Set([extensions].flat());
-    return fs.readdirSync(folder, "utf8")
-        .filter(file => extensionsList.has(path.extname(file)))
-        .map(file => {
-            return createVirtualPage({
-                file: path.join(folder, file),
-                frontmatter: fm,
-                transform: transform,
-                extname: ".html",
+    if (fs.existsSync(folder) && fs.lstatSync(folder).isDirectory()) {
+        return fs.readdirSync(folder, "utf8")
+            .filter(file => extensionsList.has(path.extname(file)))
+            .map(file => {
+                return createVirtualPage({
+                    file: path.join(folder, file),
+                    frontmatter: fm,
+                    transform: transform,
+                    extname: ".html",
+                });
             });
-        });
+    }
+    return [];
 };
 
 // @description get assets
 const readAssets = (folder, fm = null) => {
-    const assetPaths = fs.readdirSync(folder, "utf8");
-    return Object.fromEntries(assetPaths.map(file => {
-        const asset = createVirtualPage({
-            file: path.join(folder, file),
-            frontmatter: fm,
-        });
-        const assetName = asset.basename.replaceAll(".", "_").replaceAll("-", "_");
-        return [assetName, asset];
-    }));
+    if (fs.existsSync(folder) && fs.lstatSync(folder).isDirectory()) {
+        const assetPaths = fs.readdirSync(folder, "utf8");
+        return Object.fromEntries(assetPaths.map(file => {
+            const asset = createVirtualPage({
+                file: path.join(folder, file),
+                frontmatter: fm,
+            });
+            const assetName = asset.basename.replaceAll(".", "_").replaceAll("-", "_");
+            return [assetName, asset];
+        }));
+    }
+    return {};
 };
 
 // @description read a data folder
 const readData = folder => {
-    const files = fs.readdirSync(folder, "utf8")
-        .filter(file => path.extname(file) === ".json")
-        .map(file => path.join(folder, file))
-        .map(file => {
-            return [path.basename(file, ".json"), JSON.parse(fs.readFileSync(file, "utf8"))];
-        });
-    return Object.fromEntries(files);
+    if (fs.existsSync(folder) && fs.lstatSync(folder).isDirectory()) {
+        const files = fs.readdirSync(folder, "utf8")
+            .filter(file => path.extname(file) === ".json")
+            .map(file => path.join(folder, file))
+            .map(file => {
+                return [path.basename(file, ".json"), JSON.parse(fs.readFileSync(file, "utf8"))];
+            });
+        return Object.fromEntries(files);
+    }
+    return {};
 };
 
 // @description plugins
