@@ -147,6 +147,18 @@ describe("templating", () => {
             };
             assert.equal(m("{{>foo userName=name}}", data, {partials}), "Hello Bob!");
         });
+
+        it("should allow partial variables", () => {
+            const partials = {
+                foo: {
+                    body: "Hello {{@partial.name}}!",
+                    attributes: {
+                        name: "Bob",
+                    },
+                },
+            };
+            assert.equal(m("{{> foo}}", {}, {partials}), "Hello Bob!");
+        });
     });
 
     describe("{{< xyz}}", () => {
