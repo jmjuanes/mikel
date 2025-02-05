@@ -161,6 +161,35 @@ const result = m("{{>>foo}}Bob{{/foo}}", {}, options);
 // Output: 'Hello Bob!'
 ```
 
+#### Partials data
+
+> This feature was added in `v0.18.0`.
+
+Partials allows you to define custom data. Instead of providing a string with the partial content, you can provide an object with the following keys:
+
+- `body`: a string with the partial content.
+- `data`: an object with your custom data for the partial. You can also use `attributes` as an alias.
+
+Custom data will be available in the partial content as a variable `@partial`.
+
+Example:
+
+```javascript
+const options = {
+    partials: {
+        foo: {
+            body: "Hello {{@partial.name}}!",
+            data: {
+                name: "Bob",
+            },
+        },
+    },
+};
+
+const result = m("{{> foo}}", {}, options);
+// Output: 'Hello Bob!'
+```
+
 ### Inline partials
 
 > This feature was added in `v0.16.0`.
