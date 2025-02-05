@@ -163,6 +163,8 @@ const result = m("{{>>foo}}Bob{{/foo}}", {}, options);
 
 #### Partials data
 
+> This feature was added in `v0.18.0`.
+
 Partials allows you to define custom data. Instead of providing a string with the partial content, you can provide an object with the following keys:
 
 - `body`: a string with the partial content.
