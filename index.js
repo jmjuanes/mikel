@@ -124,10 +124,14 @@ const create = (template = "", options = {}) => {
                 if (tokens[i].startsWith(">>")) {
                     i = compile(tokens, blockContent, context, vars, i + 1, t);
                 }
-                if (typeof partials[t] === "string") {
+                if (typeof partials[t] === "string" || typeof partials[t]?.body === "string") {
                     const newCtx = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : context);
-                    const newVars = {...vars, content: blockContent.join("")};
-                    compile(tokenize(partials[t]), output, newCtx, newVars, 0, "");
+                    const newVars = {
+                        ...vars,
+                        content: blockContent.join(""),
+                        partial: partials[t]?.attributes || partials[t]?.data || {},
+                    };
+                    compile(tokenize(partials[t]?.body || partials[t]), output, newCtx, newVars, 0, "");
                 }
             }
             else if (tokens[i].startsWith("=")) {
