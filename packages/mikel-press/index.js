@@ -239,16 +239,22 @@ export const DataPlugin = (options = {}) => {
 // @description frontmatter plugin
 // @params {Object} options options for this plugin
 // @params {Array} options.extensions extensions to process. Default: [".md", ".markdown", ".html"]
-// @params {Function} options.parser frontmatter parser
+// @params {Function} options.parser frontmatter parser (JSON.parse, YAML.load)
 export const FrontmatterPlugin = (options = {}) => {
     const extensions = options.extensions || [".md", ".markdown", ".html"];
     return {
         name: "FrontmatterPlugin",
         transform: (_, node) => {
             if ((extensions === "*" || extensions.includes(path.extname(node.path))) && typeof node.data.content === "string") {
-                const {body, attributes} = options.parser(node.data.content);
-                node.data.attributes = attributes;
-                node.data.content = body;
+                node.data.attributes = {};
+                const matches = Array.from(node.data.content.matchAll(/^(--- *)/gm))
+                if (matches?.length === 2 && matches[0].index === 0) {
+                    const front = node.data.content.substring(0 + matches[0][1].length, matches[1].index).trim();
+                    node.data.content = node.data.content.substring(matches[1].index + matches[1][1].length).trim();
+                    if (typeof options.parser === "function") {
+                        node.data.attributes = options.parser(front);
+                    }
+                }
             }
         },
     };
