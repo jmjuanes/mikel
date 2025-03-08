@@ -10,24 +10,21 @@
     },
     "repository": "https://github.com/jmjuanes/mikel",
     "bugs": "https://github.com/jmjuanes/mikel/issues",
-    "bin": {
-        "mikel-press": "./cli.js"
-    },
     "exports": {
         ".": "./index.js",
         "./index.js": "./index.js",
-        "./cli.js": "./cli.js",
         "./package.json": "./package.json"
     },
     "engines": {
         "node": "20 || >=22"
     },
-    "dependencies": {
-        "mime": "^4.0.6"
-    },
     "peerDependencies": {
         "mikel": "*"
     },
+    "files": [
+        "README.md",
+        "index.js"
+    ],
     "keywords": [
         "static-site",
         "site-generator",
