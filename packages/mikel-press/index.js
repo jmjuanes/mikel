@@ -2,106 +2,113 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import mikel from "mikel";
 
-// @description read a file from disk
-export const read = (file, encoding = "utf8") => {
-    return fs.readFileSync(file, encoding);
-};
-
-// @description write a file to disk
-export const write = (file, content) => {
-    const folder = path.dirname(file);
-    if (!fs.existsSync(folder)) {
-        fs.mkdirSync(folder, {recursive: true});
-    }
-    fs.writeFileSync(file, content, "utf8");
-};
-
-// @description copy a file
-export const copy = (source, target) => {
-    const folder = path.dirname(target);
-    if (!fs.existsSync(folder)) {
-        fs.mkdirSync(folder, {recursive: true});
-    }
-    fs.copyFileSync(source, target);
-};
-
-// @description get all files from the given folder and the given extensions
-export const readdir = (folder, extensions = "*") => {
-    if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) {
-        return [];
-    }
-    return fs.readdirSync(folder, "utf8").filter(file => {
-        return extensions === "*" || extensions.includes(path.extname(file));
-    });
-};
-
-// @description walk through the given folder and get all files
-// @params {String} folder folder to walk through
-// @params {Array|String} extensions extensions to include. Default: "*"
-export const walkdir = (folder, extensions = "*") => {
-    const files = [];
-    const walkSync = currentFolder => {
-        fs.readdirSync(currentFolder).forEach(file => {
-            const pathToFile = path.join(currentFolder, file);
-            if (fs.statSync(pathToFile).isDirectory()) {
-                return walkSync(pathToFile);
-            }
-            if (extensions === "*" || extensions.includes(path.extname(file))) {
-                files.push(pathToFile);
+// @description general utilities
+const utils = {
+    // @description read a file from disk
+    // @param {String} file path to the file to read
+    read: (file, encoding = "utf8") => {
+        return fs.readFileSync(file, encoding);
+    },
+    // @description write a file to disk
+    // @param {String} file path to the file to save
+    // @param {String} content content to save
+    write: (file, content = "") => {
+        const folder = path.dirname(file);
+        if (!fs.existsSync(folder)) {
+            fs.mkdirSync(folder, {recursive: true});
+        }
+        fs.writeFileSync(file, content, "utf8");
+    },
+    // @description copy a file
+    copy: (source, target) => {
+        const folder = path.dirname(target);
+        if (!fs.existsSync(folder)) {
+            fs.mkdirSync(folder, {recursive: true});
+        }
+        fs.copyFileSync(source, target);
+    },
+    // @description get all files from the given folder and the given extensions
+    readdir: (folder, extensions = "*") => {
+        if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) {
+            return [];
+        }
+        return fs.readdirSync(folder, "utf8").filter(file => {
+            return extensions === "*" || extensions.includes(path.extname(file));
+        });
+    },
+    // @description walk through the given folder and get all files
+    // @params {String} folder folder to walk through
+    // @params {Array|String} extensions extensions to include. Default: "*"
+    walkdir: (folder, extensions = "*") => {
+        const files = [];
+        const walkSync = currentFolder => {
+            fs.readdirSync(currentFolder).forEach(file => {
+                const pathToFile = path.join(currentFolder, file);
+                if (fs.statSync(pathToFile).isDirectory()) {
+                    return walkSync(pathToFile);
+                }
+                if (extensions === "*" || extensions.includes(path.extname(file))) {
+                    files.push(pathToFile);
+                }
+            });
+        };
+        walkSync(folder);
+        return files;
+    },
+    // @description watch for file changes
+    // @param {String} filePath path to the file to watch
+    // @param {Function} listener method to listen for file changes
+    watch: (filePath, listener) => {
+        let lastModifiedTime = null;
+        fs.watch(filePath, "utf8", () => {
+            const modifiedTime = fs.statSync(filePath).mtimeMs;
+            if (lastModifiedTime !== modifiedTime) {
+                lastModifiedTime = modifiedTime;
+                return listener(filePath);
             }
         });
-    };
-    walkSync(folder);
-    return files;
-};
-
-// @description change the properties of the given path (dirname, basename, extname)
-export const formatPath = (filePath, options = {}) => {
-    const dirname = options.dirname || path.dirname(filePath);
-    const extname = options.extname || path.extname(filePath);
-    const basename = options.basename || path.basename(filePath, path.extname(filePath));
-    return path.join(dirname, `${basename}${extname}`);
-};
-
-// @description watch for file changes
-export const watch = (filePath, listener) => {
-    let lastModifiedTime = null;
-    fs.watch(filePath, "utf8", () => {
-        const modifiedTime = fs.statSync(filePath).mtimeMs;
-        if (lastModifiedTime !== modifiedTime) {
-            lastModifiedTime = modifiedTime;
-            return listener(filePath);
-        }
-    });
+    },
+    // @description change the properties of the given path (dirname, basename, extname)
+    format: (filePath, options = {}) => {
+        const dirname = options.dirname || path.dirname(filePath);
+        const extname = options.extname || path.extname(filePath);
+        const basename = options.basename || path.basename(filePath, path.extname(filePath));
+        return path.join(dirname, `${basename}${extname}`);
+    },
 };
 
 // @description add a new node item
-export const createNode = (source, path, label = "", data = {}) => {
+const createNode = (source, path, label = "", data = {}) => {
     return {source, path, label, data};
 };
 
 // @description get nodes with the specified label
-export const getNodesByLabel = (nodes, label) => {
+const getNodesByLabel = (nodes, label) => {
     return Array.from(nodes).filter(node => node.label === label);
 };
 
 // @description get all nodes to update
-const getNodesToUpdate = (graph, affectedNode, listOfAffectedNodes) => {
-    listOfAffectedNodes.add(affectedNode);
-    return graph.forEach(edge => {
-        if (edge[0] === affectedNode && !listOfAffectedNodes.has(edge[1])) {
-            getNodesToUpdate(graph, edge[1], listOfAffectedNodes);
-        }
-    });
+const getNodesToUpdate = (graph, affectedNode) => {
+    const listOfAffectedNodes = new Set();
+    const walkNodes = currentNode => {
+        listOfAffectedNodes.add(currentNode);
+        return graph.forEach(edge => {
+            if (edge[0] === currentNode && !listOfAffectedNodes.has(edge[1])) {
+                walkNodes(edge[1]);
+            }
+        });
+    };
+    walkNodes(affectedNode);
+    return listOfAffectedNodes;
 };
 
 // @description get plugins with the specified function
-export const getPlugins = (plugins, functionName) => {
+const getPlugins = (plugins, functionName) => {
     return plugins.filter(plugin => typeof plugin[functionName] === "function");
 };
 
 // create a new context from the provided configuration
-export const createContextFromConfig = config => {
+const createContextFromConfig = config => {
     const {source, destination, plugins, ...otherConfiguration} = config;
     const context = Object.freeze({
         config: otherConfiguration,
@@ -143,7 +150,8 @@ export const createContextFromConfig = config => {
 };
 
 // partial build context
-export const partialBuildContext = (context, nodesToBuild = []) => {
+const partialBuildContext = (context, nodes = null) => {
+    const nodesToBuild = (nodes && Array.isArray(nodes)) ? nodes : context.nodes;
     // reset nodes path
     nodesToBuild.forEach(node => {
         node.data.path = node.path;
@@ -172,62 +180,41 @@ export const partialBuildContext = (context, nodesToBuild = []) => {
     });
 };
 
-// @description start context watch
-export const startContextWatch = context => {
-    // const nodesMap = new Map(context.nodes.map(node => {
-    //     return [path.join(node.source, node.path), node];
-    // }));
-    // force to rebuild
-    const rebuild = changedNodePath => {
-        const nodesPathsToBuild = new Set();
-        getNodesToUpdate(context.edges, changedNodePath, nodesPathsToBuild);
-        const nodesToRebuild = context.nodes.filter(node => {
-            return nodesPathsToBuild.has(path.join(node.source, node.path));
-        });
-        // perform the rebuild of the context
-        partialBuildContext(context, nodesToRebuild);
-    };
-    // create a watch for each registered node in the context
-    context.nodes.forEach(node => {
-        return watch(path.join(node.source, node.path), rebuild);
-    });
-};
-
 // @description source plugin
-export const SourcePlugin = (options = {}) => {
+const SourcePlugin = (options = {}) => {
     const label = options.label || "pages";
     return {
         name: "SourcePlugin",
         load: context => {
             const folder = path.resolve(context.source, options.source || "./content");
-            const nodes = walkdir(folder, options?.extensions || "*").map(file => {
+            const nodes = utils.walkdir(folder, options?.extensions || "*").map(file => {
                 return createNode(folder, file, label);
             });
             return nodes;
         },
         transform: (_, node) => {
             if (node.label === label) {
-                node.data.content = read(path.join(node.source, node.path));
+                node.data.content = utils.read(path.join(node.source, node.path));
             }
         },
     };
 };
 
 // @description data plugin
-export const DataPlugin = (options = {}) => {
+const DataPlugin = (options = {}) => {
     const label = options?.label || "asset/data";
     return {
         name: "DataPlugin",
         load: context => {
             const folder = path.resolve(context.source, options.source || "./data");
-            return readdir(folder, [".json"]).map(file => {
+            return utils.readdir(folder, [".json"]).map(file => {
                 return createNode(folder, file, label);
             });
         },
         transform: (_, node) => {
             if (node.label === label && path.extname(node.path) === ".json") {
                 node.data.name = path.basename(node.path, ".json");
-                node.data.content = JSON.parse(read(path.join(node.source, node.path)));
+                node.data.content = JSON.parse(utils.read(path.join(node.source, node.path)));
             }
         },
         shouldEmit: (_, node) => {
@@ -240,7 +227,7 @@ export const DataPlugin = (options = {}) => {
 // @params {Object} options options for this plugin
 // @params {Array} options.extensions extensions to process. Default: [".md", ".markdown", ".html"]
 // @params {Function} options.parser frontmatter parser (JSON.parse, YAML.load)
-export const FrontmatterPlugin = (options = {}) => {
+const FrontmatterPlugin = (options = {}) => {
     const extensions = options.extensions || [".md", ".markdown", ".html"];
     return {
         name: "FrontmatterPlugin",
@@ -261,7 +248,7 @@ export const FrontmatterPlugin = (options = {}) => {
 };
 
 // @description permalink plugin
-export const PermalinkPlugin = () => {
+const PermalinkPlugin = () => {
     return {
         name: "PermalinkPlugin",
         transform: (_, node) => {
@@ -274,7 +261,7 @@ export const PermalinkPlugin = () => {
 // @description markdown plugin
 // @params {Object} options options for this plugin
 // @params {Object} options.parser markdown parser (for example marked.parse)
-export const MarkdownPlugin = (options = {}) => {
+const MarkdownPlugin = (options = {}) => {
     return {
         name: "MarkdownPlugin",
         transform: (_, node) => {
@@ -286,24 +273,24 @@ export const MarkdownPlugin = (options = {}) => {
                 //     });
                 // });
                 node.data.content = options.parser(node.data.content);
-                node.data.path = formatPath(node.data.path, {extname: ".html"});
+                node.data.path = utils.format(node.data.path, {extname: ".html"});
             }
         },
     };
 };
 
 // @description content plugin
-export const ContentPlugin = (options = {}) => {
-    const label = options.label || "asset/template";
+const ContentPlugin = (options = {}) => {
+    const label = options.label || "asset/layout";
     const extensions = options.extensions || [".html", ".md", ".markdown"];
     return {
         name: "ContentPlugin",
         load: context => {
-            return createNode(context.source, options.template, label);
+            return createNode(context.source, context.config.layout || options.layout, label);
         },
-        transform: (context, node) => {
+        transform: (_, node) => {
             if (node.label === label) {
-                node.data.content = read(path.join(node.source, node.path));
+                node.data.content = utils.read(path.join(node.source, node.path));
             }
         },
         getDependencyGraph: context => {
@@ -340,10 +327,10 @@ export const ContentPlugin = (options = {}) => {
                     const content = compiler({
                         site: siteData,
                         page: node.data,
-                        template: template.data,
+                        layout: template.data,
                     });
-                    const filePath = formatPath(node.data.path || node.path, {extname: ".html"});
-                    write(path.join(context.destination, filePath), content);
+                    const filePath = utils.format(node.data.path || node.path, {extname: ".html"});
+                    utils.write(path.join(context.destination, filePath), content);
                 }
             });
         },
@@ -351,15 +338,58 @@ export const ContentPlugin = (options = {}) => {
 };
 
 // @description copy plugin
-export const CopyAssetsPlugin = (options = {}) => {
+const CopyAssetsPlugin = (options = {}) => {
     return {
         name: "CopyAssetsPlugin",
         emit: context => {
             (options.patterns || []).forEach(item => {
                 if (item.from && item.to && fs.existsSync(item.from)) {
-                    copy(item.from, path.join(context.destination, item.to));
+                    utils.copy(item.from, path.join(context.destination, item.to));
                 }
             });
         },
     };
+};
+
+// @description default export of mikel-press
+export default {
+    // @description run mikel-press and generate the static site
+    // @param {Object} config configuration object
+    build: config => {
+        partialBuildContext(createContextFromConfig(config));
+    },
+    // @description watch for changes in the source folder and rebuild the site
+    // @param {Object} config configuration object
+    watch: config => {
+        const context = createContextFromConfig(config);
+        // force to rebuild
+        const rebuild = changedNodePath => {
+            const nodesPathsToBuild = getNodesToUpdate(context.edges, changedNodePath);
+            const nodesToRebuild = context.nodes.filter(node => {
+                return nodesPathsToBuild.has(path.join(node.source, node.path));
+            });
+            // perform the rebuild of the context
+            partialBuildContext(context, nodesToRebuild);
+        };
+        // create a watch for each registered node in the context
+        context.nodes.forEach(node => {
+            return utils.watch(path.join(node.source, node.path), rebuild);
+        });
+        // initially build all nodes
+        partialBuildContext(context, context.nodes);
+    },
+    // utilities for working with files
+    utils: utils,
+    // helpers for working with the context
+    helpers: {
+        createNode: createNode,
+    },
+    // plugins 
+    SourcePlugin: SourcePlugin,
+    DataPlugin: DataPlugin,
+    MarkdownPlugin: MarkdownPlugin,
+    FrontmatterPlugin: FrontmatterPlugin,
+    PermalinkPlugin: PermalinkPlugin,
+    ContentPlugin: ContentPlugin,
+    CopyAssetsPlugin: CopyAssetsPlugin,
 };
