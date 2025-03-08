@@ -36,7 +36,7 @@ Options:
 - `options.source` (string): Specifies a custom source directory. If not provided, `config.source` is used.
 - `options.extensions` (array): Defines the file extensions that should be processed. The default value is `[".html", ".md", ".markdown"]`.
 
-## `press.ContentPlugin(options)`
+### `press.ContentPlugin(options)`
 
 This plugin processes each page and saves it into `config.destination`. It accepts an `options` object, which is passed to mikel for template processing.
 
