@@ -19,10 +19,35 @@ $ yarn add mikel mikel-press
 | Field | Description | Default |
 |-------|-------------|---------|
 | `source` | The path to the directory containing the site's HTML or Markdown files. | `"content"` |
-| `destination` |  The output directory where the generated static site will be saved. | `"www"` |
+| `destination` | The output directory where the generated static site will be saved. | `"www"` |
 | `layout` | The path to the layout file that will be used as the base template for all pages. | - |
 | `plugins` | A list of plugins used to extend the functionality of mikel-press. | `[]` |
-| `*` |  Any other properties passed in config will be available as `site.*` inside each page template. | - |
+| `*` | Any other properties passed in config will be available as `site.*` inside each page template. | - |
+
+### Example Configuration
+
+Here is an example configuration object:
+
+```javascript
+const config = {
+    source: "./content",
+    destination: "./www",
+    layout: "./layouts/main.html",
+    plugins: [
+        press.SourcePlugin(),
+        press.DataPlugin(),
+        press.FrontmatterPlugin(),
+        press.PermalinkPlugin(),
+        press.MarkdownPlugin({ parser: marked.parse }),
+        press.ContentPlugin(),
+        press.CopyAssetsPlugin({
+            patterns: [
+                { from: "./static", to: "./www/static" },
+            ],
+        }),
+    ],
+};
+```
 
 ## Plugins
 
@@ -36,9 +61,42 @@ Options:
 - `options.source` (string): Specifies a custom source directory. If not provided, `config.source` is used.
 - `options.extensions` (array): Defines the file extensions that should be processed. The default value is `[".html", ".md", ".markdown"]`.
 
+### `press.DataPlugin(options)`
+
+This plugin loads JSON files from the specified directory and makes them available in the site context.
+
+Options:
+- `options.source` (string): Specifies a custom source directory for data files. If not provided, `./data` is used.
+
+### `press.FrontmatterPlugin(options)`
+
+This plugin processes frontmatter in Markdown and HTML files.
+
+Options:
+- `options.extensions` (array): Defines the file extensions that should be processed. The default value is `[".md", ".markdown", ".html"]`.
+- `options.parser` (function): Frontmatter parser function (e.g., `JSON.parse`, `YAML.load`).
+
+### `press.PermalinkPlugin()`
+
+This plugin allows defining custom permalinks for pages.
+
+### `press.MarkdownPlugin(options)`
+
+This plugin processes Markdown files and converts them to HTML.
+
+Options:
+- `options.parser` (function): Markdown parser function (e.g., `marked.parse`).
+
 ### `press.ContentPlugin(options)`
 
 This plugin processes each page and saves it into `config.destination`. It accepts an `options` object, which is passed to mikel for template processing.
+
+### `press.CopyAssetsPlugin(options)`
+
+This plugin copies static files from the source to the destination.
+
+Options:
+- `options.patterns` (array): List of file patterns to copy. Each pattern should have `from` and `to`.
 
 ## Node API
 
@@ -46,26 +104,22 @@ This plugin processes each page and saves it into `config.destination`. It accep
 
 ### `press.build(config)`
 
-Triggers the build of **mikel-press** with the given configuration object provided as argument.
+Triggers the build of **mikel-press** with the given configuration object provided as an argument.
 
 ```javascript
 import press from "mikel-press";
 
-press.build({
-    // ...
-});
+press.build(config);
 ```
 
 ### `press.watch(config)`
 
-Calling the `watch` method triggers the build, but when watches for changes and as soon as it detectes a change in some of the source files, builds it again.
+Calling the `watch` method triggers the build, but also watches for changes and rebuilds the site as soon as it detects a change in any of the source files.
 
 ```javascript
 import press from "mikel-press";
 
-press.watch({
-    // ...
-});
+press.watch(config);
 ```
 
 ## License
