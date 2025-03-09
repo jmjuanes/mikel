@@ -1,0 +1,36 @@
+{
+    "name": "mikel-press",
+    "description": "A tiny and fast static site generator based on mikel templating",
+    "version": "0.0.0",
+    "type": "module",
+    "license": "MIT",
+    "author": {
+        "name": "Josemi Juanes",
+        "email": "hello@josemi.xyz"
+    },
+    "repository": "https://github.com/jmjuanes/mikel",
+    "bugs": "https://github.com/jmjuanes/mikel/issues",
+    "exports": {
+        ".": "./index.js",
+        "./index.js": "./index.js",
+        "./package.json": "./package.json"
+    },
+    "engines": {
+        "node": "20 || >=22"
+    },
+    "dependencies": {
+        "mikel": "*"
+    },
+    "files": [
+        "README.md",
+        "index.js"
+    ],
+    "keywords": [
+        "static-site",
+        "site-generator",
+        "digital-garden",
+        "markdown",
+        "blog",
+        "mikel"
+    ]
+}
