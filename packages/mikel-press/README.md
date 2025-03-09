@@ -3,14 +3,20 @@
 ![npm version](https://badgen.net/npm/v/mikel-press?labelColor=1d2734&color=21bf81)
 ![license](https://badgen.net/github/license/jmjuanes/mikel?labelColor=1d2734&color=21bf81)
 
-**mikel-press** is a static site generator built on top of **mikel**, a Mustache-based templating engine. It allows you to generate static websites from HTML and Markdown files using a flexible plugin system.
+**mikel-press** is a static site generator inspired by [Jekyll](https://jekyllrb.com/) and built on top of **mikel**, a Mustache-based templating engine. It allows you to generate static websites from HTML and Markdown files using a flexible plugin system.
 
 ## Installation
 
-Install this package using **yarn** or **npm**:
+To install **mikel-press**, ensure you have [Node.js](https://nodejs.org) installed on your system. Then, add this package as a dependency to your project using **yarn**:
 
 ```bash
-$ yarn add mikel mikel-press
+$ yarn add --dev mikel-press
+```
+
+Or **npm**:
+
+```bash
+$ npm install --dev mikel-press
 ```
 
 ## Configuration
