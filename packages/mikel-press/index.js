@@ -108,7 +108,7 @@ const getPlugins = (plugins, functionName) => {
 };
 
 // create a new context from the provided configuration
-const createContextFromConfig = config => {
+const createContext = config => {
     const {source, destination, plugins, ...otherConfiguration} = config;
     const context = Object.freeze({
         config: otherConfiguration,
@@ -149,8 +149,8 @@ const createContextFromConfig = config => {
     return context;
 };
 
-// partial build context
-const partialBuildContext = (context, nodes = null) => {
+// @description build context
+const buildContext = (context, nodes = null) => {
     const nodesToBuild = (nodes && Array.isArray(nodes)) ? nodes : context.nodes;
     // reset nodes path
     nodesToBuild.forEach(node => {
@@ -177,6 +177,23 @@ const partialBuildContext = (context, nodes = null) => {
     // emit each node
     getPlugins(context.plugins, "emit").forEach(plugin => {
         return plugin.emit(context, filteredNodes);
+    });
+};
+
+// @description start a watch on the current context
+const watchContext = context => {
+    // force to rebuild
+    const rebuild = changedNodePath => {
+        const nodesPathsToBuild = getNodesToUpdate(context.edges, changedNodePath);
+        const nodesToRebuild = context.nodes.filter(node => {
+            return nodesPathsToBuild.has(path.join(node.source, node.path));
+        });
+        // perform the rebuild of the context
+        buildContext(context, nodesToRebuild);
+    };
+    // create a watch for each registered node in the context
+    context.nodes.forEach(node => {
+        return utils.watch(path.join(node.source, node.path), rebuild);
     });
 };
 
@@ -357,34 +374,22 @@ export default {
     // @description run mikel-press and generate the static site
     // @param {Object} config configuration object
     build: config => {
-        partialBuildContext(createContextFromConfig(config));
+        buildContext(createContext(config));
     },
     // @description watch for changes in the source folder and rebuild the site
     // @param {Object} config configuration object
     watch: config => {
-        const context = createContextFromConfig(config);
-        // force to rebuild
-        const rebuild = changedNodePath => {
-            const nodesPathsToBuild = getNodesToUpdate(context.edges, changedNodePath);
-            const nodesToRebuild = context.nodes.filter(node => {
-                return nodesPathsToBuild.has(path.join(node.source, node.path));
-            });
-            // perform the rebuild of the context
-            partialBuildContext(context, nodesToRebuild);
-        };
-        // create a watch for each registered node in the context
-        context.nodes.forEach(node => {
-            return utils.watch(path.join(node.source, node.path), rebuild);
-        });
-        // initially build all nodes
-        partialBuildContext(context, context.nodes);
+        const context = createContext(config);
+        buildContext(context, context.nodes);
+        watchContext(context);
     },
     // utilities for working with files
     utils: utils,
     // helpers for working with the context
-    helpers: {
-        createNode: createNode,
-    },
+    createNode: createNode,
+    createContext: createContext,
+    buildContext: buildContext,
+    watchContext: watchContext,
     // plugins 
     SourcePlugin: SourcePlugin,
     DataPlugin: DataPlugin,
