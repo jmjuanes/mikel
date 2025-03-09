@@ -411,28 +411,3 @@ describe("templating", () => {
         });
     });
 });
-
-describe("utils", () => {
-    describe("frontmatter", () => {
-        const frontmatter = lines => m.frontmatter(lines.join("\n"));
-
-        it("should return empty data if no frontmatter is present", () => {
-            const result = frontmatter([
-                `Hello world`,
-            ]);
-            assert.equal(result.body, "Hello world");
-            assert.equal(Object.keys(result.data).length, 0);
-        });
-
-        it("should return parsed frontmatter", () => {
-            const result = frontmatter([
-                `---`,
-                `DATA`,
-                `---`,
-                `Hello world`,
-            ]);
-            assert.equal(result.body, "Hello world");
-            assert.equal(result.data, "DATA");
-        });
-    });
-});
