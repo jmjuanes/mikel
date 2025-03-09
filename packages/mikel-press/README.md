@@ -1,6 +1,7 @@
 # mikel-press
 
-> A tiny and fast static site generator based on mikel templating.
+![npm version](https://badgen.net/npm/v/mikel-press?labelColor=1d2734&color=21bf81)
+![license](https://badgen.net/github/license/jmjuanes/mikel?labelColor=1d2734&color=21bf81)
 
 **mikel-press** is a static site generator built on top of **mikel**, a Mustache-based templating engine. It allows you to generate static websites from HTML and Markdown files using a flexible plugin system.
 
