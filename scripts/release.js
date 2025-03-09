@@ -5,7 +5,6 @@ import * as path from "node:path";
 const readJson = file => {
     return JSON.parse(fs.readFileSync(file, "utf8"));
 };
-
 const writeJson = (file, data) => {
     return fs.writeFileSync(file, JSON.stringify(data, null, "    "), "utf8");
 };
