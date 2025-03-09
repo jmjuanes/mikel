@@ -35,18 +35,6 @@ const parse = (v, context = {}, vars = {}) => {
     return (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(context, v || ".");
 };
 
-// @description tiny front-matter parser
-const frontmatter = (str = "", parser = null) => {
-    let body = (str || "").trim(), data = {};
-    const matches = Array.from(body.matchAll(/^(--- *)/gm))
-    if (matches?.length === 2 && matches[0].index === 0) {
-        const front = body.substring(0 + matches[0][1].length, matches[1].index).trim();
-        body = body.substring(matches[1].index + matches[1][1].length).trim();
-        data = typeof parser === "function" ? parser(front) : front;
-    }
-    return {body, data};
-};
-
 // @description default helpers
 const defaultHelpers = {
     "each": p => {
@@ -187,6 +175,5 @@ mikel.create = create;
 mikel.escape = escape;
 mikel.get = get;
 mikel.parse = parse;
-mikel.frontmatter = frontmatter;
 
 export default mikel;
