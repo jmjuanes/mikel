@@ -18,7 +18,7 @@
     "engines": {
         "node": "20 || >=22"
     },
-    "peerDependencies": {
+    "dependencies": {
         "mikel": "*"
     },
     "files": [
