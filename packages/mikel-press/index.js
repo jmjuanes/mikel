@@ -329,7 +329,8 @@ const ContentPlugin = (options = {}) => {
                         page: node.data,
                         layout: template.data,
                     });
-                    const filePath = utils.format(node.data.path || node.path, {extname: ".html"});
+                    // const filePath = utils.format(node.data.path || node.path, {extname: ".html"});
+                    const filePath = node.data?.path || node.path;
                     utils.write(path.join(context.destination, filePath), content);
                 }
             });
