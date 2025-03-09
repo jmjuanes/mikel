@@ -24,30 +24,66 @@ $ yarn add mikel mikel-press
 | `plugins` | A list of plugins used to extend the functionality of mikel-press. | `[]` |
 | `*` | Any other properties passed in config will be available as `site.*` inside each page template. | - |
 
-### Example Configuration
-
 Here is an example configuration object:
 
 ```javascript
 const config = {
     source: "./content",
     destination: "./www",
-    layout: "./layouts/main.html",
+    layout: "./layout.html",
+    title: "Hello world",
+    description: "My awesome site",
     plugins: [
         press.SourcePlugin(),
-        press.DataPlugin(),
         press.FrontmatterPlugin(),
         press.PermalinkPlugin(),
-        press.MarkdownPlugin({ parser: marked.parse }),
         press.ContentPlugin(),
         press.CopyAssetsPlugin({
             patterns: [
-                { from: "./static", to: "./www/static" },
+                { from: "./static/styles.css", to: "static/" },
             ],
         }),
     ],
 };
 ```
+
+## Content
+
+### Variables
+
+Each HTML file processed by **mikel-press** will be handled by the mikel templating engine, that will provide the following data variables to each page:
+
+#### Global variables
+
+| Variable | Description |
+|----------|-------------|
+| `site` | Contains the site information and all the additional keys provided in the configuration object. |
+| `page` | Specific information about the page that is rendered. |
+| `layout` | Specific information about the layout that is used for renderin the page. |
+
+#### Site variables
+
+| Variable | Description |
+|----------|-------------|
+| `site.data` | An object containing all data items loaded by `DataPlugin`. |
+| `site.pages` | A list containing all pages processed by **mikel-pres**. |
+| `site.*` | All the additional configuration fields provided in the configuration. |
+
+#### Page variables
+
+| Variable | Description |
+|----------|-------------|
+| `page.path` | The path to the page. Example: `about/index.html`. |
+| `page.url` | The path to the page including the leading `/`. Example: `/about/index.html`. |
+| `page.attributes` | An object containing all the frontmatter variables in the page processed by `FrontmatterPlugin`. |
+| `page.content` | The raw content of the page before begin processed by **mikel**. |
+
+#### Layout variables
+
+| Variable | Description |
+|----------|-------------|
+| `layout.attributes` | An object containing all the frontmatter variables in the layout processed by `FrontmatterPlugin`. |
+| `layout.content` | The raw content of the layout. |
 
 ## Plugins
 
