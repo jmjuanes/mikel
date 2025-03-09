@@ -1,14 +1,8 @@
 name: Publish
-
-# Allow to run this workflow manually from the Actions tab
 on:
-  workflow_dispatch:
-    inputs:
-      package:
-        description: 'Package to publish'
-        type: string
-        required: true
-        default: 'mikel'
+  push:
+    tags: ['*']
+
 ## Set permissions to the github token
 ## https://github.com/softprops/action-gh-release#permissions 
 permissions:
@@ -24,13 +18,22 @@ jobs:
         with:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
-      - name: Publish primary package
-        run: npm publish
-        if: ${{ inputs.package == 'mikel' }}
+      - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Publish secondary package
-        run: cd packages/${{ inputs.package }} && npm publish
-        if: ${{ inputs.package != 'mikel' }}
+  publish-packages:
+    if: ${{ github.repository == 'jmjuanes/mikel' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [mikel-webpack-plugin, mikel-press, mikel-press-cli]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+      - run: yarn release
+      - run: cd packages/${{ matrix.package }} && npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
