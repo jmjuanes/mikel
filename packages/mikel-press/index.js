@@ -305,7 +305,8 @@ const ContentPlugin = (options = {}) => {
     return {
         name: "ContentPlugin",
         load: context => {
-            return createNode(context.source, context.config.layout || options.layout, label);
+            const layoutPath = path.resolve(context.source, context.config.layout || options.layout);
+            return createNode(path.dirname(layoutPath), path.basename(layoutPath), label);
         },
         transform: (_, node) => {
             if (node.label === label) {
