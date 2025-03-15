@@ -42,17 +42,19 @@ const utils = {
     walkdir: (folder, extensions = "*") => {
         const files = [];
         const walkSync = currentFolder => {
-            fs.readdirSync(currentFolder).forEach(file => {
-                const pathToFile = path.join(currentFolder, file);
-                if (fs.statSync(pathToFile).isDirectory()) {
-                    return walkSync(pathToFile);
+            const fullFolderPath = path.join(folder, currentFolder);
+            fs.readdirSync(fullFolderPath).forEach(file => {
+                const filePath = path.join(currentFolder, file);
+                const fullFilePath = path.join(fullFolderPath, file);
+                if (fs.statSync(fullFilePath).isDirectory()) {
+                    return walkSync(filePath);
                 }
                 if (extensions === "*" || extensions.includes(path.extname(file))) {
-                    files.push(pathToFile);
+                    files.push(filePath);
                 }
             });
         };
-        walkSync(folder);
+        walkSync("./");
         return files;
     },
     // @description watch for file changes
