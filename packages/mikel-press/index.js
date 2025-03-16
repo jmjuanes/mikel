@@ -1,6 +1,23 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import * as http from "node:http";
 import mikel from "mikel";
+
+// @description default mime types
+const DEFAULT_MIME_TYPES = {
+    ".css": "text/css",
+    ".gif": "image/gif",
+    ".html": "text/html",
+    ".ico": "image/vnd.microsoft.icon",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".js": "text/javascript",
+    ".json": "application/json",
+    ".mjs": "text/javascript",
+    ".png": "image/png",
+    ".svg": "image/svg+xml",
+    ".txt": "text/plain", 
+};
 
 // @description general utilities
 const utils = {
@@ -76,6 +93,10 @@ const utils = {
         const extname = options.extname || path.extname(filePath);
         const basename = options.basename || path.basename(filePath, path.extname(filePath));
         return path.join(dirname, `${basename}${extname}`);
+    },
+    // @description get the mime type from the given extension
+    getMimeType: (extname = ".txt") => {
+        return DEFAULT_MIME_TYPES[extname] || "text/plain";
     },
 };
 
@@ -197,6 +218,42 @@ const watchContext = context => {
     context.nodes.forEach(node => {
         return utils.watch(path.join(node.source, node.path), rebuild);
     });
+};
+
+// @description start a server on the current context
+// @param {Object} context current site context
+// @param {Object} options server options
+// @param {String} options.port port that the server will listen. Default: "3000"
+// @param {Function} options.getMimeType function to obtain the associated mime type from the given extension
+const serveContext = (context, options = {}) => {
+    const port = parseInt(options?.port || "3000");
+    const getMimeType = options?.getMimeType || utils.getMimeType;
+    const server = http.createServer((request, response) => {
+        let responseCode = 200;
+        let url = path.join(context.destination, path.normalize(request.url));
+        // check for directory
+        if (url.endsWith("/") || (fs.existsSync(url) && fs.statSync(url).isDirectory())) {
+            url = path.join(url, "index.html");
+        }
+        // check if we have to append the '.html' extension
+        if (!fs.existsSync(url) && fs.existsSync(url + ".html")) {
+            url = url + ".html";
+        }
+        // check if the file does not exist
+        if (!fs.existsSync(url)) {
+            url = path.join(context.destination, "404.html");
+            responseCode = 404;
+        }
+        // send the file
+        response.writeHead(responseCode, {
+            "Content-Type": getMimeType?.(path.extname(url)) || "text/plain",
+        });
+        fs.createReadStream(url).pipe(response);
+        console.log(`[${responseCode}] ${request.method} ${request.url}`);
+    });
+    // launch server
+    server.listen(port);
+    console.log(`Server running at http://127.0.0.1:${port}/`);
 };
 
 // @description source plugin
@@ -393,6 +450,7 @@ export default {
     createContext: createContext,
     buildContext: buildContext,
     watchContext: watchContext,
+    serveContext: serveContext,
     // plugins 
     SourcePlugin: SourcePlugin,
     DataPlugin: DataPlugin,
