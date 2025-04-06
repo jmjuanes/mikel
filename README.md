@@ -547,7 +547,7 @@ Allows to extend the templating with custom **helpers**, **functions**, and **pa
 ```javascript
 template.use({
     partials: {
-        foo: "bar,
+        foo: "bar",
     },
 });
 ```
