@@ -52,7 +52,7 @@ m.use(mikelMarkdown());
 
 And finally, compile your template:
 ```javascript
-const result = m({}); // --> 'Hello <b>world</b>'
+const result = m({}); // --> 'Hello <strong>world</strong>'
 ```
 
 ## License
