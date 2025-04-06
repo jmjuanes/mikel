@@ -59,7 +59,7 @@ const create = (template = "", options = {}) => {
         helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
         partials: Object.assign({}, options?.partials || {}),
         functions: options?.functions || {},
-        variables: options?.variables || {},
+        variables: {},
     };
     // internal method to compile the template
     const compile = (tokens, output, data, vars, index = 0, section = "") => {
@@ -161,6 +161,17 @@ const create = (template = "", options = {}) => {
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
+        use: newOptions => {
+            if (typeof newOptions === "function") {
+                newOptions(ctx);
+            }
+            else if (!!newOptions && typeof newOptions === "object") {
+                ["helpers", "functions", "partials", "variables"].forEach(field => {
+                    return Object.assign(ctx[field], newOptions?.[field] || {});
+                });
+            }
+            return compileTemplate;
+        },
         addHelper: (name, fn) => ctx.helpers[name] = fn,
         removeHelper: name => delete ctx.helpers[name],
         addFunction: (name, fn) => ctx.functions[name] = fn,
