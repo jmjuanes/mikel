@@ -380,7 +380,8 @@ Custom helper functions receive a single object as argument, containing the foll
 
 - `args`: an array containing the variables with the helper is called in the template.
 - `opt`: an object containing the keyword arguments provided to the helper.
-- `context`: the current context (data) where the helper has been executed.
+- `data`: the current data where the helper has been executed.
+- `context` (**DEPRECATED**): the current context (data) where the helper has been executed.
 - `fn`: a function that executes the template provided in the helper block and returns a string with the evaluated template in the provided context.
 
 The helper function must return a string, which will be injected into the result string. Example:
@@ -536,6 +537,20 @@ console.log(template({name: "Susan"})); // --> "Hello, Susan!"
 ```
 
 It also exposes the following additional methods:
+
+#### `template.use(options)`
+
+> Added in `v0.19.0`.
+
+Allows to extend the templating with custom **helpers**, **functions**, and **partials**.
+
+```javascript
+template.use({
+    partials: {
+        foo: "bar",
+    },
+});
+```
 
 #### `template.addHelper(helperName, helperFn)`
 

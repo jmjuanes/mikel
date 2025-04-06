@@ -2,6 +2,7 @@ declare type HelperFunction = (params: {
     args: any[];
     opt: Record<string, any>;
     context: Record<string, any>;
+    data: Record<string, any>;
     fn: (context?: Record<string, any>, vars?: Record<string, any>, output?: string[]) => string;
 }) => string;
 
@@ -21,14 +22,20 @@ declare interface Functions {
     }) => string | void;
 }
 
+declare interface Variables {
+    [key: string]: any;
+}
+
 declare interface MikelOptions {
     helpers?: Helpers;
     partials?: Partials;
     functions?: Functions;
+    variables?: Variables;
 }
 
 declare interface MikelTemplate {
     (data?: any): string;
+    use(options: Partial<MikelOptions>): MikelTemplate;
     addHelper(name: string, fn: HelperFunction): void;
     removeHelper(name: string): void;
     addFunction(name: string, fn: (params: any) => string | void): void;

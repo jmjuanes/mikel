@@ -411,3 +411,35 @@ describe("templating", () => {
         });
     });
 });
+
+describe("mikel.use", () => {
+    it("should allow registering new helpers", () => {
+        const mk = m.create(`Hello {{#foo "bar"}}{{/foo}}`);
+        mk.use({
+            helpers: {
+                foo: params => params.args[0],
+            },
+        });
+        assert.equal(mk({}), "Hello bar");
+    });
+
+    it("should allow registering new functions", () => {
+        const mk = m.create("Hello {{=foo}}");
+        mk.use({
+            functions: {
+                foo: () => "bar",
+            },
+        });
+        assert.equal(mk({}), "Hello bar");
+    });
+
+    it("should allow registering new partials", () => {
+        const mk = m.create("Hello {{>foo}}");
+        mk.use({
+            partials: {
+                foo: "bar",
+            },
+        });
+        assert.equal(mk({}), "Hello bar");
+    });
+});
