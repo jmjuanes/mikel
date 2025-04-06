@@ -19,7 +19,8 @@
     },
     "scripts": {
         "release": "node ./scripts/release.js",
-        "test": "node test.js"
+        "test": "node test.js && yarn test:markdown",
+        "test:markdown": "node ./packages/mikel-markdown/test.js"
     },
     "keywords": [
         "template",
