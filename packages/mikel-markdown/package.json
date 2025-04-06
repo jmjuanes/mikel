@@ -1,0 +1,27 @@
+{
+    "name": "mikel-markdown",
+    "description": "A mikel helper for parsing markdown content.",
+    "version": "0.0.0",
+    "type": "module",
+    "license": "MIT",
+    "author": {
+        "name": "Josemi Juanes",
+        "email": "hello@josemi.xyz"
+    },
+    "repository": "https://github.com/jmjuanes/mikel",
+    "bugs": "https://github.com/jmjuanes/mikel/issues",
+    "exports": {
+        ".": "./index.js",
+        "./index.js": "./index.js",
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "README.md",
+        "index.js"
+    ],
+    "keywords": [
+        "mikel",
+        "plugin",
+        "markdown"
+    ]
+}
