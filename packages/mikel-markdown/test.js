@@ -37,11 +37,11 @@ describe("parser", () => {
         });
 
         it("should parse images without alt text", () => {
-            assert.equal(mk("![](./image.png)"), `<p><img alt="" src="./image.png" /></p>`);
+            assert.equal(mk("![](./image.png)"), `<p><img src="./image.png" /></p>`);
         });
 
         it("should parse images with links", () => {
-            assert.equal(mk("[![](./image.png)](page.html)"), `<p><a href="page.html"><img alt="" src="./image.png" /></a></p>`);
+            assert.equal(mk("[![](./image.png)](page.html)"), `<p><a href="page.html"><img src="./image.png" /></a></p>`);
         });
     });
 
