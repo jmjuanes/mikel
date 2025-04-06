@@ -54,9 +54,13 @@ const defaultHelpers = {
 
 // @description create a new instance of mikel
 const create = (template = "", options = {}) => {
-    const helpers = Object.assign({}, defaultHelpers, options?.helpers || {});
-    const partials = Object.assign({}, options?.partials || {});
-    const functions = options?.functions || {};
+    const ctx = {
+        tokens: tokenize(template),
+        helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
+        partials: Object.assign({}, options?.partials || {}),
+        functions: options?.functions || {},
+        variables: options?.variables || {},
+    };
     // internal method to compile the template
     const compile = (tokens, output, data, vars, index = 0, section = "") => {
         let i = index;
@@ -64,10 +68,10 @@ const create = (template = "", options = {}) => {
             if (i % 2 === 0) {
                 output.push(tokens[i]);
             }
-            else if (tokens[i].startsWith("#") && typeof helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
+            else if (tokens[i].startsWith("#") && typeof ctx.helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), data, vars);
                 const j = i + 1;
-                output.push(helpers[t]({
+                output.push(ctx.helpers[t]({
                     args: args,
                     opt: opt,
                     data: data,
@@ -102,8 +106,8 @@ const create = (template = "", options = {}) => {
                 const lastIndex = partialTokens.findIndex((token, j) => {
                     return j % 2 !== 0 && token.trim().startsWith("/") && token.trim().endsWith(t);
                 });
-                if (typeof partials[t] === "undefined") {
-                    partials[t] = untokenize(partialTokens.slice(0, lastIndex));
+                if (typeof ctx.partials[t] === "undefined") {
+                    ctx.partials[t] = untokenize(partialTokens.slice(0, lastIndex));
                 }
                 i = i + lastIndex + 1;
             }
@@ -113,20 +117,20 @@ const create = (template = "", options = {}) => {
                 if (tokens[i].startsWith(">>")) {
                     i = compile(tokens, blockContent, data, vars, i + 1, t);
                 }
-                if (typeof partials[t] === "string" || typeof partials[t]?.body === "string") {
+                if (typeof ctx.partials[t] === "string" || typeof ctx.partials[t]?.body === "string") {
                     const newData = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : data);
                     const newVars = {
                         ...vars,
                         content: blockContent.join(""),
-                        partial: partials[t]?.attributes || partials[t]?.data || {},
+                        partial: ctx.partials[t]?.attributes || ctx.partials[t]?.data || {},
                     };
-                    compile(tokenize(partials[t]?.body || partials[t]), output, newData, newVars, 0, "");
+                    compile(tokenize(ctx.partials[t]?.body || ctx.partials[t]), output, newData, newVars, 0, "");
                 }
             }
             else if (tokens[i].startsWith("=")) {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), data, vars);
-                if (typeof functions[t] === "function") {
-                    output.push(functions[t]({args, opt, data}) || "");
+                if (typeof ctx.functions[t] === "function") {
+                    output.push(ctx.functions[t]({args, opt, data}) || "");
                 }
             }
             else if (tokens[i].startsWith("/")) {
@@ -152,17 +156,17 @@ const create = (template = "", options = {}) => {
     };
     // entry method to compile the template with the provided data object
     const compileTemplate = (data = {}, output = []) => {
-        compile(tokenize(template), output, data, {root: data}, 0, "");
+        compile(ctx.tokens, output, data, {root: data, ...ctx.variables}, 0, "");
         return output.join("");
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
-        addHelper: (name, fn) => helpers[name] = fn,
-        removeHelper: name => delete helpers[name],
-        addFunction: (name, fn) => functions[name] = fn,
-        removeFunction: name => delete functions[name],
-        addPartial: (name, partial) => partials[name] = partial,
-        removePartial: name => delete partials[name],
+        addHelper: (name, fn) => ctx.helpers[name] = fn,
+        removeHelper: name => delete ctx.helpers[name],
+        addFunction: (name, fn) => ctx.functions[name] = fn,
+        removeFunction: name => delete ctx.functions[name],
+        addPartial: (name, partial) => ctx.partials[name] = partial,
+        removePartial: name => delete ctx.partials[name],
     });
 };
 
