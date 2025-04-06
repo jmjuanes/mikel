@@ -75,7 +75,7 @@ const create = (template = "", options = {}) => {
                     args: args,
                     opt: opt,
                     data: data,
-                    context: data, // DEPRECATED
+                    context: data,
                     fn: (blockData = {}, blockVars = {}, blockOutput = []) => {
                         i = compile(tokens, blockOutput, blockData, {...vars, ...blockVars, root: vars.root}, j, t);
                         return blockOutput.join("");
@@ -167,7 +167,7 @@ const create = (template = "", options = {}) => {
             }
             else if (!!newOptions && typeof newOptions === "object") {
                 ["helpers", "functions", "partials", "variables"].forEach(field => {
-                    return Object.assign(ctx[field], newOptions?.[field] || {});
+                    Object.assign(ctx[field], newOptions?.[field] || {});
                 });
             }
             return compileTemplate;
