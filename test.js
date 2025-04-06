@@ -411,3 +411,15 @@ describe("templating", () => {
         });
     });
 });
+
+describe("mikel.use", () => {
+    it("should allow registering new helpers", () => {
+        const mk = m.create(`Hello {{#foo "bar"}}{{/foo}}`);
+        mk.use({
+            helpers: {
+                foo: params => params.args[0],
+            },
+        });
+        assert.equal(mk({}), "Hello bar");
+    });
+});
