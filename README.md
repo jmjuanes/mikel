@@ -540,6 +540,8 @@ It also exposes the following additional methods:
 
 #### `template.use(options)`
 
+> Added in `v0.19.0`.
+
 Allows to extend the templating with custom **helpers**, **functions**, and **partials**.
 
 ```javascript
