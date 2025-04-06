@@ -422,4 +422,24 @@ describe("mikel.use", () => {
         });
         assert.equal(mk({}), "Hello bar");
     });
+
+    it("should allow registering new functions", () => {
+        const mk = m.create("Hello {{=foo}}");
+        mk.use({
+            functions: {
+                foo: () => "bar",
+            },
+        });
+        assert.equal(mk({}), "Hello bar");
+    });
+
+    it("should allow registering new partials", () => {
+        const mk = m.create("Hello {{>foo}}");
+        mk.use({
+            partials: {
+                foo: "bar",
+            },
+        });
+        assert.equal(mk({}), "Hello bar");
+    });
 });
