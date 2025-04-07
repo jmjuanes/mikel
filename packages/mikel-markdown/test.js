@@ -21,7 +21,7 @@ describe("parser", () => {
         });
 
         it("should escape HTML characters", () => {
-            assert.equal(mk("Text `<hr>` text"), "<p>Text <code>%3Chr%3E</code> text</p>");
+            assert.equal(mk("Text `<hr>` text"), "<p>Text <code>&lt;hr&gt;</code> text</p>");
         });
     });
 
