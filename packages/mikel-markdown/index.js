@@ -1,4 +1,12 @@
-const escape = str => encodeURIComponent(str);
+const escapedChars = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+};
+
+const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 
 // @description custom method to render the provided tag and content
 const render = (tag, props = {}, content = "") => {
