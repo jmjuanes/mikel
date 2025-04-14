@@ -19,6 +19,15 @@ const DEFAULT_MIME_TYPES = {
     ".txt": "text/plain", 
 };
 
+// @description default labels
+const LABELS = {
+    PAGE: "page",
+    ASSET: "asset",
+    DATA: "asset/data",
+    PARTIAL: "asset/partial",
+    LAYOUT: "asset/layout",
+};
+
 // @description general utilities
 const utils = {
     // @description read a file from disk
@@ -258,27 +267,44 @@ const serveContext = (context, options = {}) => {
 
 // @description source plugin
 const SourcePlugin = (options = {}) => {
-    const label = options.label || "pages";
     return {
         name: "SourcePlugin",
         load: context => {
-            const folder = path.resolve(context.source, options.source || "./content");
+            const folder = path.resolve(context.source, options.source);
             const nodes = utils.walkdir(folder, options?.extensions || "*").map(file => {
-                return createNode(folder, file, label);
+                return createNode(folder, file, options.label);
             });
             return nodes;
         },
         transform: (_, node) => {
-            if (node.label === label) {
+            if (node.label === options.label) {
                 node.data.content = utils.read(path.join(node.source, node.path));
             }
         },
     };
 };
 
+// @description alias to Source plugin
+const PagesPlugin = (options = {}) => {
+    return SourcePlugin({
+        extensions: options?.extensions || [".html", ".htm"],
+        label: options?.label || LABELS.PAGE,
+        source: "./pages",
+    });
+};
+
+// @description assets plugin
+const AssetsPlugin = (options = {}) => {
+    return SourcePlugin({
+        extensions: options?.extensions || "*",
+        label: options?.label || LABELS.ASSET,
+        source: "./assets",
+    });
+};
+
 // @description data plugin
 const DataPlugin = (options = {}) => {
-    const label = options?.label || "asset/data";
+    const label = options?.label || LABELS.DATA;
     return {
         name: "DataPlugin",
         load: context => {
@@ -357,47 +383,45 @@ const MarkdownPlugin = (options = {}) => {
 
 // @description content plugin
 const ContentPlugin = (options = {}) => {
-    const label = options.label || "asset/layout";
-    const extensions = options.extensions || [".html", ".md", ".markdown"];
     return {
         name: "ContentPlugin",
         load: context => {
-            const layoutPath = path.resolve(context.source, context.config.layout || options.layout);
-            return createNode(path.dirname(layoutPath), path.basename(layoutPath), label);
+            const layout = path.resolve(context.source, context.config.layout || options.layout);
+            return createNode(path.dirname(layout), path.basename(layout), LABELS.LAYOUT);
         },
         transform: (_, node) => {
-            if (node.label === label) {
+            if (node.label === LABELS.LAYOUT) {
                 node.data.content = utils.read(path.join(node.source, node.path));
             }
         },
-        getDependencyGraph: context => {
-            const graph = [];
-            const template = getNodesByLabel(context.nodes, label)[0];
-            context.nodes.forEach(node => {
-                if (node.label !== label && extensions.includes(path.extname(node.path))) {
-                    graph.push([
-                        path.join(template.source, template.path),
-                        path.join(node.source, node.path),
-                    ]);
-                }
-            });
-            return graph;
-        },
+        // getDependencyGraph: context => {
+        //     const graph = [];
+        //     const layout = getNodesByLabel(context.nodes, LABELS.LAYOUT)[0];
+        //     context.nodes.forEach(node => {
+        //         if (node.label !== LABELS.LAYOUT && extensions.includes(path.extname(node.path))) {
+        //             graph.push([
+        //                 path.join(layout.source, layout.path),
+        //                 path.join(node.source, node.path),
+        //             ]);
+        //         }
+        //     });
+        //     return graph;
+        // },
         shouldEmit: (_, node) => {
-            return node.label !== label;
+            return node.label !== LABELS.LAYOUT;
         },
         emit: (context, nodesToEmit) => {
             // prepare site data
             const siteData = Object.assign({}, context.config, {
-                data: Object.fromEntries(getNodesByLabel(context.nodes, "asset/data").map(node => {
+                data: Object.fromEntries(getNodesByLabel(context.nodes, LABELS.DATA).map(node => {
                     return [node.data.name, node.data.content];
                 })),
-                pages: getNodesByLabel(context.nodes, "pages").map(n => n.data),
-                posts: getNodesByLabel(context.nodes, "posts").map(n => n.data),
+                pages: getNodesByLabel(context.nodes, LABELS.PAGE).map(n => n.data),
+                assets: getNodesByLabel(context.nodes, LABELS.ASSET).map(n => n.data),
             });
             // get data files
-            const template = getNodesByLabel(context.nodes, label)[0];
-            const compiler = mikel.create(template.data.content, options);
+            const layout = getNodesByLabel(context.nodes, LABELS.LAYOUT)[0];
+            const compiler = mikel.create(layout.data.content, options);
             nodesToEmit.forEach(node => {
                 if (extensions.includes(path.extname(node.path))) {
                     compiler.addPartial("content", node.data.content);
@@ -453,10 +477,14 @@ export default {
     serveContext: serveContext,
     // plugins 
     SourcePlugin: SourcePlugin,
+    PagesPlugin: PagesPlugin,
+    AssetsPlugin: AssetsPlugin,
     DataPlugin: DataPlugin,
     MarkdownPlugin: MarkdownPlugin,
     FrontmatterPlugin: FrontmatterPlugin,
     PermalinkPlugin: PermalinkPlugin,
     ContentPlugin: ContentPlugin,
     CopyAssetsPlugin: CopyAssetsPlugin,
+    // constants
+    LABELS: LABELS,
 };
