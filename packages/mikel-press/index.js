@@ -279,6 +279,8 @@ const SourcePlugin = (options = {}) => {
         transform: (_, node) => {
             if (node.label === options.label) {
                 node.data.content = utils.read(path.join(node.source, node.path));
+                node.data.path = path.join(options?.base || "", node.path);
+                node.data.url = path.normalize("/" + node.data.path);
             }
         },
     };
@@ -289,7 +291,7 @@ const PagesPlugin = (options = {}) => {
     return SourcePlugin({
         extensions: options?.extensions || [".html", ".htm"],
         label: options?.label || LABELS.PAGE,
-        source: "./pages",
+        source: options?.source || "./pages",
     });
 };
 
@@ -298,7 +300,8 @@ const AssetsPlugin = (options = {}) => {
     return SourcePlugin({
         extensions: options?.extensions || "*",
         label: options?.label || LABELS.ASSET,
-        source: "./assets",
+        source: options?.source || "./assets",
+        base: options?.base || "assets",
     });
 };
 
@@ -355,7 +358,7 @@ const PermalinkPlugin = () => {
         name: "PermalinkPlugin",
         transform: (_, node) => {
             node.data.path = node.data?.attributes?.permalink || node.data.path;
-            // node.data.url = path.normalize("/" + node.data.path);
+            node.data.url = path.normalize("/" + node.data.path);
         },
     };
 };
@@ -368,12 +371,6 @@ const MarkdownPlugin = (options = {}) => {
         name: "MarkdownPlugin",
         transform: (_, node) => {
             if (path.extname(node.path) === ".md" || path.extname(node.path) === ".markdown") {
-                // const marked = new Marked(options);
-                // getPlugins(context.plugins, "markdownPlugins").forEach(plugin => {
-                //     (plugin.markdownPlugins(context, node) || []).forEach(markedPlugin => {
-                //         marked.use(markedPlugin);
-                //     });
-                // });
                 node.data.content = options.parser(node.data.content);
                 node.data.path = utils.format(node.data.path, {extname: ".html"});
             }
