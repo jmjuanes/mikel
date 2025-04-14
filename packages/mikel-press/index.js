@@ -270,9 +270,9 @@ const SourcePlugin = (options = {}) => {
     return {
         name: "SourcePlugin",
         load: context => {
-            const folder = path.resolve(context.source, options.source);
+            const folder = path.resolve(context.source, options?.source || "");
             const nodes = utils.walkdir(folder, options?.extensions || "*").map(file => {
-                return createNode(folder, file, options.label);
+                return createNode(folder, file, options?.label || LABELS.PAGE);
             });
             return nodes;
         },
