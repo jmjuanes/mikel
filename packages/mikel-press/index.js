@@ -387,7 +387,9 @@ const ContentPlugin = (options = {}) => {
         name: "ContentPlugin",
         load: context => {
             const layout = path.resolve(context.source, context.config.layout || options.layout);
-            return createNode(path.dirname(layout), path.basename(layout), LABELS.LAYOUT);
+            if (fs.existsSync(layout)) {
+                return createNode(path.dirname(layout), path.basename(layout), LABELS.LAYOUT);
+            }
         },
         transform: (_, node) => {
             if (node.label === LABELS.LAYOUT) {
@@ -421,18 +423,26 @@ const ContentPlugin = (options = {}) => {
             });
             // get data files
             const layout = getNodesByLabel(context.nodes, LABELS.LAYOUT)[0];
-            const compiler = mikel.create(layout.data.content, options);
+            const compiler = mikel.create(layout?.data?.content || "{{>content}}", options);
             nodesToEmit.forEach(node => {
-                if (extensions.includes(path.extname(node.path))) {
+                const destination = path.join(context.destination, node.data?.path || node.path);
+                // 1. check for page node
+                if (node.label === LABELS.PAGE) {
                     compiler.addPartial("content", node.data.content);
                     const content = compiler({
                         site: siteData,
                         page: node.data,
-                        layout: template.data,
+                        layout: layout?.data || {},
                     });
-                    // const filePath = utils.format(node.data.path || node.path, {extname: ".html"});
-                    const filePath = node.data?.path || node.path;
-                    utils.write(path.join(context.destination, filePath), content);
+                    utils.write(destination, content);
+                }
+                // 2. check for asset node with content in the node
+                else if (node.label === LABELS.ASSET && node.data?.content) {
+                    utils.write(destination, node.data.content);
+                }
+                // 3. check for asset node without content in the node
+                else if (node.label === LABELS.ASSET) {
+                    utils.copy(path.join(node.source, node.path), destination);
                 }
             });
         },
