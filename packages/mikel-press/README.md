@@ -73,7 +73,8 @@ Each HTML file processed by **mikel-press** will be handled by the mikel templat
 | Variable | Description |
 |----------|-------------|
 | `site.data` | An object containing all data items loaded by `DataPlugin`. |
-| `site.pages` | A list containing all pages processed by **mikel-pres**. |
+| `site.pages` | A list containing all pages loaded by the `PagesPlugin`. |
+| `site.assets` | A list containing all assets files loaded by the `AssetsPlugin`. |
 | `site.*` | All the additional configuration fields provided in the configuration. |
 
 #### Page variables
@@ -103,6 +104,15 @@ This plugin reads content from the specified `config.source` directory and loads
 Options:
 - `options.source` (string): Specifies a custom source directory. If not provided, `config.source` is used.
 - `options.extensions` (array): Defines the file extensions that should be processed. The default value is `[".html", ".md", ".markdown"]`.
+- `options.base` (string): Specifies the base path for the output files.
+
+### `press.PagesPlugin()`
+
+An alias of `press.SourcePlugin` that will read `.html` files from the `pages` folder.
+
+### `press.AssetsPlugin()`
+
+An alias of `press.SourcePlugin` that will read all files in the `assets` folder and process them as assets.
 
 ### `press.DataPlugin(options)`
 
