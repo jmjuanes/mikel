@@ -147,6 +147,7 @@ const createContext = config => {
         source: path.resolve(source || "."),
         destination: path.resolve(destination || "./www"),
         plugins: plugins || [],
+        template: mikel.create("{{>content}}", {}),
         nodes: [],
         edges: [],
     });
@@ -206,9 +207,16 @@ const buildContext = (context, nodes = null) => {
         }
         return true;
     });
+    // before emit
+    getPlugins(context.plugins, "beforeEmit").forEach(plugin => {
+        return plugin.beforeEmit(context);
+    });
     // emit each node
-    getPlugins(context.plugins, "emit").forEach(plugin => {
-        return plugin.emit(context, filteredNodes);
+    const emitPlugins = getPlugins(context.plugins, "emit");
+    filteredNodes.forEach((node, _, allNodes) => {
+        emitPlugins.forEach(plugin => {
+            return plugin.emit(context, node, allNodes);
+        });
     });
 };
 
@@ -278,7 +286,9 @@ const SourcePlugin = (options = {}) => {
         },
         transform: (_, node) => {
             if (node.label === options.label) {
-                node.data.content = utils.read(path.join(node.source, node.path));
+                if (!(options?.binaryExtensions || []).includes(path.extname(node.path))) {
+                    node.data.content = utils.read(path.join(node.source, node.path));
+                }
                 node.data.path = path.join(options?.base || "", node.path);
                 node.data.url = path.normalize("/" + node.data.path);
             }
@@ -301,8 +311,24 @@ const AssetsPlugin = (options = {}) => {
         extensions: options?.extensions || "*",
         label: options?.label || LABELS.ASSET,
         source: options?.source || "./assets",
-        base: options?.base || "assets",
+        base: options?.base ?? "assets",
+        binaryExtensions: options?.binaryExtensions || [".png", ".jpg", ".jpeg", ".gif", ".ico"],
     });
+};
+
+// @description partials plugin
+const PartialsPlugin = (options = {}) => {
+    return {
+        ...SourcePlugin({
+            extensions: options?.extensions || [".html", ".htm"],
+            source: options?.source || "./partials",
+            label: options?.label || LABELS.PARTIAL,
+        }),
+        name: "PartialsPlugin",
+        shouldEmit: (_, node) => {
+            return node.label !== (options?.label || LABELS.PARTIAL);
+        },
+    };
 };
 
 // @description data plugin
@@ -379,69 +405,81 @@ const MarkdownPlugin = (options = {}) => {
 };
 
 // @description content plugin
-const ContentPlugin = (options = {}) => {
+const ContentPlugin = (options = {}, pluginContext = {}) => {
     return {
         name: "ContentPlugin",
         load: context => {
-            const layout = path.resolve(context.source, context.config.layout || options.layout);
-            if (fs.existsSync(layout)) {
-                return createNode(path.dirname(layout), path.basename(layout), LABELS.LAYOUT);
+            const layout = path.resolve(context.source, context.config.layout || options.layout || "./layout.html");
+            if (fs.existsSync(layoutPath)) {
+                pluginContext.layout = createNode(path.dirname(layout), path.basename(layout), LABELS.LAYOUT);
             }
+            return pluginContext.layout;
         },
         transform: (_, node) => {
             if (node.label === LABELS.LAYOUT) {
                 node.data.content = utils.read(path.join(node.source, node.path));
             }
         },
-        // getDependencyGraph: context => {
-        //     const graph = [];
-        //     const layout = getNodesByLabel(context.nodes, LABELS.LAYOUT)[0];
-        //     context.nodes.forEach(node => {
-        //         if (node.label !== LABELS.LAYOUT && extensions.includes(path.extname(node.path))) {
-        //             graph.push([
-        //                 path.join(layout.source, layout.path),
-        //                 path.join(node.source, node.path),
-        //             ]);
-        //         }
-        //     });
-        //     return graph;
-        // },
+        getDependencyGraph: context => {
+            const graph = [];
+            const extensions = context.config?.extensions || [".html", ".htm"];
+            context.nodes.forEach(node => {
+                if (pluginContext.layout && node.label !== LABELS.LAYOUT && extensions.includes(path.extname(node.path))) {
+                    graph.push([
+                        path.join(pluginContext.layout.source, pluginContext.layout.path),
+                        path.join(node.source, node.path),
+                    ]);
+                }
+            });
+            return graph;
+        },
         shouldEmit: (_, node) => {
             return node.label !== LABELS.LAYOUT;
         },
-        emit: (context, nodesToEmit) => {
+        beforeEmit: context => {
             // prepare site data
-            const siteData = Object.assign({}, context.config, {
+            pluginContext.siteData = Object.assign({}, context.config, {
                 data: Object.fromEntries(getNodesByLabel(context.nodes, LABELS.DATA).map(node => {
                     return [node.data.name, node.data.content];
                 })),
                 pages: getNodesByLabel(context.nodes, LABELS.PAGE).map(n => n.data),
                 assets: getNodesByLabel(context.nodes, LABELS.ASSET).map(n => n.data),
+                partials: getNodesByLabel(context.nodes, LABELS.PARTIAL).map(n => n.data),
             });
-            // get data files
-            const layout = getNodesByLabel(context.nodes, LABELS.LAYOUT)[0];
-            const compiler = mikel.create(layout?.data?.content || "{{>content}}", options);
-            nodesToEmit.forEach(node => {
-                const destination = path.join(context.destination, node.data?.path || node.path);
-                // 1. check for page node
-                if (node.label === LABELS.PAGE) {
-                    compiler.addPartial("content", node.data.content);
-                    const content = compiler({
-                        site: siteData,
-                        page: node.data,
-                        layout: layout?.data || {},
-                    });
-                    utils.write(destination, content);
-                }
-                // 2. check for asset node with content in the node
-                else if (node.label === LABELS.ASSET && node.data?.content) {
-                    utils.write(destination, node.data.content);
-                }
-                // 3. check for asset node without content in the node
-                else if (node.label === LABELS.ASSET) {
-                    utils.copy(path.join(node.source, node.path), destination);
-                }
+            // use layout in template
+            if (pluginContext?.layout?.data?.content) {
+                context.template.use(ctx => {
+                    ctx.tokens = mikel.tokenize(pluginContext.layout.data.content || "{{>content}}");
+                });
+            }
+            // register partials
+            pluginContext.siteData.partials.forEach(partial => {
+                const name = path.basename(partial.path, path.extname(partial.path));
+                context.template.addPartial(name, {
+                    body: partial.content,
+                    attributes: partial.attributes || {},
+                });
             });
+        },
+        emit: (context, node) => {
+            const destination = path.join(context.destination, node.data?.path || node.path);
+            // 1. check for page node
+            if (node.label === LABELS.PAGE) {
+                context.template.addPartial("content", node.data.content);
+                utils.write(destination, context.template({
+                    site: pluginContext.siteData,
+                    page: node.data,
+                    layout: pluginContext.layout?.data || {},
+                }));
+            }
+            // 2. check for asset node with content in the node
+            else if (node.label === LABELS.ASSET && node.data?.content) {
+                utils.write(destination, node.data.content);
+            }
+            // 3. check for asset node without content in the node
+            else if (node.label === LABELS.ASSET) {
+                utils.copy(path.join(node.source, node.path), destination);
+            }
         },
     };
 };
@@ -486,6 +524,7 @@ export default {
     SourcePlugin: SourcePlugin,
     PagesPlugin: PagesPlugin,
     AssetsPlugin: AssetsPlugin,
+    PartialsPlugin: PartialsPlugin,
     DataPlugin: DataPlugin,
     MarkdownPlugin: MarkdownPlugin,
     FrontmatterPlugin: FrontmatterPlugin,
