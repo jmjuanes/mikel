@@ -311,18 +311,24 @@ const AssetsPlugin = (options = {}) => {
         extensions: options?.extensions || "*",
         label: options?.label || LABELS.ASSET,
         source: options?.source || "./assets",
-        base: options?.base || "assets",
+        base: options?.base ?? "assets",
         binaryExtensions: options?.binaryExtensions || [".png", ".jpg", ".jpeg", ".gif", ".ico"],
     });
 };
 
 // @description partials plugin
 const PartialsPlugin = (options = {}) => {
-    return SourcePlugin({
-        extensions: options?.extensions || [".html", ".htm"],
-        label: options?.label || LABELS.PARTIAL,
-        source: options?.source || "./partials",
-    });
+    return {
+        ...SourcePlugin({
+            extensions: options?.extensions || [".html", ".htm"],
+            source: options?.source || "./partials",
+            label: options?.label || LABELS.PARTIAL,
+        }),
+        name: "PartialsPlugin",
+        shouldEmit: (_, node) => {
+            return node.label !== (options?.label || LABELS.PARTIAL);
+        },
+    };
 };
 
 // @description data plugin
