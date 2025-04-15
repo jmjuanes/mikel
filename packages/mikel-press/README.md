@@ -25,7 +25,7 @@ $ npm install --dev mikel-press
 
 | Field | Description | Default |
 |-------|-------------|---------|
-| `source` | The path to the directory containing the site's HTML or Markdown files. | `"content"` |
+| `source` | The path to the directory containing the site folders. | `"."` |
 | `destination` | The output directory where the generated static site will be saved. | `"www"` |
 | `layout` | The path to the layout file that will be used as the base template for all pages. | - |
 | `plugins` | A list of plugins used to extend the functionality of mikel-press. | `[]` |
@@ -35,13 +35,13 @@ Here is an example configuration object:
 
 ```javascript
 const config = {
-    source: "./content",
+    source: ".",
     destination: "./www",
     layout: "./layout.html",
     title: "Hello world",
     description: "My awesome site",
     plugins: [
-        press.SourcePlugin(),
+        press.PagesPlugin(),
         press.FrontmatterPlugin(),
         press.PermalinkPlugin(),
         press.ContentPlugin(),
@@ -75,6 +75,7 @@ Each HTML file processed by **mikel-press** will be handled by the mikel templat
 | `site.data` | An object containing all data items loaded by `DataPlugin`. |
 | `site.pages` | A list containing all pages loaded by the `PagesPlugin`. |
 | `site.assets` | A list containing all assets files loaded by the `AssetsPlugin`. |
+| `site.partials` | A list containing all partials files loaded by the `PartialsPlugin`. |
 | `site.*` | All the additional configuration fields provided in the configuration. |
 
 #### Page variables
@@ -113,6 +114,10 @@ An alias of `press.SourcePlugin` that will read `.html` files from the `pages` f
 ### `press.AssetsPlugin()`
 
 An alias of `press.SourcePlugin` that will read all files in the `assets` folder and process them as assets.
+
+### `press.PartialsPlugin()`
+
+An alias of `press.SourcePlugin` that will read all files in the `partials` folder and process them as a partials. The **mikel** tag `{{>file}}` can be used to include the partial in `partials/file.html`.
 
 ### `press.DataPlugin(options)`
 
