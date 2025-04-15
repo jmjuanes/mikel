@@ -448,7 +448,8 @@ const ContentPlugin = (options = {}, pluginContext = {}) => {
             }
             // register partials
             pluginContext.siteData.partials.forEach(partial => {
-                context.template.addPartial(partial.path.replace(/\//g, "."), {
+                const name = path.basename(partial.path, path.extname(partial.path));
+                context.template.addPartial(name, {
                     body: partial.content,
                     attributes: partial.attributes || {},
                 });
