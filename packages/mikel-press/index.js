@@ -316,6 +316,15 @@ const AssetsPlugin = (options = {}) => {
     });
 };
 
+// @description partials plugin
+const PartialsPlugin = (options = {}) => {
+    return SourcePlugin({
+        extensions: options?.extensions || [".html", ".htm"],
+        label: options?.label || LABELS.PARTIAL,
+        source: options?.source || "./partials",
+    });
+};
+
 // @description data plugin
 const DataPlugin = (options = {}) => {
     const label = options?.label || LABELS.DATA;
@@ -429,13 +438,21 @@ const ContentPlugin = (options = {}, pluginContext = {}) => {
                 })),
                 pages: getNodesByLabel(context.nodes, LABELS.PAGE).map(n => n.data),
                 assets: getNodesByLabel(context.nodes, LABELS.ASSET).map(n => n.data),
+                partials: getNodesByLabel(context.nodes, LABELS.PARTIAL).map(n => n.data),
             });
             // use layout in template
-            if (pluginContext.layout) {
+            if (pluginContext?.layout?.data?.content) {
                 context.template.use(ctx => {
-                    ctx.tokens = mikel.tokenize(pluginContext.layout.data?.content || "{{>content}}");
+                    ctx.tokens = mikel.tokenize(pluginContext.layout.data.content || "{{>content}}");
                 });
             }
+            // register partials
+            pluginContext.siteData.partials.forEach(partial => {
+                context.template.addPartial(partial.path.replace(/\//g, "."), {
+                    body: partial.content,
+                    attributes: partial.attributes || {},
+                });
+            });
         },
         emit: (context, node) => {
             const destination = path.join(context.destination, node.data?.path || node.path);
@@ -500,6 +517,7 @@ export default {
     SourcePlugin: SourcePlugin,
     PagesPlugin: PagesPlugin,
     AssetsPlugin: AssetsPlugin,
+    PartialsPlugin: PartialsPlugin,
     DataPlugin: DataPlugin,
     MarkdownPlugin: MarkdownPlugin,
     FrontmatterPlugin: FrontmatterPlugin,
