@@ -157,7 +157,20 @@ describe("templating", () => {
                     },
                 },
             };
-            assert.equal(m("{{> foo}}", {}, {partials}), "Hello Bob!");
+            assert.equal(m("{{>foo}}", {}, {partials}), "Hello Bob!");
+        });
+
+        it("should support spread operator in partial keyword arguments", () => {
+            const data = {
+                partialArgs: {
+                    name: "Bob",
+                    age: 30,
+                },
+            };
+            const partials = {
+                foo: "Hello {{name}}! You are {{age}} years old.",
+            };
+            assert.equal(m("{{>foo ...partialArgs}}", data, {partials}), "Hello Bob! You are 30 years old.");
         });
     });
 
@@ -337,6 +350,48 @@ describe("templating", () => {
             };
             assert.equal(m(`{{#concat a b delimiter=","}}{{/concat}}`, {a: "hello", b: "world"}, options), "hello,world");
         });
+
+        it("should support spread operator in helper arguments", () => {
+            const data = {
+                values: ["Hello", "World"],
+            };
+            const options = {
+                helpers: {
+                    concat: params => params.args.join(" "),
+                },
+            };
+            assert.equal(m("{{#concat ...values}}{{/concat}}", data, options), "Hello World");
+        });
+
+        it("should support spread operator in helper arguments with keywords", () => {
+            const data = {
+                helperArgs: {
+                    values: ["Hello", "World"],
+                    delimiter: ",",
+                },
+            };
+            const options = {
+                helpers: {
+                    concat: params => params.opt.values.join(params.opt.delimiter || " "),
+                },
+            };
+            assert.equal(m("{{#concat ...helperArgs}}{{/concat}}", data, options), "Hello,World");
+        });
+
+        it("should support using the spread operator for both arguments and keyword arguments", () => {
+            const data = {
+                values: ["Hello", "World"],
+                options: {
+                    delimiter: ",",
+                },
+            };
+            const options = {
+                helpers: {
+                    concat: params => params.args.join(params.opt.delimiter || " "),
+                },
+            };
+            assert.equal(m("{{#concat ...values ...options}}{{/concat}}", data, options), "Hello,World");
+        });
     });
 
     describe("{{@root}}", () => {
@@ -408,6 +463,37 @@ describe("templating", () => {
                 },
             };
             assert.equal(m("{{=sayWelcome name surname=surname}}", data, options), "Welcome, Bob Doe");
+        });
+
+        it("should support spread operator in function arguments", () => {
+            const data = {
+                values: [1, 2, 3],
+            };
+            const options = {
+                functions: {
+                    sum: ({args}) => {
+                        return args.reduce((a, b) => a + b, 0);
+                    },
+                },
+            };
+            assert.equal(m("result={{=sum ...values}}", data, options), "result=6");
+        });
+
+        it("should support spread operator in function arguments with keywords", () => {
+            const data = {
+                functionArgs: {
+                    values: [1, 2, 3],
+                    delimiter: ",",
+                },
+            };
+            const options = {
+                functions: {
+                    concat: ({opt}) => {
+                        return (opt.values || []).join(opt.delimiter || " ");
+                    },
+                },
+            };
+            assert.equal(m("result={{=concat ...functionArgs}}", data, options), "result=1,2,3");
         });
     });
 });
