@@ -107,6 +107,18 @@ const utils = {
     getMimeType: (extname = ".txt") => {
         return DEFAULT_MIME_TYPES[extname] || "text/plain";
     },
+    // @description frontmatter parser
+    frontmatter: (str = "", parser = JSON.parse) => {
+        const matches = Array.from(str.matchAll(/^(--- *)/gm))
+        if (matches?.length === 2 && matches[0].index === 0) {
+            const front = str.substring(0 + matches[0][1].length, matches[1].index).trim();
+            return [
+                str.substring(matches[1].index + matches[1][1].length).trim(),
+                parser(front),
+            ];
+        }
+        return [str, {}];
+    },
 };
 
 // @description add a new node item
@@ -359,20 +371,14 @@ const DataPlugin = (options = {}) => {
 // @params {Array} options.extensions extensions to process. Default: [".md", ".markdown", ".html"]
 // @params {Function} options.parser frontmatter parser (JSON.parse, YAML.load)
 const FrontmatterPlugin = (options = {}) => {
-    const extensions = options.extensions || [".md", ".markdown", ".html"];
+    const extensions = options?.extensions || [".md", ".markdown", ".html"];
     return {
         name: "FrontmatterPlugin",
         transform: (_, node) => {
             if ((extensions === "*" || extensions.includes(path.extname(node.path))) && typeof node.data.content === "string") {
-                node.data.attributes = {};
-                const matches = Array.from(node.data.content.matchAll(/^(--- *)/gm))
-                if (matches?.length === 2 && matches[0].index === 0) {
-                    const front = node.data.content.substring(0 + matches[0][1].length, matches[1].index).trim();
-                    node.data.content = node.data.content.substring(matches[1].index + matches[1][1].length).trim();
-                    if (typeof options.parser === "function") {
-                        node.data.attributes = options.parser(front);
-                    }
-                }
+                const [body, attributes] = utils.frontmatter(node.data.content || "", options?.parser || JSON.parse);
+                node.data.content = body;
+                node.data.attributes = attributes || {};
             }
         },
     };
