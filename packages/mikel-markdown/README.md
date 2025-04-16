@@ -52,7 +52,25 @@ m.use(mikelMarkdown());
 
 And finally, compile your template:
 ```javascript
-const result = m({}); // --> 'Hello <strong>world</strong>'
+const result = m({}); // --> '<p>Hello <strong>world</strong></p>'
+```
+
+## Helpers
+
+### `#markdown`
+
+The `#markdown` helper is used to convert Markdown content into HTML markup. It takes the content inside the helper and processes it using a Markdown parser, returning the resulting HTML.
+
+```javascript
+m(`{{#markdown}}Hello **world**{{/markdown}}`); // --> '<p>Hello <strong>world</strong></p>'
+```
+
+### `#inlineMarkdown`
+
+The `#inlineMarkdown` helper is used to convert inline Markdown content into HTML markup. This helper is useful for rendering Markdown content that is not block-level, such as inline code, emphasis, or links.
+
+```javascript
+m(`{{#inlineMarkdown}}Hello **world**{{/inlineMarkdown}}`); // --> 'Hello <strong>world</strong>'
 ```
 
 ## License
