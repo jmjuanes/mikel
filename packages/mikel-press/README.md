@@ -132,7 +132,7 @@ This plugin processes frontmatter in Markdown and HTML files.
 
 Options:
 - `options.extensions` (array): Defines the file extensions that should be processed. The default value is `[".md", ".markdown", ".html"]`.
-- `options.parser` (function): Frontmatter parser function (e.g., `JSON.parse`, `YAML.load`).
+- `options.parser` (function): Frontmatter parser function (e.g., `JSON.parse`, `YAML.load`). Default: `JSON.parse`.
 
 ### `press.PermalinkPlugin()`
 
