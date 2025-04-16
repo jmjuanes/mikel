@@ -50,6 +50,8 @@ declare const mikel: {
     escape(str: string): string;
     get(context: any, path: string): any;
     parse(value: string, context?: any, vars?: any): any;
+    tokenize(value: string): string[];
+    untokenize(value: string[]): string;
 };
 
 export default mikel;
