@@ -100,11 +100,11 @@ Each HTML file processed by **mikel-press** will be handled by the mikel templat
 
 ### `press.SourcePlugin(options)`
 
-This plugin reads content from the specified `config.source` directory and loads it into the system for processing.
+This plugin reads content from the specified `options.source` directory and loads it into the system for processing.
 
 Options:
-- `options.source` (string): Specifies a custom source directory. If not provided, `config.source` is used.
-- `options.extensions` (array): Defines the file extensions that should be processed. The default value is `[".html", ".md", ".markdown"]`.
+- `options.source` (string): Specifies a custom source directory. If not provided, `./content` folder is used.
+- `options.extensions` (array or string): Defines the file extensions that should be processed. The default value is `"*"`.
 - `options.base` (string): Specifies the base path for the output files.
 
 ### `press.PagesPlugin()`
