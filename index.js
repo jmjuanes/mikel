@@ -17,13 +17,23 @@ const untokenize = (ts = [], s = "{{", e = "}}") => {
 };
 
 // @description parse string arguments
-const parseArgs = (argString = "", data = {}, vars = {}) => {
-    const [t, ...args] = argString.trim().match(/(?:[^\s"]+|"[^"]*")+/g);
-    const argv = args.filter(a => !a.includes("=")).map(a => parse(a, data, vars));
-    const opt = Object.fromEntries(args.filter(a => a.includes("=")).map(a => {
-        const [k, v] = a.split("=");
-        return [k, parse(v, data, vars)];
-    }));
+const parseArgs = (str = "", data = {}, vars = {}, argv = [], opt = {}) => {
+    const [t, ...args] = str.trim().match(/(?:[^\s"]+|"[^"]*")+/g);
+    args.forEach(argStr => {
+        if (argStr.includes("=")) {
+            const [k, v] = argStr.split("=");
+            opt[k] = parse(v, data, vars);
+        }
+        else if (argStr.startsWith("...")) {
+            const value = parse(argStr.replace(/^\.{3}/, ""), data, vars);
+            if (!!value && typeof value === "object") {
+                Array.isArray(value) ? argv.push(...value) : Object.assign(opt, value);
+            }
+        }
+        else {
+            argv.push(parse(argStr, data, vars));
+        }
+    });
     return [t, argv, opt];
 };
 
@@ -191,5 +201,7 @@ mikel.create = create;
 mikel.escape = escape;
 mikel.get = get;
 mikel.parse = parse;
+mikel.tokenize = tokenize;
+mikel.untokenize = untokenize;
 
 export default mikel;
