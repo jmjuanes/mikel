@@ -1,6 +1,7 @@
 import {describe, it} from "node:test";
 import assert from "node:assert";
 import markdown from "./index.js";
+import m from "../../index.js";
 
 describe("parser", () => {
     const mk = markdown.parser;
@@ -52,5 +53,37 @@ describe("parser", () => {
                 assert.equal(mk(`${h} Heading ${i}`), `<h${i}>Heading ${i}</h${i}>`);
             });
         });
+    });
+});
+
+describe("{{#markdown}}", () => {
+    const options = markdown();
+
+    it("should parse markdown code", () => {
+        assert.equal(m("{{#markdown}}This is `inline code`{{/markdown}}", {}, options), "<p>This is <code>inline code</code></p>");
+    });
+});
+
+describe("{{#inlineMarkdown}}", () => {
+    const options = markdown();
+
+    it("should parse inline markdown code", () => {
+        assert.equal(m("{{#inlineMarkdown}}This is `inline code`{{/inlineMarkdown}}", {}, options), "This is <code>inline code</code>");
+    });
+
+    it("should parse inline markdown code with HTML", () => {
+        assert.equal(m("{{#inlineMarkdown}}This is `<hr>`{{/inlineMarkdown}}", {}, options), "This is <code>&lt;hr&gt;</code>");
+    });
+
+    it("should parse inline markdown with links", () => {
+        assert.equal(m("{{#inlineMarkdown}}[Home](home.html){{/inlineMarkdown}}", {}, options), `<a href="home.html">Home</a>`);
+    });
+
+    it("should parse inline markdown with strong", () => {
+        assert.equal(m("{{#inlineMarkdown}}This is **bold**{{/inlineMarkdown}}", {}, options), "This is <strong>bold</strong>");
+    });
+
+    it("should parse inline markdown with italic", () => {
+        assert.equal(m("{{#inlineMarkdown}}This is *italic*{{/inlineMarkdown}}", {}, options), "This is <em>italic</em>");
     });
 });
