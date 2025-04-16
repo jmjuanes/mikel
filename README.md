@@ -142,11 +142,34 @@ const result = m("User: {{>user userName=name userEmail=email }}", data, {partia
 
 Please note that providing keyword arguments and a custom context to a partial is not supported. On this situation, the partial will be evaluated only with the custom context.
 
+#### Expand partial arguments using the spread operator
+
+> This feature was added in `v0.20.0`.
+
+You can use the spread operator `...` to expand the keyword arguments of a partial. This allows you to pass an object as individual keyword arguments to the partial.
+
+Example:
+
+```javascript
+const data = {
+    user: {
+        name: "John Doe",
+        email: "john@example.com",
+    },
+};
+const partials = {
+    user: "{{userName}} <{{userEmail}}>",
+};
+
+const result = m("User: {{>user ...user}}", data, {partials});
+console.log(result); // --> 'User: John Doe <john@example.com>'
+```
+
 #### Partial blocks
 
 > This feature was added in `v0.16.0`.
 
-You can pass a block to a partial using a greather than symbol `>>` followed by the partial name to start the partial block, and a slash followed by the partial name to end the partial block. The provided block content will be available in the `@content` variable.
+You can pass a block to a partial using a double greather than symbol `>>` followed by the partial name to start the partial block, and a slash followed by the partial name to end the partial block. The provided block content will be available in the `@content` variable.
 
 Example:
 
@@ -186,7 +209,7 @@ const options = {
     },
 };
 
-const result = m("{{> foo}}", {}, options);
+const result = m("{{>foo}}", {}, options);
 // Output: 'Hello Bob!'
 ```
 
@@ -406,6 +429,33 @@ const result = m("{{#customEach items}}{{index}}: {{name}}, {{/customEach}}", da
 console.log(result); // --> "0: John, 1: Alice, 2: Bob,"
 ```
 
+#### Expand helper arguments using the spread operator
+
+> This feature was addedin `v0.20.0`.
+
+You can use the spread operator `...` to expand the arguments of a helper. This allows you to pass an array of values as individual arguments to the helper, or to pass an object as keyword arguments.
+
+Example:
+
+```javascript
+const data = {
+    items: ["John", "Alice", "Bob"],
+    options: {
+        separator: ", ",
+    },
+};
+const options = {
+    helpers: {
+        join: params => {
+            return params.args.join(params.opt.separator);
+        }
+    },
+};
+
+const result = m("{{#join ...items ...options}}{{/join}}", data, options);
+console.log(result); // --> "John, Alice, Bob"
+```
+
 ### Runtime Variables
 
 > Added in `v0.4.0`.
@@ -492,6 +542,57 @@ const options = {
 
 const result = m("My name is: {{=fullName user.firstName user.lastName}}", data, options);
 console.log(result); // --> "My name is: John Doe"
+```
+
+#### Expand function arguments using the spread operator
+
+> This feature was addedin `v0.20.0`.
+
+You can use the spread operator `...` to expand the arguments of a function. This allows you to pass an array of values as individual arguments to the function, or to pass an object as keyword arguments.
+
+
+Example with an **array**:
+
+```javascript
+const data = {
+    items: ["John", "Alice", "Bob"],
+};
+
+const options = {
+    functions: {
+        join: params => {
+            return params.args.join(", ");
+        }
+    },
+};
+
+const result = m("{{=join ...items}}", data, options);
+console.log(result); // --> "John, Alice, Bob"
+```
+
+Example with an **object**:
+
+```javascript
+const data = {
+    user1: {
+        firstName: "John",
+        lastName: "Doe",
+    },
+    user2: {
+        firstName: "Alice",
+        lastName: "Smith",
+    },
+};
+const options = {
+    functions: {
+        fullName: params => {
+            return `${params.opt.firstName} ${params.opt.lastName}`;
+        }
+    },
+};
+
+const result = m("Users: {{=fullName ...user1}} and {{=fullName ...user2}}", data, options);
+console.log(result); // --> "Users: John Doe and Alice Smith"
 ```
 
 
