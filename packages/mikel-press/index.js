@@ -278,7 +278,7 @@ const SourcePlugin = (options = {}) => {
     return {
         name: "SourcePlugin",
         load: context => {
-            const folder = path.resolve(context.source, options?.source || "");
+            const folder = path.resolve(context.source, options?.source || "./content");
             const nodes = utils.walkdir(folder, options?.extensions || "*").map(file => {
                 return createNode(folder, file, options?.label || LABELS.PAGE);
             });
@@ -458,6 +458,18 @@ const ContentPlugin = (options = {}, pluginContext = {}) => {
                 context.template.addPartial(name, {
                     body: partial.content,
                     attributes: partial.attributes || {},
+                });
+            });
+            // register additional plugins
+            (options?.plugins || []).forEach(mikelPlugin => {
+                context.template.use(mikelPlugin);
+            });
+            // register helpers, functions, or partials
+            context.template.use(ctx => {
+                ["helpers", "functions", "partials"].forEach(field => {
+                    Object.keys(options?.[field] || {}).forEach(key => {
+                        ctx[field][key] = options[field][key];
+                    });
                 });
             });
         },
