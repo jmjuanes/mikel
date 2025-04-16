@@ -9,6 +9,11 @@ const escapedChars = {
 const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 
 // @description custom method to render the provided tag and content
+// @param tag {string} tag to render
+// @param props {object} attributes to add to the tag
+// @param content {string} content to add to the tag
+// @return {string} the rendered tag
+// @example render("div", {class: "my-class"}, "Hello world") --> '<div class="my-class">Hello world</div>'
 const render = (tag, props = {}, content = "") => {
     const attrs = Object.keys(props).filter(k => !!props[k]).map(k => `${k}="${props[k]}"`);
     if (tag === "hr" || tag === "img") {
@@ -17,7 +22,8 @@ const render = (tag, props = {}, content = "") => {
     return `<${[tag, ...attrs].join(" ")}>${content}</${tag}>`;
 };
 
-const expressions = {
+// @description all available expressions
+const allExpressions = {
     pre: {
         regex: /(?:^```(?:[^\n]*)\n([\s\S]*?)\n``` *$)/gm,
         replace: (args, cn) => render("pre", {class: cn.pre}, escape(args[1])),
@@ -35,7 +41,7 @@ const expressions = {
         replace: (args, cn) => render("code", {class: cn.code}, escape(args[1])),
     },
     image: {
-        regex: /!\[([^\]]*?)\]\(([^)]*?)\)/g,
+        regex: /\!\[([^\]]*?)\]\(([^)]*?)\)/g,
         replace: (args, cn) => render("img", {class: cn.image, alt: args[1], src: args[2]}),
     },
     table: {
@@ -104,15 +110,17 @@ const expressions = {
     }
 };
 
+// @description inline expressions
+const inlineExpressions = Object.fromEntries(["link", "strong", "emphasis", "code"].map(key => {
+    return [key, allExpressions[key]];
+}));
+
 // @description markdown parser
-const parser = (str, options = {}) => {
+const parser = (str = "", options = {}) => {
     const classNames = options?.classNames || {}; // custom classNames
+    const expressions = options?.expressions || allExpressions; // custom expressions
     const ignoredBlocks = []; // chunks to ignore
     str = str.replace(/\r\n/g, "\n");
-    // replace all <script> tags
-    // str = str.replace(/<script[^\0]*?>([^\0]*?)<\/script>/gmi, function (match, content) {
-    //     return "&lt;script&gt;" + content + "&lt;/script&gt;";
-    // });
     // replace all expressions
     Object.keys(expressions).forEach(key => {
         str = str.replace(expressions[key].regex, (...args) => {
@@ -129,10 +137,6 @@ const parser = (str, options = {}) => {
             str = str.replace(expressions[key].afterRegex, "");
         }
     });
-    // Replace all line breaks expressions
-    // str = str.replace(/^\n\n+/gm, function () {
-    //     return renderer("br", {});
-    // });
     // Replace all the ignored blocks
     for (let i = ignoredBlocks.length - 1; i >= 0; i--) {
         str = str.replace(`<pre>{IGNORED%${i}}</pre>`, ignoredBlocks[i]);
@@ -148,13 +152,20 @@ const markdownPlugin = (options = {}) => {
             markdown: params => {
                 return parser(params.fn(params.data) || "", options);
             },
+            inlineMarkdown: params => {
+                return parser(params.fn(params.data) || "", {
+                    expressions: inlineExpressions,
+                    ...options,
+                });
+            },
         },
     };
 };
 
 // assign additional options for this plugin
 markdownPlugin.parser = parser;
-markdownPlugin.expressions = expressions;
+markdownPlugin.render = render;
+markdownPlugin.expressions = allExpressions;
 
 // export the plugin
 export default markdownPlugin;
