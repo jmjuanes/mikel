@@ -83,6 +83,7 @@ const press = config => {
         config: otherConfiguration,
         source: path.resolve(source || "."),
         destination: path.resolve(destination || "./www"),
+        template: mikel.create("{{>content}}", {}),
         plugins: plugins || [],
         nodes: [],
     });
@@ -213,40 +214,37 @@ press.PermalinkPlugin = () => {
 };
 
 // @description content plugin
-press.ContentPlugin = (options = {}, template = {}) => {
+press.ContentPlugin = (options = {}, siteData = {}) => {
     return {
         name: "ContentPlugin",
         beforeEmit: context => {
             // 1. prepare site data
-            template.siteData = Object.assign({}, context.config, {
+            Object.assign(siteData, context.config, {
                 data: Object.fromEntries(getNodesByLabel(context.nodes, LABELS.ASSET_DATA).map(node => {
                     return [path.basename(node.path, ".json"), node.data.content];
                 })),
                 pages: getNodesByLabel(context.nodes, LABELS.PAGE).map(n => n.data),
                 partials: getNodesByLabel(context.nodes, LABELS.ASSET_PARTIAL).map(n => n.data),
             });
-            // 2. generate options
-            template.options = Object.assign({}, options, {
-                partials: {
-                    ...Object.fromEntries(template.siteData.partials.map(partial => {
-                        const partialName = path.basename(partial.path, path.extname(partial.path));
-                        const partialContent = {
-                            body: partial.content,
-                            attributes: partial.attributes || {},
-                        };
-                        return [partialName, partialContent];
-                    })),
-                    ...options.partials,
-                },
+            // 2. register partials into template
+            siteData.partials.forEach(partial => {
+                const partialName = path.basename(partial.path, path.extname(partial.path));
+                context.template.addPartial(partialName, {
+                    body: partial.content,
+                    attributes: partial.attributes || {},
+                });
             });
+            // 3. assign template options
+            context.template.use(options);
         },
         emit: (context, node) => {
             if (node.label === LABELS.PAGE && typeof node.data.content === "string") {
-                const data = {
-                    site: template.siteData,
-                    page: node.data,
-                };
-                const result = mikel(node.data.content, data, template.options);
+                // use the page content as template
+                context.template.use(ctx => {
+                    ctx.tokens = mikel.tokenize(node.data.content || "");
+                });
+                // compile and write the template
+                const result = context.template({site: siteData, page: node.data});
                 utils.write(path.join(context.destination, node.data?.path || node.path), result);
             }
         },
