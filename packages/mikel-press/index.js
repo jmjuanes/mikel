@@ -2,73 +2,23 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import mikel from "mikel";
 
-// @description general utilities
-const utils = {
-    // @description read a file from disk
-    // @param {String} file path to the file to read
-    read: (file, encoding = "utf8") => {
-        return fs.readFileSync(file, encoding);
-    },
-    // @description write a file to disk
-    // @param {String} file path to the file to save
-    // @param {String} content content to save
-    write: (file, content = "") => {
-        const folder = path.dirname(file);
-        if (!fs.existsSync(folder)) {
-            fs.mkdirSync(folder, {recursive: true});
-        }
-        fs.writeFileSync(file, content, "utf8");
-    },
-    // @description copy a file
-    copy: (source, target) => {
-        const folder = path.dirname(target);
-        if (!fs.existsSync(folder)) {
-            fs.mkdirSync(folder, {recursive: true});
-        }
-        fs.copyFileSync(source, target);
-    },
-    // @description get all files from the given folder and the given extensions
-    readdir: (folder, extensions = "*") => {
-        if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) {
-            return [];
-        }
-        return fs.readdirSync(folder, "utf8")
-            .filter(file => extensions === "*" || extensions.includes(path.extname(file)))
-            .filter(file => fs.statSync(path.join(folder, file)).isFile());
-    },
-    // @description frontmatter parser
-    // @params {String} content content to parse
-    // @params {Function} parser parser function to use
-    frontmatter: (content = "", parser = JSON.parse) => {
-        const matches = Array.from(content.matchAll(/^(--- *)/gm))
-        if (matches?.length === 2 && matches[0].index === 0) {
-            return [
-                content.substring(matches[1].index + matches[1][1].length).trim(),
-                parser(content.substring(matches[0].index + matches[0][1].length, matches[1].index).trim()),
-            ];
-        }
-        return [content, {}];
-    },
-};
-
 // @description press main function
 // @param {Object} config - configuration object
 // @param {String} config.source - source folder
 // @param {String} config.destination - destination folder to save the files
-const press = config => {
-    const {source, destination, plugins, partialsDir, dataDir, pagesDir, ...otherConfig} = config;
+// @param {Array} config.plugins - list of plugins to apply
+const press = (config = {}) => {
+    const {source, destination, plugins, extensions, mikelOptions, ...otherConfig} = config;
     const context = Object.freeze({
         config: otherConfig,
         source: path.resolve(source || "."),
         destination: path.resolve(destination || "./www"),
-        template: mikel.create("{{>content}}", otherConfig.mikelOptions || {}),
+        extensions: extensions || [".html"],
+        template: mikel.create("{{>content}}", mikelOptions || {}),
         plugins: [
-            SourcePlugin({folder: pagesDir || ".", extensions: [".html"], label: press.LABEL_PAGE}),
-            SourcePlugin({folder: partialsDir || "./partials", extensions: [".html"], label: press.LABEL_PARTIAL}),
-            SourcePlugin({folder: dataDir || "./data", extensions: [".json"], label: press.LABEL_DATA}),
+            SourcePlugin({folder: ".", label: press.LABEL_PAGE}),
             ...plugins,
-            ContentPlugin(),
-        ].filter(Boolean),
+        ],
         nodes: [],
     });
     const getPlugins = name => context.plugins.filter(plugin => typeof plugin[name] === "function");
@@ -110,51 +60,109 @@ const press = config => {
     });
 };
 
+// @description general utilities
+press.utils = {
+    // @description read a file from disk
+    // @param {String} file path to the file to read
+    read: (file, encoding = "utf8") => {
+        return fs.readFileSync(file, encoding);
+    },
+    // @description write a file to disk
+    // @param {String} file path to the file to save
+    // @param {String} content content to save
+    write: (file, content = "") => {
+        const folder = path.dirname(file);
+        if (!fs.existsSync(folder)) {
+            fs.mkdirSync(folder, {recursive: true});
+        }
+        fs.writeFileSync(file, content, "utf8");
+    },
+    // @description copy a file
+    copy: (source, target) => {
+        const folder = path.dirname(target);
+        if (!fs.existsSync(folder)) {
+            fs.mkdirSync(folder, {recursive: true});
+        }
+        fs.copyFileSync(source, target);
+    },
+    // @description get all files from the given folder and the given extensions
+    readdir: (folder, extensions = "*") => {
+        if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) {
+            return [];
+        }
+        return fs.readdirSync(folder, "utf8")
+            .filter(file => extensions === "*" || extensions.includes(path.extname(file)))
+            .filter(file => fs.statSync(path.join(folder, file)).isFile());
+    },
+    // @description frontmatter parser
+    // @params {String} content content to parse
+    // @params {Function} parser parser function to use
+    frontmatter: (content = "", parser = JSON.parse) => {
+        const matches = Array.from(content.matchAll(/^(--- *)/gm))
+        if (matches?.length === 2 && matches[0].index === 0) {
+            return {
+                body: content.substring(matches[1].index + matches[1][1].length).trim(),
+                attributes: parser(content.substring(matches[0].index + matches[0][1].length, matches[1].index).trim()),
+            };
+        }
+        return {body: content, attributes: {}};
+    },
+};
+
+// assign constants
+press.LABEL_PAGE = "page";
+press.LABEL_ASSET = "asset";
+press.LABEL_DATA = "asset/data";
+press.LABEL_PARTIAL = "asset/partial";
+
 // @description source plugin
-press.SourcePlugin = (options = {}, ids = new Set()) => {
-    const label = options.label || press.LABEL_PAGE;
+press.SourcePlugin = (options = {}) => {
     return {
         name: "SourcePlugin",
         load: context => {
             const folder = path.join(context.source, options?.folder || ".");
-            return utils.readdir(folder, options?.extensions || "*").map(file => {
-                const source = path.join(folder, file);
-                ids.add(source); // save the full path as id
-                return {source, label, path: file};
-            });
-        },
-        transform: (_, node) => {
-            if (node.label === label && ids.has(node.source)) {
-                node.content = utils.read(node.source);
-                node.url = path.normalize("/" + node.path);
-            }
+            return press.utils.readdir(folder, options?.extensions || context.extensions).map(file => ({
+                source: path.join(folder, file),
+                label: options.label || press.LABEL_PAGE,
+                path: path.join(options?.basePath || ".", file),
+                url: path.normalize("/" + path.join(options?.basePath || ".", file)),
+                content: press.utils.read(path.join(folder, file)),
+            }));
         },
     };
 };
 
+// @description loader plugins
+press.DataLoaderPlugin = (options = {}) => {
+    return SourcePlugin({folder: "./data", extensions: [".json"], label: press.LABEL_DATA, ...options});
+};
+press.PartialsLoaderPlugin = (options = {}) => {
+    return SourcePlugin({folder: "./partials", extensions: [".html"], label: press.LABEL_PARTIAL, ...options});
+};
+
 // @description frontmatter plugin
-// @params {Object} options options for this plugin
-// @params {Function} options.parser frontmatter parser (JSON.parse, YAML.load)
-press.FrontmatterPlugin = (options = {}) => {
+press.FrontmatterPlugin = () => {
     return {
         name: "FrontmatterPlugin",
         transform: (_, node) => {
             if (typeof node.content === "string") {
-                const [content, attributes] = utils.frontmatter(node.content, options.parser || JSON.parse);
-                node.content = content;
-                node.attributes = attributes;
-                // check for permalink in node.attributes
-                node.path = node.attributes?.permalink || node.path;
-                node.url = path.normalize("/" + node.path);
+                const result = press.utils.frontmatter(node.content, JSON.parse);
+                node.content = result.content;
+                node.attributes = result.attributes || {};
+                node.title = node.attributes?.title || node.path;
+                if (node.attributes.permalink) {
+                    node.path = node.attributes.permalink;
+                    node.url = path.normalize("/" + node.path);
+                }
             }
         },
     };
 };
 
-// @description content plugin
-press.ContentPlugin = (siteData = {}) => {
+// @description plugin to generate pages content
+press.ContentPagePlugin = (siteData = {}) => {
     return {
-        name: "ContentPlugin",
+        name: "ContentPagePlugin",
         shouldEmit: (context, node) => {
             return ![press.LABEL_ASSET, press.LABEL_DATA, press.LABEL_PARTIAL].includes(node.label);
         },
@@ -184,7 +192,7 @@ press.ContentPlugin = (siteData = {}) => {
                 });
                 // compile and write the template
                 const result = context.template({site: siteData, page: node});
-                utils.write(path.join(context.destination, node.path), result);
+                press.utils.write(path.join(context.destination, node.path), result);
             }
         },
     };
@@ -197,17 +205,10 @@ press.CopyAssetsPlugin = (options = {}) => {
         beforeEmit: context => {
             (options.patterns || [])
                 .filter(item => !!item.from && !!item.to && fs.existsSync(item.from))
-                .forEach(item => utils.copy(item.from, path.join(context.destination, item.to)));
+                .forEach(item => press.utils.copy(item.from, path.join(context.destination, item.to)));
         },
     };
 };
-
-// assign other utils and values
-press.utils = utils;
-press.LABEL_PAGE = "page";
-press.LABEL_ASSET = "asset";
-press.LABEL_DATA = "asset/data";
-press.LABEL_PARTIAL = "asset/partial";
 
 // export press generator
 export default press;
