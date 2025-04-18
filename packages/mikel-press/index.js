@@ -28,13 +28,13 @@ const utils = {
         fs.copyFileSync(source, target);
     },
     // @description get all files from the given folder and the given extensions
-    readdir: (folder, ext = "*") => {
+    readdir: (folder, extensions = "*") => {
         if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) {
             return [];
         }
-        return fs.readdirSync(folder, "utf8").filter(file => {
-            return (ext === "*" || ext.includes(path.extname(file))) && fs.statSync(path.join(folder, file)).isFile();
-        });
+        return fs.readdirSync(folder, "utf8")
+            .filter(file => extensions === "*" || extensions.includes(path.extname(file)))
+            .filter(file => fs.statSync(path.join(folder, file)).isFile());
     },
     // @description frontmatter parser
     // @params {String} content content to parse
@@ -51,35 +51,31 @@ const utils = {
     },
 };
 
-// @description get nodes with the specified label
-const getNodesByLabel = (nodes, label) => {
-    return Array.from(nodes).filter(node => node.label === label);
-};
-
-// @description get plugins with the specified function
-const getPlugins = (plugins, functionName) => {
-    return plugins.filter(plugin => typeof plugin[functionName] === "function");
-};
-
 // @description press main function
 // @param {Object} config - configuration object
 // @param {String} config.source - source folder
 // @param {String} config.destination - destination folder to save the files
 const press = config => {
-    const {source, destination, plugins, ...otherConfiguration} = config;
+    const {source, destination, plugins, partialsDir, dataDir, pagesDir, ...otherConfig} = config;
     const context = Object.freeze({
-        config: otherConfiguration,
+        config: otherConfig,
         source: path.resolve(source || "."),
         destination: path.resolve(destination || "./www"),
-        template: mikel.create("{{>content}}", {}),
-        plugins: plugins || [],
+        template: mikel.create("{{>content}}", otherConfig.mikelOptions || {}),
+        plugins: [
+            SourcePlugin({folder: pagesDir || ".", extensions: [".html"], label: press.LABEL_PAGE}),
+            SourcePlugin({folder: partialsDir || "./partials", extensions: [".html"], label: press.LABEL_PARTIAL}),
+            SourcePlugin({folder: dataDir || "./data", extensions: [".json"], label: press.LABEL_DATA}),
+            ...plugins,
+            ContentPlugin(),
+        ].filter(Boolean),
         nodes: [],
     });
+    const getPlugins = name => context.plugins.filter(plugin => typeof plugin[name] === "function");
     // 1. load nodes into context
     const nodesPaths = new Set(); // prevent adding duplicated nodes
-    getPlugins(context.plugins, "load").forEach(plugin => {
-        const nodes = plugin.load(context) || [];
-        [nodes].flat().forEach(node => {
+    getPlugins("load").forEach(plugin => {
+        [plugin.load(context) || []].flat().forEach(node => {
             if (nodesPaths.has(node.source)) {
                 throw new Error(`File ${node.source} has been already processed by another plugin`);
             }
@@ -88,29 +84,25 @@ const press = config => {
         });
     });
     // 2. transform nodes
-    const transformPlugins = getPlugins(context.plugins, "transform");
+    const transformPlugins = getPlugins("transform");
     context.nodes.forEach((node, _, allNodes) => {
         transformPlugins.forEach(plugin => {
             return plugin.transform(context, node, allNodes);
         });
     });
     // 3. filter nodes and get only the ones that are going to be emitted
-    const shouldEmitPlugins = getPlugins(context.plugins, "shouldEmit");
+    const shouldEmitPlugins = getPlugins("shouldEmit");
     const filteredNodes = context.nodes.filter((node, _, allNodes) => {
-        for (let i = 0; i < shouldEmitPlugins.length; i++) {
-            const plugin = shouldEmitPlugins[i];
-            if (!plugin.shouldEmit(context, node, allNodes)) {
-                return false;
-            }
-        }
-        return true;
+        return shouldEmitPlugins.every(plugin => {
+            return !!plugin.shouldEmit(context, node, allNodes);
+        });
     });
     // 4. before emit
-    getPlugins(context.plugins, "beforeEmit").forEach(plugin => {
+    getPlugins("beforeEmit").forEach(plugin => {
         return plugin.beforeEmit(context);
     });
     // 5. emit each node
-    const emitPlugins = getPlugins(context.plugins, "emit");
+    const emitPlugins = getPlugins("emit");
     filteredNodes.forEach((node, _, allNodes) => {
         emitPlugins.forEach(plugin => {
             return plugin.emit(context, node, allNodes);
@@ -120,21 +112,19 @@ const press = config => {
 
 // @description source plugin
 press.SourcePlugin = (options = {}, ids = new Set()) => {
+    const label = options.label || press.LABEL_PAGE;
     return {
         name: "SourcePlugin",
         load: context => {
             const folder = path.join(context.source, options?.folder || ".");
             return utils.readdir(folder, options?.extensions || "*").map(file => {
-                ids.add(path.join(folder, file)); // save the full path as id
-                return {
-                    source: path.join(folder, file),
-                    path: file,
-                    label: options?.label,
-                };
+                const source = path.join(folder, file);
+                ids.add(source); // save the full path as id
+                return {source, label, path: file};
             });
         },
         transform: (_, node) => {
-            if (ids.has(node.source)) {
+            if (node.label === label && ids.has(node.source)) {
                 node.content = utils.read(node.source);
                 node.url = path.normalize("/" + node.path);
             }
@@ -142,14 +132,8 @@ press.SourcePlugin = (options = {}, ids = new Set()) => {
     };
 };
 
-// @description aliases for loading pages, partials, and data
-press.PagesPlugin = (folder = ".") => SourcePlugin({folder, extensions: [".html"], label: "page"});
-press.PartialsPlugin = (folder = "./partials") => SourcePlugin({folder, extensions: [".html"], label: "partial"});
-press.DataPlugin = (folder = "./data") => SourcePlugin({folder, extensions: [".json"], label: "data"});
-
 // @description frontmatter plugin
 // @params {Object} options options for this plugin
-// @params {Array} options.extensions extensions to process. Default: [".md", ".markdown", ".html"]
 // @params {Function} options.parser frontmatter parser (JSON.parse, YAML.load)
 press.FrontmatterPlugin = (options = {}) => {
     return {
@@ -172,28 +156,29 @@ press.ContentPlugin = (siteData = {}) => {
     return {
         name: "ContentPlugin",
         shouldEmit: (context, node) => {
-            return node.label !== "asset/data" && node.label !== "asset/partial";
+            return ![press.LABEL_ASSET, press.LABEL_DATA, press.LABEL_PARTIAL].includes(node.label);
         },
         beforeEmit: context => {
+            const getNodes = label => context.nodes.filter(n => n.label === label);
             // 1. prepare site data
             Object.assign(siteData, context.config, {
-                data: Object.fromEntries(getNodesByLabel(context.nodes, LABELS.DATA).map(node => {
+                pages: getNodes(press.LABEL_PAGE),
+                data: Object.fromEntries(getNodes(press.LABEL_DATA).map(node => {
                     return [path.basename(node.path, ".json"), JSON.parse(node.content)];
                 })),
-                pages: getNodesByLabel(context.nodes, LABELS.PAGE),
-                partials: getNodesByLabel(context.nodes, LABELS.PARTIAL),
+                partials: getNodes(press.LABEL_PARTIAL),
+                assets: getNodes(press.LABEL_ASSET),
             });
             // 2. register partials into template
             siteData.partials.forEach(partial => {
-                const partialName = path.basename(partial.path, path.extname(partial.path));
-                context.template.addPartial(partialName, {
+                context.template.addPartial(path.basename(partial.path), {
                     body: partial.content,
                     attributes: partial.attributes || {},
                 });
             });
         },
         emit: (context, node) => {
-            if (node.label === "page" && typeof node.content === "string") {
+            if (node.label === press.LABEL_PAGE && typeof node.content === "string") {
                 context.template.use(ctx => {
                     ctx.tokens = mikel.tokenize(node.content || "");
                 });
@@ -217,8 +202,12 @@ press.CopyAssetsPlugin = (options = {}) => {
     };
 };
 
-// assign other utils
+// assign other utils and values
 press.utils = utils;
+press.LABEL_PAGE = "page";
+press.LABEL_ASSET = "asset";
+press.LABEL_DATA = "asset/data";
+press.LABEL_PARTIAL = "asset/partial";
 
 // export press generator
 export default press;
