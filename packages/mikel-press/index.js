@@ -147,7 +147,7 @@ press.FrontmatterPlugin = () => {
         transform: (_, node) => {
             if (typeof node.content === "string") {
                 const result = press.utils.frontmatter(node.content, JSON.parse);
-                node.content = result.content;
+                node.content = result.body || "";
                 node.attributes = result.attributes || {};
                 node.title = node.attributes?.title || node.path;
                 if (node.attributes.permalink) {
