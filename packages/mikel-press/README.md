@@ -121,7 +121,7 @@ Options:
 - `options.extensions` (array): Defines the file extensions that should be processed. If not provided, it will use `config.extensions`.
 - `options.basePath` (string): Specifies the base path for the output files.
 
-### `press.PartialsLoaderPlugin(options)`
+### `press.PartialsPlugin(options)`
 
 An alias of `press.SourcePlugin` that will read all files in the `partials` folder and process them as a partials. The **mikel** tag `{{>file}}` can be used to include the partial in `partials/file.html`.
 
@@ -129,7 +129,7 @@ This plugin accepts the following options:
 - `options.folder` (string): To change the directory to load the partials files. Default is `./partials`.
 - `options.extensions` (array): Defines the file extensions that should be processed. If not provided, it will use `config.extensions`.
 
-### `press.DataLoaderPlugin(options)`
+### `press.DataPlugin(options)`
 
 This plugin loads JSON files from the specified directory and makes them available in the site context.
 
