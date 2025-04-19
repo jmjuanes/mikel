@@ -131,10 +131,18 @@ This plugin accepts the following options:
 
 ### `press.DataPlugin(options)`
 
-This plugin loads JSON files from the specified directory and makes them available in the site context.
+This plugin loads JSON files from the specified directory and makes them available in the site context. This plugin accepts the following options:
 
-Options:
 - `options.folder` (string): Specifies a custom source directory for data files. If not provided, `./data` is used.
+
+### `press.AssetsPlugin(options)`
+
+This plugin loads additional files (aka assets) and includes them in the build folder. This plugin accepts the following options:
+
+- `options.folder` (string): Specifies a custom source directory for assets files. If not provided, `./assets` is used.
+- `options.extensions` (array): Defines the file extensions that should be processed. If not provided, it will use `"*"`.
+- `options.exclude` (array): Defines the list of file names to exclude.
+- `options.basePath` (string): Allows to specify a base path for the output files.
 
 ### `press.FrontmatterPlugin()`
 
