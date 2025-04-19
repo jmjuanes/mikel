@@ -8,12 +8,13 @@ import mikel from "mikel";
 // @param {String} config.destination - destination folder to save the files
 // @param {Array} config.plugins - list of plugins to apply
 const press = (config = {}) => {
-    const {source, destination, plugins, extensions, mikelOptions, ...otherConfig} = config;
+    const {source, destination, plugins, extensions, exclude, mikelOptions, ...otherConfig} = config;
     const context = Object.freeze({
         config: otherConfig,
         source: path.resolve(source || "."),
         destination: path.resolve(destination || "./www"),
         extensions: extensions || [".html"],
+        exclude: exclude || ["node_modules", ".git", ".gitignore", ".github"],
         template: mikel.create("{{>content}}", mikelOptions || {}),
         plugins: [
             press.SourcePlugin({folder: ".", label: press.LABEL_PAGE}),
@@ -86,12 +87,12 @@ press.utils = {
         fs.copyFileSync(source, target);
     },
     // @description get all files from the given folder and the given extensions
-    readdir: (folder, extensions = "*") => {
+    readdir: (folder, extensions = "*", exclude = []) => {
         if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) {
             return [];
         }
         return fs.readdirSync(folder, "utf8")
-            .filter(file => extensions === "*" || extensions.includes(path.extname(file)))
+            .filter(file => (extensions === "*" || extensions.includes(path.extname(file))) && !exclude.includes(file))
             .filter(file => fs.statSync(path.join(folder, file)).isFile());
     },
     // @description frontmatter parser
@@ -121,7 +122,9 @@ press.SourcePlugin = (options = {}) => {
         name: "SourcePlugin",
         load: context => {
             const folder = path.join(context.source, options?.folder || ".");
-            return press.utils.readdir(folder, options?.extensions || context.extensions).map(file => ({
+            const extensions = options?.extensions || context.extensions;
+            const exclude = options?.exclude || context.exclude;
+            return press.utils.readdir(folder, extensions, exclude).map(file => ({
                 source: path.join(folder, file),
                 label: options.label || press.LABEL_PAGE,
                 path: path.join(options?.basePath || ".", file),
@@ -132,12 +135,37 @@ press.SourcePlugin = (options = {}) => {
     };
 };
 
-// @description loader plugins
+// @description data plugin
 press.DataPlugin = (options = {}) => {
     return press.SourcePlugin({folder: "./data", extensions: [".json"], label: press.LABEL_DATA, ...options});
 };
+
+// @description partials plugin
 press.PartialsPlugin = (options = {}) => {
     return press.SourcePlugin({folder: "./partials", extensions: [".html"], label: press.LABEL_PARTIAL, ...options});
+};
+
+// @description assets plugin
+press.AssetsPlugin = (options = {}) => {
+    return {
+        name: "AssetsPlugin",
+        load: context => {
+            const folder = path.join(context.source, options?.folder || "./assets");
+            return press.utils.readdir(folder, options?.extensions || "*", options?.exclude || context.exclude).map(file => ({
+                source: path.join(folder, file),
+                label: options.label || press.LABEL_ASSET,
+                path: path.join(options?.basePath || ".", file),
+            }));
+        },
+        emit: (context, node) => {
+            if (node.label === press.LABEL_ASSET && typeof node.content === "string") {
+                press.utils.write(path.join(context.destination, node.path), node.content);
+            }
+            else if (node.label === press.LABEL_ASSET) {
+                press.utils.copy(node.source, path.join(context.destination, node.path));
+            }
+        },
+    };
 };
 
 // @description frontmatter plugin
@@ -164,7 +192,7 @@ press.ContentPagePlugin = (siteData = {}) => {
     return {
         name: "ContentPagePlugin",
         shouldEmit: (context, node) => {
-            return ![press.LABEL_ASSET, press.LABEL_DATA, press.LABEL_PARTIAL].includes(node.label);
+            return ![press.LABEL_DATA, press.LABEL_PARTIAL].includes(node.label);
         },
         beforeEmit: context => {
             const getNodes = label => context.nodes.filter(n => n.label === label);
@@ -180,7 +208,7 @@ press.ContentPagePlugin = (siteData = {}) => {
             // 2. register partials into template
             siteData.partials.forEach(partial => {
                 context.template.addPartial(path.basename(partial.path), {
-                    body: partial.content,
+                    body: partial.content || "",
                     attributes: partial.attributes || {},
                 });
             });
@@ -203,9 +231,11 @@ press.CopyAssetsPlugin = (options = {}) => {
     return {
         name: "CopyAssetsPlugin",
         beforeEmit: context => {
-            (options.patterns || [])
-                .filter(item => !!item.from && !!item.to && fs.existsSync(item.from))
-                .forEach(item => press.utils.copy(item.from, path.join(context.destination, item.to)));
+            return (options.patterns || []).forEach(item => {
+                if (item.from && fs.existsSync(item.from)) {
+                    press.utils.copy(item.from, path.join(context.destination, options.basePath || ".", item.to || path.basename(item.from)));
+                }
+            });
         },
     };
 };
