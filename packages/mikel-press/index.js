@@ -16,7 +16,7 @@ const press = (config = {}) => {
         extensions: extensions || [".html"],
         template: mikel.create("{{>content}}", mikelOptions || {}),
         plugins: [
-            SourcePlugin({folder: ".", label: press.LABEL_PAGE}),
+            press.SourcePlugin({folder: ".", label: press.LABEL_PAGE}),
             ...plugins,
         ],
         nodes: [],
@@ -133,11 +133,11 @@ press.SourcePlugin = (options = {}) => {
 };
 
 // @description loader plugins
-press.DataLoaderPlugin = (options = {}) => {
-    return SourcePlugin({folder: "./data", extensions: [".json"], label: press.LABEL_DATA, ...options});
+press.DataPlugin = (options = {}) => {
+    return press.SourcePlugin({folder: "./data", extensions: [".json"], label: press.LABEL_DATA, ...options});
 };
-press.PartialsLoaderPlugin = (options = {}) => {
-    return SourcePlugin({folder: "./partials", extensions: [".html"], label: press.LABEL_PARTIAL, ...options});
+press.PartialsPlugin = (options = {}) => {
+    return press.SourcePlugin({folder: "./partials", extensions: [".html"], label: press.LABEL_PARTIAL, ...options});
 };
 
 // @description frontmatter plugin
