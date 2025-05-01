@@ -63,7 +63,7 @@ const press = (config = {}) => {
             press.utils.write(path.join(context.destination, node.path), node.content);
         }
         // 2. if node has not been processed, just copy the file
-        else {
+        else if (fs.existsSync(node.source)) {
             press.utils.copy(node.source, path.join(context.destination, node.path));
         }
     });
