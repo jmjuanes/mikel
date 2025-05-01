@@ -35,9 +35,13 @@ const press = (config = {}) => {
         });
     });
     // 2. transform nodes
-    const transformPlugins = getPlugins("transform");
-    context.nodes.forEach((node, _, allNodes) => {
-        transformPlugins.forEach(plugin => {
+    getPlugins("transform").forEach(plugin => {
+        // special hook to initialize the transform plugin
+        if (typeof plugin.beforeTransform === "function") {
+            plugin.beforeTransform(context);
+        }
+        // run the transform in all nodes
+        context.nodes.forEach((node, _, allNodes) => {
             return plugin.transform(context, node, allNodes);
         });
     });
@@ -142,7 +146,7 @@ press.SourcePlugin = (options = {}) => {
             });
         },
         shouldEmit: (context, node) => {
-            return processedNodes.has(node.source) ? !!shouldEmit : true;
+            return !processedNodes.has(node.source) || shouldEmit;
         },
     };
 };
@@ -195,10 +199,7 @@ press.FrontmatterPlugin = () => {
 press.ContentPagePlugin = (siteData = {}) => {
     return {
         name: "ContentPagePlugin",
-        shouldEmit: (context, node) => {
-            return ![press.LABEL_DATA, press.LABEL_PARTIAL].includes(node.label);
-        },
-        beforeEmit: context => {
+        beforeTransform: context => {
             const getNodes = label => context.nodes.filter(n => n.label === label);
             // 1. prepare site data
             Object.assign(siteData, context.config, {
@@ -217,16 +218,14 @@ press.ContentPagePlugin = (siteData = {}) => {
                 });
             });
         },
-        // emit: (context, node) => {
-        //     if (node.label === press.LABEL_PAGE && typeof node.content === "string") {
-        //         context.template.use(ctx => {
-        //             ctx.tokens = mikel.tokenize(node.content || "");
-        //         });
-        //         // compile and write the template
-        //         const result = context.template({site: siteData, page: node});
-        //         press.utils.write(path.join(context.destination, node.path), result);
-        //     }
-        // },
+        transform: (context, node) => {
+            if (node.label === press.LABEL_PAGE && typeof node.content === "string") {
+                context.template.use(ctx => {
+                    ctx.tokens = mikel.tokenize(node.content || "");
+                });
+                node.content = context.template({site: siteData, page: node});
+            }
+        },
     };
 };
 
@@ -234,12 +233,14 @@ press.ContentPagePlugin = (siteData = {}) => {
 press.CopyAssetsPlugin = (options = {}) => {
     return {
         name: "CopyAssetsPlugin",
-        beforeEmit: context => {
-            return (options.patterns || []).forEach(item => {
-                if (item.from && fs.existsSync(item.from)) {
-                    press.utils.copy(item.from, path.join(context.destination, options.basePath || ".", item.to || path.basename(item.from)));
-                }
-            });
+        load: () => {
+            return (options?.patterns || [])
+                .filter(item => item.from && fs.existsSync(path.resolve(item.from)))
+                .map(item => ({
+                    source: path.resolve(item.from),
+                    path: path.join(options?.basePath || ".", item.to || path.basename(item.from)),
+                    label: options?.label || press.LABEL_ASSET,
+                }));
         },
     };
 };
