@@ -35,9 +35,13 @@ const press = (config = {}) => {
         });
     });
     // 2. transform nodes
-    const transformPlugins = getPlugins("transform");
-    context.nodes.forEach((node, _, allNodes) => {
-        transformPlugins.forEach(plugin => {
+    getPlugins("transform").forEach(plugin => {
+        // special hook to initialize the transform plugin
+        if (typeof plugin.beforeTransform === "function") {
+            plugin.beforeTransform(context);
+        }
+        // run the transform in all nodes
+        context.nodes.forEach((node, _, allNodes) => {
             return plugin.transform(context, node, allNodes);
         });
     });
@@ -53,11 +57,15 @@ const press = (config = {}) => {
         return plugin.beforeEmit(context);
     });
     // 5. emit each node
-    const emitPlugins = getPlugins("emit");
-    filteredNodes.forEach((node, _, allNodes) => {
-        emitPlugins.forEach(plugin => {
-            return plugin.emit(context, node, allNodes);
-        });
+    filteredNodes.forEach(node => {
+        // 1. if node has been processed (aka node.content is an string), write the file
+        if (typeof node.content === "string") {
+            press.utils.write(path.join(context.destination, node.path), node.content);
+        }
+        // 2. if node has not been processed, just copy the file
+        else if (fs.existsSync(node.source)) {
+            press.utils.copy(node.source, path.join(context.destination, node.path));
+        }
     });
 };
 
@@ -118,31 +126,39 @@ press.LABEL_PARTIAL = "asset/partial";
 
 // @description source plugin
 press.SourcePlugin = (options = {}) => {
+    const shouldEmit = options?.shouldEmit ?? true;
+    const processedNodes = new Set();
     return {
         name: "SourcePlugin",
         load: context => {
             const folder = path.join(context.source, options?.folder || ".");
             const extensions = options?.extensions || context.extensions;
             const exclude = options?.exclude || context.exclude;
-            return press.utils.readdir(folder, extensions, exclude).map(file => ({
-                source: path.join(folder, file),
-                label: options.label || press.LABEL_PAGE,
-                path: path.join(options?.basePath || ".", file),
-                url: path.normalize("/" + path.join(options?.basePath || ".", file)),
-                content: press.utils.read(path.join(folder, file)),
-            }));
+            return press.utils.readdir(folder, extensions, exclude).map(file => {
+                processedNodes.add(path.join(folder, file)); // register this node
+                return {
+                    source: path.join(folder, file),
+                    label: options.label || press.LABEL_PAGE,
+                    path: path.join(options?.basePath || ".", file),
+                    url: path.normalize("/" + path.join(options?.basePath || ".", file)),
+                    content: press.utils.read(path.join(folder, file)),
+                };
+            });
+        },
+        shouldEmit: (context, node) => {
+            return !processedNodes.has(node.source) || shouldEmit;
         },
     };
 };
 
 // @description data plugin
 press.DataPlugin = (options = {}) => {
-    return press.SourcePlugin({folder: "./data", extensions: [".json"], label: press.LABEL_DATA, ...options});
+    return press.SourcePlugin({folder: "./data", shouldEmit: false, extensions: [".json"], label: press.LABEL_DATA, ...options});
 };
 
 // @description partials plugin
 press.PartialsPlugin = (options = {}) => {
-    return press.SourcePlugin({folder: "./partials", extensions: [".html"], label: press.LABEL_PARTIAL, ...options});
+    return press.SourcePlugin({folder: "./partials", shouldEmit: false, extensions: [".html"], label: press.LABEL_PARTIAL, ...options});
 };
 
 // @description assets plugin
@@ -156,14 +172,6 @@ press.AssetsPlugin = (options = {}) => {
                 label: options.label || press.LABEL_ASSET,
                 path: path.join(options?.basePath || ".", file),
             }));
-        },
-        emit: (context, node) => {
-            if (node.label === press.LABEL_ASSET && typeof node.content === "string") {
-                press.utils.write(path.join(context.destination, node.path), node.content);
-            }
-            else if (node.label === press.LABEL_ASSET) {
-                press.utils.copy(node.source, path.join(context.destination, node.path));
-            }
         },
     };
 };
@@ -191,10 +199,7 @@ press.FrontmatterPlugin = () => {
 press.ContentPagePlugin = (siteData = {}) => {
     return {
         name: "ContentPagePlugin",
-        shouldEmit: (context, node) => {
-            return ![press.LABEL_DATA, press.LABEL_PARTIAL].includes(node.label);
-        },
-        beforeEmit: context => {
+        beforeTransform: context => {
             const getNodes = label => context.nodes.filter(n => n.label === label);
             // 1. prepare site data
             Object.assign(siteData, context.config, {
@@ -213,14 +218,12 @@ press.ContentPagePlugin = (siteData = {}) => {
                 });
             });
         },
-        emit: (context, node) => {
+        transform: (context, node) => {
             if (node.label === press.LABEL_PAGE && typeof node.content === "string") {
                 context.template.use(ctx => {
                     ctx.tokens = mikel.tokenize(node.content || "");
                 });
-                // compile and write the template
-                const result = context.template({site: siteData, page: node});
-                press.utils.write(path.join(context.destination, node.path), result);
+                node.content = context.template({site: siteData, page: node});
             }
         },
     };
@@ -230,12 +233,14 @@ press.ContentPagePlugin = (siteData = {}) => {
 press.CopyAssetsPlugin = (options = {}) => {
     return {
         name: "CopyAssetsPlugin",
-        beforeEmit: context => {
-            return (options.patterns || []).forEach(item => {
-                if (item.from && fs.existsSync(item.from)) {
-                    press.utils.copy(item.from, path.join(context.destination, options.basePath || ".", item.to || path.basename(item.from)));
-                }
-            });
+        load: () => {
+            return (options?.patterns || [])
+                .filter(item => item.from && fs.existsSync(path.resolve(item.from)))
+                .map(item => ({
+                    source: path.resolve(item.from),
+                    path: path.join(options?.basePath || ".", item.to || path.basename(item.from)),
+                    label: options?.label || press.LABEL_ASSET,
+                }));
         },
     };
 };
