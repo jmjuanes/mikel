@@ -1,7 +1,7 @@
 {
     "name": "mikel",
     "description": "Micro templating library with zero dependencies",
-    "version": "0.20.1",
+    "version": "0.20.2",
     "type": "module",
     "author": {
         "name": "Josemi Juanes",
