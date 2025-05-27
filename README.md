@@ -213,20 +213,7 @@ const result = m("{{>foo}}", {}, options);
 // Output: 'Hello Bob!'
 ```
 
-### Inline partials
-
-> This feature was added in `v0.16.0`.
-
-Inline partials allows you to define partials directly in your template. Use the plus symbol `+` followed by the partial name to start the partial definition, and end the partial definition with a slash `/` followed by the partial name. For example, `{{<foo}}` begins a partial definition called `foo`, and `{{/foo}}` ends it.
-
-Example:
-
-```javascript
-const result = m(`{{<foo}}Hello {{name}}!{{/foo}}{{>foo name="Bob"}}`, {});
-// Output: 'Hello Bob!'
-```
-
-### Built-in helpers
+### Helpers
 
 > Added in `v0.4.0`.
 

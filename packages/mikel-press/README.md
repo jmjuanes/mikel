@@ -19,6 +19,30 @@ Or **npm**:
 $ npm install --dev mikel-press
 ```
 
+## Directory structure
+
+A basic **mikel-press** directory structure looks like this:
+
+```
+.
+├── data
+│   └── projects.json
+├── partials
+│   ├── footer.html
+│   └── header.html
+├── posts
+│   ├── 2025-04-03-introducing-our-new-project.html
+│   ├── 2025-04-05-how-to-stay-productive.html
+│   └── 2025-04-07-understanding-javascript-closures.html
+├── www
+├── press.js
+├── package.json
+├── projects.html
+├── blog.html
+├── about.html
+└── index.html
+```
+
 ## Configuration
 
 **mikel-press** can be configured using a `config` object that accepts the following options:
@@ -27,31 +51,29 @@ $ npm install --dev mikel-press
 |-------|-------------|---------|
 | `source` | The path to the directory containing the site folders. | `"."` |
 | `destination` | The output directory where the generated static site will be saved. | `"www"` |
-| `layout` | The path to the layout file that will be used as the base template for all pages. | - |
-| `plugins` | A list of plugins used to extend the functionality of mikel-press. | `[]` |
+| `extensions` | List of file extensions to process. | `[".html"]` |
+| `mikelOptions` | An object containing custom configuration for the **mikel** templating engine. | `{}` |
+| `plugins` | A list of plugins used to extend the functionality of **mikel-press**. | `[]` |
 | `*` | Any other properties passed in config will be available as `site.*` inside each page template. | - |
 
 Here is an example configuration object:
 
 ```javascript
-const config = {
+import press from "mikel-press";
+
+press({
     source: ".",
     destination: "./www",
-    layout: "./layout.html",
     title: "Hello world",
     description: "My awesome site",
     plugins: [
-        press.PagesPlugin(),
+        press.SourcePlugin({folder: "posts", basePath: "blog"}),
+        press.PartialsLoaderPlugin(),
+        press.DataLoaderPlugin(),
         press.FrontmatterPlugin(),
-        press.PermalinkPlugin(),
-        press.ContentPlugin(),
-        press.CopyAssetsPlugin({
-            patterns: [
-                { from: "./static/styles.css", to: "static/" },
-            ],
-        }),
+        press.ContentPagePlugin(),
     ],
-};
+});
 ```
 
 ## Content
@@ -66,33 +88,25 @@ Each HTML file processed by **mikel-press** will be handled by the mikel templat
 |----------|-------------|
 | `site` | Contains the site information and all the additional keys provided in the configuration object. |
 | `page` | Specific information about the page that is rendered. |
-| `layout` | Specific information about the layout that is used for renderin the page. |
 
 #### Site variables
 
 | Variable | Description |
 |----------|-------------|
-| `site.data` | An object containing all data items loaded by `DataPlugin`. |
-| `site.pages` | A list containing all pages loaded by the `PagesPlugin`. |
-| `site.assets` | A list containing all assets files loaded by the `AssetsPlugin`. |
-| `site.partials` | A list containing all partials files loaded by the `PartialsPlugin`. |
+| `site.pages` | A list containing all pages processed by **mikel-press**. |
+| `site.data` | An object containing all data items loaded by `DataLoaderPlugin`. |
+| `site.partials` | A list containing all partials files loaded by the `PartialsLoaderPlugin`. |
 | `site.*` | All the additional configuration fields provided in the configuration. |
 
 #### Page variables
 
 | Variable | Description |
 |----------|-------------|
+| `page.content` | The raw content of the page before begin processed by **mikel**. |
+| `page.title` | The title of the page. |
 | `page.path` | The path to the page. Example: `about/index.html`. |
 | `page.url` | The path to the page including the leading `/`. Example: `/about/index.html`. |
 | `page.attributes` | An object containing all the frontmatter variables in the page processed by `FrontmatterPlugin`. |
-| `page.content` | The raw content of the page before begin processed by **mikel**. |
-
-#### Layout variables
-
-| Variable | Description |
-|----------|-------------|
-| `layout.attributes` | An object containing all the frontmatter variables in the layout processed by `FrontmatterPlugin`. |
-| `layout.content` | The raw content of the layout. |
 
 ## Plugins
 
@@ -100,54 +114,43 @@ Each HTML file processed by **mikel-press** will be handled by the mikel templat
 
 ### `press.SourcePlugin(options)`
 
-This plugin reads content from the specified `config.source` directory and loads it into the system for processing.
+This plugin reads content from the specified directory and loads it into the system for processing.
 
 Options:
-- `options.source` (string): Specifies a custom source directory. If not provided, `config.source` is used.
-- `options.extensions` (array): Defines the file extensions that should be processed. The default value is `[".html", ".md", ".markdown"]`.
-- `options.base` (string): Specifies the base path for the output files.
+- `options.folder` (string): Specifies a custom source directory. If not provided, `config.source` is used.
+- `options.extensions` (array): Defines the file extensions that should be processed. If not provided, it will use `config.extensions`.
+- `options.basePath` (string): Specifies the base path for the output files.
 
-### `press.PagesPlugin()`
-
-An alias of `press.SourcePlugin` that will read `.html` files from the `pages` folder.
-
-### `press.AssetsPlugin()`
-
-An alias of `press.SourcePlugin` that will read all files in the `assets` folder and process them as assets.
-
-### `press.PartialsPlugin()`
+### `press.PartialsPlugin(options)`
 
 An alias of `press.SourcePlugin` that will read all files in the `partials` folder and process them as a partials. The **mikel** tag `{{>file}}` can be used to include the partial in `partials/file.html`.
 
+This plugin accepts the following options:
+- `options.folder` (string): To change the directory to load the partials files. Default is `./partials`.
+- `options.extensions` (array): Defines the file extensions that should be processed. If not provided, it will use `config.extensions`.
+
 ### `press.DataPlugin(options)`
 
-This plugin loads JSON files from the specified directory and makes them available in the site context.
+This plugin loads JSON files from the specified directory and makes them available in the site context. This plugin accepts the following options:
 
-Options:
-- `options.source` (string): Specifies a custom source directory for data files. If not provided, `./data` is used.
+- `options.folder` (string): Specifies a custom source directory for data files. If not provided, `./data` is used.
 
-### `press.FrontmatterPlugin(options)`
+### `press.AssetsPlugin(options)`
 
-This plugin processes frontmatter in Markdown and HTML files.
+This plugin loads additional files (aka assets) and includes them in the build folder. This plugin accepts the following options:
 
-Options:
-- `options.extensions` (array): Defines the file extensions that should be processed. The default value is `[".md", ".markdown", ".html"]`.
-- `options.parser` (function): Frontmatter parser function (e.g., `JSON.parse`, `YAML.load`).
+- `options.folder` (string): Specifies a custom source directory for assets files. If not provided, `./assets` is used.
+- `options.extensions` (array): Defines the file extensions that should be processed. If not provided, it will use `"*"`.
+- `options.exclude` (array): Defines the list of file names to exclude.
+- `options.basePath` (string): Allows to specify a base path for the output files.
 
-### `press.PermalinkPlugin()`
+### `press.FrontmatterPlugin()`
 
-This plugin allows defining custom permalinks for pages.
+This plugin processes and parses the frontmatter in each file. The parsed frontmatter content will be available in `page.attributes` field.
 
-### `press.MarkdownPlugin(options)`
+### `press.ContentPagePlugin()`
 
-This plugin processes Markdown files and converts them to HTML.
-
-Options:
-- `options.parser` (function): Markdown parser function (e.g., `marked.parse`).
-
-### `press.ContentPlugin(options)`
-
-This plugin processes each page and saves it into `config.destination`. It accepts an `options` object, which is passed to mikel for template processing.
+This plugin processes each page and saves it into `config.destination`.
 
 ### `press.CopyAssetsPlugin(options)`
 
@@ -156,28 +159,14 @@ This plugin copies static files from the source to the destination.
 Options:
 - `options.patterns` (array): List of file patterns to copy. Each pattern should have `from` and `to`.
 
-## Node API
+## API
 
-**mikel-press** provides an API with two main methods:
-
-### `press.build(config)`
-
-Triggers the build of **mikel-press** with the given configuration object provided as an argument.
+**mikel-press** exposes a single function that triggers the build with the given configuration object provided as an argument.
 
 ```javascript
 import press from "mikel-press";
 
-press.build(config);
-```
-
-### `press.watch(config)`
-
-Calling the `watch` method triggers the build, but also watches for changes and rebuilds the site as soon as it detects a change in any of the source files.
-
-```javascript
-import press from "mikel-press";
-
-press.watch(config);
+press({...});
 ```
 
 ## License
