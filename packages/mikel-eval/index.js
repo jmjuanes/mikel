@@ -18,13 +18,13 @@ const getIn = (c, p) => {
     return (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c));
 };
 
-// Parse a next character
+// parse a next character
 const nextChar = ctx => {
     ctx.pos = ctx.pos + 1;
     ctx.current = (ctx.pos < ctx.str.length) ? ctx.str.charAt(ctx.pos) : -1;
 };
 
-// ceck if the current character is the provided character
+// check if the current character is the provided character
 const checkChar = (ctx, ch) =>{
     while (ctx.current === " ") {
         nextChar(ctx);
@@ -178,6 +178,105 @@ const parseFactor = ctx => {
     return x;
 };
 
+// @description default functions
+const defaultFunctions = {
+    // common functions
+    len: x => {
+        if (Array.isArray(x) || typeof x === "string") {
+            return x.length;
+        } else if (typeof x === "object") {
+            return Object.keys(x).length;
+        }
+        throw new Error(`len() cannot be applied to type ${typeof x}`);
+    },
+    type: x => typeof x,
+    if: (condition, trueValue, falseValue) => {
+        if (typeof condition !== "boolean") {
+            throw new Error(`if() expects a boolean condition, got ${typeof condition}`);
+        }
+        return condition ? trueValue : falseValue;
+    },
+    // array functions
+    in: (array, item) => {
+        if (!Array.isArray(array)) {
+            throw new Error(`in() expects an array, got ${typeof array}`);
+        }
+        return array.includes(item);
+    },
+    indexOf: (array, item) => {
+        if (!Array.isArray(array)) {
+            throw new Error(`indexOf() expects an array, got ${typeof array}`);
+        }
+        return array.indexOf(item);
+    },
+    join: (array, separator = ",") => {
+        if (!Array.isArray(array)) {
+            throw new Error(`join() expects an array, got ${typeof array}`);
+        }
+        return array.join(separator);
+    },
+    // object functions
+    valueOf: (obj, key) => {
+        if (typeof obj !== "object" || obj === null) {
+            throw new Error(`valueOf() expects an object, got ${typeof obj}`);
+        }
+        return obj[key];
+    },
+    // string functions
+    startsWith: (str, prefix) => {
+        if (typeof str !== "string") {
+            throw new Error(`startsWith() expects a string, got ${typeof str}`);
+        }
+        return str.startsWith(prefix);
+    },
+    endsWith: (str, suffix) => {
+        if (typeof str !== "string") {
+            throw new Error(`endsWith() expects a string, got ${typeof str}`);
+        }
+        return str.endsWith(suffix);
+    },
+    contains: (str, substring) => {
+        if (typeof str !== "string") {
+            throw new Error(`contains() expects a string, got ${typeof str}`);
+        }
+        return str.includes(substring);
+    },
+    replace: (str, search, replacement) => {
+        if (typeof str !== "string") {
+            throw new Error(`replace() expects a string, got ${typeof str}`);
+        }
+        return str.replace(new RegExp(search, "g"), replacement || "");
+    },
+    toUpperCase: str => {
+        if (typeof str !== "string") {
+            throw new Error(`toUpperCase() expects a string, got ${typeof str}`);
+        }
+        return str.toUpperCase();
+    },
+    toLowerCase: str => {
+        if (typeof str !== "string") {
+            throw new Error(`toLowerCase() expects a string, got ${typeof str}`);
+        }
+        return str.toLowerCase();
+    },
+    trim: str => {
+        if (typeof str !== "string") {
+            throw new Error(`trim() expects a string, got ${typeof str}`);
+        }
+        return str.trim();
+    },
+    // mathematical functions
+    min: (...args) => Math.min(...args),
+    max: (...args) => Math.max(...args),
+    abs: x => Math.abs(x),
+    round: x => Math.round(x),
+    ceil: x => Math.ceil(x),
+    floor: x => Math.floor(x),
+    sqrt: x => Math.sqrt(x),
+    pow: (x, y) => Math.pow(x, y),
+    random: () => Math.random(),
+};
+
 // @description: evaluate a string expression
 // @param str {string} the expression to evaluate
 // @param options {object} the options to use
@@ -189,7 +288,10 @@ const evaluate = (str = "", options = {}) => {
         current: str.charAt(0) || "",
         str: str,
         values: options.values || {},
-        functions: options.functions || {},
+        functions: {
+            ...defaultFunctions,
+            ...(options.functions || {}),
+        },
     };
     const result = parseExpression(context);
     if (context.pos < context.str.length) {
@@ -203,8 +305,27 @@ const evaluatePlugin = (options = {}) => {
     return {
         functions: {
             eval: params => {
-                return evaluate(params.args[0], options);
+                return evaluate(params.args[0], {
+                    values: params.data,
+                    functions: options.functions,
+                });
             },
-        }
+        },
+        helpers: {
+            ifEval: params => {
+                const condition = evaluate(params.args[0], {
+                    values: params.data,
+                    functions: options.functions,
+                });
+                return !!condition ? params.fn(params.data) : "";
+            },
+        },
     };
 };
+
+// assign additional options for this plugin
+evaluatePlugin.evaluate = evaluate;
+evaluatePlugin.defaultFunctions = defaultFunctions;
+
+// export the evaluate plugin
+export default evaluatePlugin;
