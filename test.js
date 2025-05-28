@@ -320,11 +320,17 @@ describe("templating", () => {
             const options = {
                 helpers: {
                     customEqual: params => params.args[0] === params.args[1] ? params.fn(params.context) : "",
+                    customEval: params => {
+                        const values = params.args[0].split(" == ");
+                        return values[0] === values[1] ? params.fn(params.context) : "";
+                    },
                 },
             };
             assert.equal(m(`{{#customEqual value "yes"}}Yes!!{{/customEqual}}`, {value: "yes"}, options), "Yes!!");
             assert.equal(m(`{{#customEqual value "no"}}Yes!!{{/customEqual}}`, {value: "yes"}, options), "");
             assert.equal(m(`{{#customEqual value false}}Yes!!{{/customEqual}}`, {value: "yes"}, options), "");
+            assert.equal(m(`{{#customEval "1 == 1"}}Equal!!{{/customEval}}`, {}, options), "Equal!!");
+            assert.equal(m(`{{#customEval "1 == 2"}}Equal!!{{/customEval}}`, {}, options), "");
         });
 
         it("should allow to provide keyword arguments", () => {
@@ -408,6 +414,10 @@ describe("templating", () => {
             functions: {
                 toUpperCase: params => params.args[0].toUpperCase(),
                 concat: params => params.args.join(params.opt.delimiter || " "),
+                equal: params => {
+                    const values = params.args[0].split(" == ");
+                    return values[0] === values[1] ? "YES" : "NO";
+                },
             },
         };
 
@@ -425,6 +435,8 @@ describe("templating", () => {
 
         it("should allow to provide fixed arguments values", () => {
             assert.equal(m(`{{=concat "Hello" "World"}}!`, {}, options), "Hello World!");
+            assert.equal(m(`{{=equal "1 == 1"}}`, {}, options), "YES");
+            assert.equal(m(`{{=equal "1 == 2"}}`, {}, options), "NO");
         });
 
         it("should allow to execute funcions inside helpers blocks", () => {
