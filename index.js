@@ -20,7 +20,7 @@ const untokenize = (ts = [], s = "{{", e = "}}") => {
 const parseArgs = (str = "", data = {}, vars = {}, argv = [], opt = {}) => {
     const [t, ...args] = str.trim().match(/(?:[^\s"]+|"[^"]*")+/g);
     args.forEach(argStr => {
-        if (argStr.includes("=")) {
+        if (argStr.includes("=") && !argStr.startsWith(`"`)) {
             const [k, v] = argStr.split("=");
             opt[k] = parse(v, data, vars);
         }
