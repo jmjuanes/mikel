@@ -54,6 +54,33 @@ describe("evaluate", () => {
         });
     });
 
+    describe("boolean operations", () => {
+        it("should evaluate logical AND", () => {
+            assert.equal(e("true && false"), false);
+            assert.equal(e("true && true"), true);
+        });
+
+        it("should evaluate logical OR", () => {
+            assert.equal(e("true || false"), true);
+            assert.equal(e("false || false"), false);
+        });
+
+        it("should evaluate logical NOT", () => {
+            assert.equal(e("!true"), false);
+            assert.equal(e("!false"), true);
+        });
+
+        it("should evaluate comparisons", () => {
+            assert.equal(e("1 < 2"), true);
+            assert.equal(e("2 > 1"), true);
+            assert.equal(e("1 <= 1"), true);
+            assert.equal(e("2 >= 2"), true);
+            assert.equal(e("1 == 1"), true);
+            assert.equal(e("'a' == 'a'"), true);
+            assert.equal(e("'a' != 'b'"), true);
+        });
+    });
+
     describe("default functions", () => {
         it("should evaluate default math functions", () => {
             assert.equal(e("abs(-5)"), 5);
@@ -73,6 +100,20 @@ describe("evaluate", () => {
             assert.equal(e("trim('  Hello  ')"), "Hello");
             assert.equal(e("startsWith('Hello', 'He')"), true);
             assert.equal(e("endsWith('Hello', 'lo')"), true);
+            assert.equal(e("in('Hello', 'lo')"), true);
+        });
+
+        it("should evaluate array functions", () => {
+            assert.equal(e("len([1, 2, 3])"), 3);
+            assert.equal(e("indexOf([1, 2, 3], 2)"), 1);
+            assert.equal(e("join([1, 2, 3], ', ')"), "1, 2, 3");
+            assert.equal(e("in([1, 2, 3], 2)"), true);
+        });
+
+        it("should evaluate 'if' function", () => {
+            assert.equal(e("if(true, 'Yes', 'No')"), "Yes");
+            assert.equal(e("if(false, 'Yes', 'No')"), "No");
+            assert.equal(e("if(1 > 0, 'Positive', 'Negative')"), "Positive");
         });
     });
 });
@@ -86,6 +127,24 @@ describe("{{=eval}}", () => {
 
     it("should evaluate expressions with variables", () => {
         assert.equal(m(`{{=eval "x + 1"}}`, {x: 1}, options), "2");
+        assert.equal(m(`{{=eval "x * y"}}`, {x: 2, y: 3}, options), "6");
+        assert.equal(m(`{{=eval "x + y"}}`, {x: 5, y: 10}, options), "15");
         assert.equal(m(`{{=eval "'Hello ' + name"}}`, {name: "Bob"}, options), "Hello Bob");
+        assert.equal(m(`{{=eval "replace('Hello', 'Hello', name)"}}`, {name: "Alice"}, options), "Alice");
+    });
+});
+
+describe("{{#when}}", () => {
+    const options = evaluate();
+    it("should render content if expression is true", () => {
+        assert.equal(m(`{{#when "1 + 1"}}True{{/when}}`, {}, options), "True");
+        assert.equal(m(`{{#when "x > 1"}}Greater{{/when}}`, {x: 2}, options), "Greater");
+        assert.equal(m(`{{#when "'aa' == 'aa'"}}Equal{{/when}}`, {}, options), "Equal");
+    });
+
+    it("should not render content if expression is false", () => {
+        assert.equal(m(`{{#when "(1 + 1) == 3"}}True{{/when}}`, {}, options), "");
+        assert.equal(m(`{{#when "x < 1"}}Less{{/when}}`, {x: 2}, options), "");
+        assert.equal(m(`{{#when "'aa' != 'aa'"}}Not Equal{{/when}}`, {}, options), "");
     });
 });
