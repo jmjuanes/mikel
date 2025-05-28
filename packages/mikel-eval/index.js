@@ -184,10 +184,19 @@ const defaultFunctions = {
     len: x => {
         if (Array.isArray(x) || typeof x === "string") {
             return x.length;
-        } else if (typeof x === "object") {
+        } else if (typeof x === "object" && x !== null) {
             return Object.keys(x).length;
         }
         throw new Error(`len() cannot be applied to type ${typeof x}`);
+    },
+    in: (x, item) => {
+        if (Array.isArray(x) || typeof x === "string") {
+            return x.includes(item);
+        }
+        else if (typeof x === "object" && x !== null) {
+            return Object.values(x).includes(item);
+        }
+        throw new Error(`in() cannot be applied to type ${typeof x}`);
     },
     type: x => typeof x,
     if: (condition, trueValue, falseValue) => {
@@ -197,12 +206,6 @@ const defaultFunctions = {
         return condition ? trueValue : falseValue;
     },
     // array functions
-    in: (array, item) => {
-        if (!Array.isArray(array)) {
-            throw new Error(`in() expects an array, got ${typeof array}`);
-        }
-        return array.includes(item);
-    },
     indexOf: (array, item) => {
         if (!Array.isArray(array)) {
             throw new Error(`indexOf() expects an array, got ${typeof array}`);
@@ -234,12 +237,6 @@ const defaultFunctions = {
             throw new Error(`endsWith() expects a string, got ${typeof str}`);
         }
         return str.endsWith(suffix);
-    },
-    contains: (str, substring) => {
-        if (typeof str !== "string") {
-            throw new Error(`contains() expects a string, got ${typeof str}`);
-        }
-        return str.includes(substring);
     },
     replace: (str, search, replacement) => {
         if (typeof str !== "string") {
@@ -312,7 +309,7 @@ const evaluatePlugin = (options = {}) => {
             },
         },
         helpers: {
-            ifEval: params => {
+            when: params => {
                 const condition = evaluate(params.args[0], {
                     values: params.data,
                     functions: options.functions,
