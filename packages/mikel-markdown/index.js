@@ -28,6 +28,10 @@ const allExpressions = {
         regex: /(?:^```(?:[^\n]*)\n([\s\S]*?)\n``` *$)/gm,
         replace: (args, cn) => render("pre", {class: cn.pre}, escape(args[1])),
     },
+    code: {
+        regex: /`([^`]*?)`/g,
+        replace: (args, cn) => render("code", {class: cn.code}, escape(args[1])),
+    },
     heading: {
         regex: /^(#+)\s+(.*)/gm,
         replace: (args, cn) => render("h" + args[1].length, {class: cn.heading}, args[2]),
@@ -35,10 +39,6 @@ const allExpressions = {
     blockquote: {
         regex: /^[\s]*>\s(.*)/gm,
         replace: (args, cn) => render("blockquote", {class: cn.blockquote}, args[1]),
-    },
-    code: {
-        regex: /`([^`]*?)`/g,
-        replace: (args, cn) => render("code", {class: cn.code}, escape(args[1])),
     },
     image: {
         regex: /\!\[([^\]]*?)\]\(([^)]*?)\)/g,
@@ -111,7 +111,7 @@ const allExpressions = {
 };
 
 // @description inline expressions
-const inlineExpressions = Object.fromEntries(["link", "strong", "emphasis", "code"].map(key => {
+const inlineExpressions = Object.fromEntries(["code", "link", "strong", "emphasis"].map(key => {
     return [key, allExpressions[key]];
 }));
 
@@ -125,9 +125,9 @@ const parser = (str = "", options = {}) => {
     Object.keys(expressions).forEach(key => {
         str = str.replace(expressions[key].regex, (...args) => {
             const value = expressions[key].replace(args, classNames);
-            if (key === "pre") {
+            if (key === "pre" || key === "code") {
                 ignoredBlocks.push(value);
-                return `<pre>{IGNORED%${(ignoredBlocks.length - 1)}}</pre>\n`;
+                return `<pre>{IGNORED%${(ignoredBlocks.length - 1)}}</pre>`;
             }
             // other value --> return the value provided by the renderer
             return value;
