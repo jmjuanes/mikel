@@ -24,6 +24,10 @@ describe("parser", () => {
         it("should escape HTML characters", () => {
             assert.equal(mk("Text `<hr>` text"), "<p>Text <code>&lt;hr&gt;</code> text</p>");
         });
+
+        it("should handle asterisks in code", () => {
+            assert.equal(mk("This `*text*` is code"), "<p>This <code>*text*</code> is code</p>");
+        });
     });
 
     describe("links", () => {
