@@ -1,4 +1,7 @@
-# mikel-eval Plugin
+# mikel-eval
+
+![npm version](https://badgen.net/npm/v/mikel-eval?labelColor=1d2734&color=21bf81)
+![license](https://badgen.net/github/license/jmjuanes/mikel?labelColor=1d2734&color=21bf81)
 
 The `mikel-eval` plugin extends the [mikel](https://github.com/jmjuanes/mikel) templating engine with expression evaluation capabilities. It allows you to evaluate mathematical, string, boolean, and array expressions directly within your templates.
 
