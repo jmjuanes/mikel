@@ -85,9 +85,9 @@ const create = (template = "", options = {}) => {
                     args: args,
                     opt: opt,
                     data: data,
-                    context: data,
+                    variables: vars,
                     fn: (blockData = {}, blockVars = {}, blockOutput = []) => {
-                        i = compile(tokens, blockOutput, blockData, {...vars, ...blockVars, root: vars.root}, j, t);
+                        i = compile(tokens, blockOutput, blockData, {...vars, ...blockVars, parent: data, root: vars.root}, j, t);
                         return blockOutput.join("");
                     },
                 }));
@@ -130,7 +130,7 @@ const create = (template = "", options = {}) => {
             else if (tokens[i].startsWith("=")) {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), data, vars);
                 if (typeof ctx.functions[t] === "function") {
-                    output.push(ctx.functions[t]({args, opt, data}) || "");
+                    output.push(ctx.functions[t]({args, opt, data, variables: vars}) || "");
                 }
             }
             else if (tokens[i].startsWith("/")) {
