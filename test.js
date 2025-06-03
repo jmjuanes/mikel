@@ -383,6 +383,18 @@ describe("templating", () => {
             };
             assert.equal(m("{{#concat ...values ...options}}{{/concat}}", data, options), "Hello,World");
         });
+
+        it("should support accessing to root data", () => {
+            const data = {
+                name: "Bob",
+            };
+            const options = {
+                helpers: {
+                    greet: params => `Hello ${params.root.name}!`,
+                },
+            };
+            assert.equal(m("{{#greet}}{{/greet}}", data, options), "Hello Bob!");
+        });
     });
 
     describe("{{@root}}", () => {
@@ -491,6 +503,18 @@ describe("templating", () => {
                 },
             };
             assert.equal(m("result={{=concat ...functionArgs}}", data, options), "result=1,2,3");
+        });
+
+        it("should support accessing to root data", () => {
+            const data = {
+                name: "Bob",
+            };
+            const options = {
+                functions: {
+                    greet: params => `Hello ${params.root.name}!`,
+                },
+            };
+            assert.equal(m("{{=greet}}", data, options), "Hello Bob!");
         });
     });
 });
