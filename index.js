@@ -87,7 +87,7 @@ const create = (template = "", options = {}) => {
                     data: data,
                     variables: vars,
                     fn: (blockData = {}, blockVars = {}, blockOutput = []) => {
-                        i = compile(tokens, blockOutput, blockData, {...vars, ...blockVars, root: vars.root}, j, t);
+                        i = compile(tokens, blockOutput, blockData, {...vars, ...blockVars, parent: data, root: vars.root}, j, t);
                         return blockOutput.join("");
                     },
                 }));
