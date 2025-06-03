@@ -384,13 +384,13 @@ describe("templating", () => {
             assert.equal(m("{{#concat ...values ...options}}{{/concat}}", data, options), "Hello,World");
         });
 
-        it("should support accessing to root data", () => {
+        it("should support accessing to variables in helper params", () => {
             const data = {
                 name: "Bob",
             };
             const options = {
                 helpers: {
-                    greet: params => `Hello ${params.root.name}!`,
+                    greet: params => `Hello ${params.variables.root.name}!`,
                 },
             };
             assert.equal(m("{{#greet}}{{/greet}}", data, options), "Hello Bob!");
@@ -505,13 +505,13 @@ describe("templating", () => {
             assert.equal(m("result={{=concat ...functionArgs}}", data, options), "result=1,2,3");
         });
 
-        it("should support accessing to root data", () => {
+        it("should support accessing to variables in function params", () => {
             const data = {
                 name: "Bob",
             };
             const options = {
                 functions: {
-                    greet: params => `Hello ${params.root.name}!`,
+                    greet: params => `Hello ${params.variables.root.name}!`,
                 },
             };
             assert.equal(m("{{=greet}}", data, options), "Hello Bob!");
