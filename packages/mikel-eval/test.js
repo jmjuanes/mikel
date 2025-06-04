@@ -55,6 +55,7 @@ describe("evaluate", () => {
 
         it("should replace substrings", () => {
             assert.equal(e("replace('Hello World', 'World', 'Mikel')"), "Hello Mikel");
+            assert.equal(e("replace('Hello World', 'World')"), "Hello ");
         });
     });
 
