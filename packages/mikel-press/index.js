@@ -23,6 +23,10 @@ const press = (config = {}) => {
         nodes: [],
     });
     const getPlugins = name => context.plugins.filter(plugin => typeof plugin[name] === "function");
+    // 0. initialize
+    getPlugins("init").forEach(plugin => {
+        return plugin.init(context);
+    });
     // 1. load nodes into context
     const nodesPaths = new Set(); // prevent adding duplicated nodes
     getPlugins("load").forEach(plugin => {
