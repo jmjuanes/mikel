@@ -237,7 +237,7 @@ press.ContentPagePlugin = (siteData = {}) => {
 press.UsePlugin = mikelPlugin => {
     return {
         name: "UsePlugin",
-        init: () => {
+        init: context => {
             context.template.use(mikelPlugin);
         },
     };
