@@ -52,6 +52,11 @@ describe("evaluate", () => {
         it("should concatenate strings", () => {
             assert.equal(e("'Hello' + ' World'"), "Hello World");
         });
+
+        it("should replace substrings", () => {
+            assert.equal(e("replace('Hello World', 'World', 'Mikel')"), "Hello Mikel");
+            assert.equal(e("replace('Hello World', 'World')"), "Hello ");
+        });
     });
 
     describe("boolean operations", () => {
