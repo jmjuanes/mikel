@@ -233,6 +233,16 @@ press.ContentPagePlugin = (siteData = {}) => {
     };
 };
 
+// @description plugin to register mikel helpers and functions
+press.UsePlugin = mikelPlugin => {
+    return {
+        name: "UsePlugin",
+        init: () => {
+            context.template.use(mikelPlugin);
+        },
+    };
+};
+
 // @description copy plugin
 press.CopyAssetsPlugin = (options = {}) => {
     return {
