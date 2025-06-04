@@ -23,6 +23,10 @@ const press = (config = {}) => {
         nodes: [],
     });
     const getPlugins = name => context.plugins.filter(plugin => typeof plugin[name] === "function");
+    // 0. initialize
+    getPlugins("init").forEach(plugin => {
+        return plugin.init(context);
+    });
     // 1. load nodes into context
     const nodesPaths = new Set(); // prevent adding duplicated nodes
     getPlugins("load").forEach(plugin => {
@@ -225,6 +229,16 @@ press.ContentPagePlugin = (siteData = {}) => {
                 });
                 node.content = context.template({site: siteData, page: node});
             }
+        },
+    };
+};
+
+// @description plugin to register mikel helpers and functions
+press.UsePlugin = mikelPlugin => {
+    return {
+        name: "UsePlugin",
+        init: () => {
+            context.template.use(mikelPlugin);
         },
     };
 };
