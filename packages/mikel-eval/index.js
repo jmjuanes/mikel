@@ -242,7 +242,7 @@ const defaultFunctions = {
         if (typeof str !== "string") {
             throw new Error(`replace() expects a string, got ${typeof str}`);
         }
-        return str.replace(new RegExp(search, "g"), replacement || "");
+        return str.replaceAll(search, replacement || "");
     },
     toUpperCase: str => {
         if (typeof str !== "string") {
