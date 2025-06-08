@@ -312,7 +312,7 @@ describe("templating", () => {
 
         it("should return raw content with nested raw sections", () => {
             assert.equal(m("{{#raw}}{{#raw}}Hello {{name}}!{{/raw}}{{/raw}}", {name: "Bob"}), "{{#raw}}Hello {{name}}!{{/raw}}");
-            assert.equal(m("{{#raw}}Hello #raw{{name}}/raw!{{/raw}}", {name: "Bob"}), "Hello #raw{{name}}/raw!");
+            assert.equal(m("{{#raw}}#raw{{name}}/raw{{/raw}}", {name: "Bob"}), "#raw{{name}}/raw");
         });
     });
 
