@@ -360,6 +360,16 @@ The `escape` helper allows to escape the provided block content.
 console.log(m("{{#escape}}<b>Hello World!</b>{{/escape}}")); // --> '&lt;b&gt;Hello World!&lt;/b&gt;
 ```
 
+#### raw
+
+> Added in `v0.23.0`.
+
+The `raw` helper allows to render the content of the block without evaluating it. All the stuff inside the block will be rendered as is, without processing any variables or helpers.
+
+```javascript
+console.log(m("{{#raw}}Hello {{name}}!{{/raw}}", {name: "Bob"})); // --> 'Hello {{name}}!'
+```
+
 ### Custom Helpers
 
 > Added in `v0.5.0`.

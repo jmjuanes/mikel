@@ -297,6 +297,25 @@ describe("templating", () => {
         });
     });
 
+    describe("{{#raw}}", () => {
+        it("should return raw content", () => {
+            assert.equal(m("{{#raw}}{{foo}}{{/raw}}", {foo: "bar"}), "{{foo}}");
+        });
+
+        it("should return raw content with nested sections", () => {
+            assert.equal(m("{{#raw}}{{#if condition}}Hello{{/if}}{{/raw}}", {}), "{{#if condition}}Hello{{/if}}");
+        });
+
+        it("should return raw content with nested sections and variables", () => {
+            assert.equal(m("{{#raw}}Hello {{name}}!{{/raw}}", {name: "Bob"}), "Hello {{name}}!");
+        });
+
+        it("should return raw content with nested raw sections", () => {
+            assert.equal(m("{{#raw}}{{#raw}}Hello {{name}}!{{/raw}}{{/raw}}", {name: "Bob"}), "{{#raw}}Hello {{name}}!{{/raw}}");
+            assert.equal(m("{{#raw}}#raw{{name}}/raw{{/raw}}", {name: "Bob"}), "#raw{{name}}/raw");
+        });
+    });
+
     describe("{{#customHelper }}", () => {
         it("should allow to execute a simple custom helper", () => {
             const options = {
