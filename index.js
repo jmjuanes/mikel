@@ -45,6 +45,20 @@ const parse = (v, data = {}, vars = {}) => {
     return (v || "").startsWith("@") ? get(vars, v.slice(1)) : get(data, v || ".");
 };
 
+// @description find the index of the closing token
+const findClosingToken = (tokens, i, token) => {
+    while(i < tokens.length) {
+        if (tokens[i].startsWith("/") && tokens[i].slice(1).trim() === token) {
+            return i;
+        }
+        else if (tokens[i].startsWith("#") && tokens[i].slice(1).trim().split(" ")[0] === token) {
+            i = findClosingToken(tokens, i + 1, token);
+        }
+        i = i + 1;
+    }
+    throw new Error(`Unmatched section end: {{${token}}}`);
+};
+
 // @description default helpers
 const defaultHelpers = {
     "each": p => {
@@ -82,11 +96,11 @@ const create = (template = "", options = {}) => {
             else if (tokens[i].startsWith("#") && typeof ctx.helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), data, vars);
                 const j = i + 1;
-                i = compile(tokens, [], {}, {}, j, t); // this block is executed at least once
+                i = findClosingToken(tokens, j, t);
                 output.push(ctx.helpers[t]({
                     args: args,
                     opt: opt,
-                    tokens: tokens.slice(i, j),
+                    tokens: tokens.slice(j, i),
                     data: data,
                     variables: vars,
                     fn: (blockData = {}, blockVars = {}, blockOutput = []) => {
