@@ -297,6 +297,12 @@ describe("templating", () => {
         });
     });
 
+    describe("{{#raw}}", () => {
+        it("should return raw content", () => {
+            assert.equal(m("{{#raw}}{{foo}}{{/raw}}", {foo: "bar"}), "{{foo}}");
+        });
+    });
+
     describe("{{#customHelper }}", () => {
         it("should allow to execute a simple custom helper", () => {
             const options = {
