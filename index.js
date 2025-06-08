@@ -48,11 +48,13 @@ const parse = (v, data = {}, vars = {}) => {
 // @description find the index of the closing token
 const findClosingToken = (tokens, i, token) => {
     while(i < tokens.length) {
-        if (tokens[i].startsWith("/") && tokens[i].slice(1).trim() === token) {
-            return i;
-        }
-        else if (tokens[i].startsWith("#") && tokens[i].slice(1).trim().split(" ")[0] === token) {
-            i = findClosingToken(tokens, i + 1, token);
+        if (i % 2 > 0) {
+            if (tokens[i].startsWith("/") && tokens[i].slice(1).trim() === token) {
+                return i;
+            }
+            else if (tokens[i].startsWith("#") && tokens[i].slice(1).trim().split(" ")[0] === token) {
+                i = findClosingToken(tokens, i + 1, token);
+            }
         }
         i = i + 1;
     }
