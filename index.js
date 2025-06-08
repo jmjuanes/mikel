@@ -60,6 +60,7 @@ const defaultHelpers = {
     "ne": p => p.args[0] !== p.args[1] ? p.fn(p.data) : "",
     "with": p => p.fn(p.args[0]),
     "escape": p => escape(p.fn(p.data)),
+    "raw": p => untokenize(p.tokens),
 };
 
 // @description create a new instance of mikel
@@ -81,20 +82,18 @@ const create = (template = "", options = {}) => {
             else if (tokens[i].startsWith("#") && typeof ctx.helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), data, vars);
                 const j = i + 1;
+                i = compile(tokens, [], {}, {}, j, t); // this block is executed at least once
                 output.push(ctx.helpers[t]({
                     args: args,
                     opt: opt,
+                    tokens: tokens.slice(i, j),
                     data: data,
                     variables: vars,
                     fn: (blockData = {}, blockVars = {}, blockOutput = []) => {
-                        i = compile(tokens, blockOutput, blockData, {...vars, ...blockVars, parent: data, root: vars.root}, j, t);
+                        compile(tokens, blockOutput, blockData, {...vars, ...blockVars, parent: data, root: vars.root}, j, t);
                         return blockOutput.join("");
                     },
                 }));
-                // Make sure that this block is executed at least once
-                if (i + 1 === j) {
-                    i = compile(tokens, [], {}, {}, j, t);
-                }
             }
             else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
                 const t = tokens[i].slice(1).trim();
