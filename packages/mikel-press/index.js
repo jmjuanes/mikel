@@ -130,7 +130,7 @@ press.LABEL_PARTIAL = "asset/partial";
 
 // @description source plugin
 press.SourcePlugin = (options = {}) => {
-    const shouldEmit = options?.shouldEmit ?? true;
+    const shouldEmit = options?.emit ?? true, shouldRead = options.read ?? true;
     const processedNodes = new Set();
     return {
         name: "SourcePlugin",
@@ -145,9 +145,13 @@ press.SourcePlugin = (options = {}) => {
                     label: options.label || press.LABEL_PAGE,
                     path: path.join(options?.basePath || ".", file),
                     url: path.normalize("/" + path.join(options?.basePath || ".", file)),
-                    content: press.utils.read(path.join(folder, file)),
                 };
             });
+        },
+        transform: (context, node) => {
+            if (processedNodes.has(node.source) && shouldRead) {
+                node.content = press.utils.read(node.source);
+            }
         },
         shouldEmit: (context, node) => {
             return !processedNodes.has(node.source) || shouldEmit;
@@ -157,27 +161,17 @@ press.SourcePlugin = (options = {}) => {
 
 // @description data plugin
 press.DataPlugin = (options = {}) => {
-    return press.SourcePlugin({folder: "./data", shouldEmit: false, extensions: [".json"], label: press.LABEL_DATA, ...options});
+    return press.SourcePlugin({folder: "./data", emit: false, extensions: [".json"], label: press.LABEL_DATA, ...options});
 };
 
 // @description partials plugin
 press.PartialsPlugin = (options = {}) => {
-    return press.SourcePlugin({folder: "./partials", shouldEmit: false, extensions: [".html"], label: press.LABEL_PARTIAL, ...options});
+    return press.SourcePlugin({folder: "./partials", emit: false, extensions: [".html"], label: press.LABEL_PARTIAL, ...options});
 };
 
 // @description assets plugin
 press.AssetsPlugin = (options = {}) => {
-    return {
-        name: "AssetsPlugin",
-        load: context => {
-            const folder = path.join(context.source, options?.folder || "./assets");
-            return press.utils.readdir(folder, options?.extensions || "*", options?.exclude || context.exclude).map(file => ({
-                source: path.join(folder, file),
-                label: options.label || press.LABEL_ASSET,
-                path: path.join(options?.basePath || ".", file),
-            }));
-        },
-    };
+    return press.SourcePlugin({folder: "./assets", read: false, extensions: "*", label: press.LABEL_ASSET, ...options});
 };
 
 // @description frontmatter plugin
