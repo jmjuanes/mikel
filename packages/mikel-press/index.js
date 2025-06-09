@@ -8,7 +8,13 @@ import mikel from "mikel";
 // @param {String} config.destination - destination folder to save the files
 // @param {Array} config.plugins - list of plugins to apply
 const press = (config = {}) => {
-    const {source, destination, plugins, extensions, exclude, mikelOptions, ...otherConfig} = config;
+    const context = press.createContext(config);
+    press.buildContext(context, context.nodes);
+};
+
+// @description create a context object
+press.createContext = (config = {}) => {
+    const {source, destination, plugins, extensions, exclude, mikelOptions, watch, ...otherConfig} = config;
     const context = Object.freeze({
         config: otherConfig,
         source: path.resolve(source || "."),
@@ -23,11 +29,10 @@ const press = (config = {}) => {
         nodes: [],
     });
     const getPlugins = name => context.plugins.filter(plugin => typeof plugin[name] === "function");
-    // 0. initialize
     getPlugins("init").forEach(plugin => {
         return plugin.init(context);
     });
-    // 1. load nodes into context
+    // load nodes into context
     const nodesPaths = new Set(); // prevent adding duplicated nodes
     getPlugins("load").forEach(plugin => {
         [plugin.load(context) || []].flat().forEach(node => {
@@ -38,29 +43,35 @@ const press = (config = {}) => {
             nodesPaths.add(node.source);
         });
     });
-    // 2. transform nodes
+    return context;
+};
+
+// @description build the provided context
+press.buildContext = (context, nodesToBuild = null) => {
+    const nodes = Array.isArray(nodesToBuild) ? nodesToBuild : context.nodes;
+    // 1. transform nodes
     getPlugins("transform").forEach(plugin => {
         // special hook to initialize the transform plugin
         if (typeof plugin.beforeTransform === "function") {
             plugin.beforeTransform(context);
         }
         // run the transform in all nodes
-        context.nodes.forEach((node, _, allNodes) => {
+        nodes.forEach((node, _, allNodes) => {
             return plugin.transform(context, node, allNodes);
         });
     });
-    // 3. filter nodes and get only the ones that are going to be emitted
+    // 2. filter nodes and get only the ones that are going to be emitted
     const shouldEmitPlugins = getPlugins("shouldEmit");
-    const filteredNodes = context.nodes.filter((node, _, allNodes) => {
+    const filteredNodes = nodes.filter((node, _, allNodes) => {
         return shouldEmitPlugins.every(plugin => {
             return !!plugin.shouldEmit(context, node, allNodes);
         });
     });
-    // 4. before emit
+    // 3. before emit
     getPlugins("beforeEmit").forEach(plugin => {
         return plugin.beforeEmit(context);
     });
-    // 5. emit each node
+    // 4. emit each node
     filteredNodes.forEach(node => {
         // 1. if node has been processed (aka node.content is an string), write the file
         if (typeof node.content === "string") {
