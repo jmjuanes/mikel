@@ -10,6 +10,10 @@ import mikel from "mikel";
 const press = (config = {}) => {
     const context = press.createContext(config);
     press.buildContext(context, context.nodes);
+    // start a watch server if the watch option has been provided
+    if (config.watch === true) {
+        press.watchContext(context);
+    }
 };
 
 // @description create a context object
@@ -84,6 +88,19 @@ press.buildContext = (context, nodesToBuild = null) => {
     });
 };
 
+// @description start a watch on the current context
+press.watchContext = context => {
+    // only PAGES, PARTIALS, or DATA nodes are allowed to rebuild
+    const nodesToRebuild = context.nodes.filter(node => {
+        return [press.LABEL_PAGE, press.LABEL_PARTIAL, press.LABEL_DATA].includes(node.label);
+    });
+    const rebuild = () => press.buildContext(context, nodesToRebuild);
+    // create a watch for each registered node in the context
+    nodesToRebuild.forEach(node => {
+        press.utils.watch(node.source, rebuild);
+    });
+};
+
 // @description general utilities
 press.utils = {
     // @description read a file from disk
@@ -117,6 +134,19 @@ press.utils = {
         return fs.readdirSync(folder, "utf8")
             .filter(file => (extensions === "*" || extensions.includes(path.extname(file))) && !exclude.includes(file))
             .filter(file => fs.statSync(path.join(folder, file)).isFile());
+    },
+    // @description watch for file changes
+    // @param {String} filePath path to the file to watch
+    // @param {Function} listener method to listen for file changes
+    watch: (filePath, listener) => {
+        let lastModifiedTime = null;
+        fs.watch(filePath, "utf8", () => {
+            const modifiedTime = fs.statSync(filePath).mtimeMs;
+            if (lastModifiedTime !== modifiedTime) {
+                lastModifiedTime = modifiedTime;
+                return listener(filePath);
+            }
+        });
     },
     // @description frontmatter parser
     // @params {String} content content to parse
