@@ -1,0 +1,45 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mikel Reactive Demo</title>
+    <script type="importmap">
+        {
+            "imports": {
+                "mikel-reactive": "/packages/mikel-reactive/index.js",
+                "mikel": "/index.js"
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Mikel Reactive Demo</h1>
+    <p>This page demonstrates the Mikel Reactive library.</p>
+    <div id="app"></div>
+    <template type="text/mikel">
+        <div>
+            <h2>Count: {{ count }}</h2>
+            <button>Increment Counter</button>
+        </div>
+    </template>
+    <script type="module">
+        import mikel from "mikel";
+        import reactive from "mikel-reactive";
+
+        reactive({
+            el: document.getElementById("app"),
+            template: mikel.create(document.querySelector(`template[type="text/mikel"]`).innerHTML, {}),
+            data: {
+                count: 0,
+            },
+            mount: self => {
+                self.$el.querySelector("button").addEventListener("click", () => {
+                    self.$update({
+                        count: self.count + 1,
+                    });
+                });
+            },
+        });
+    </script>
+</body>
+</html>
