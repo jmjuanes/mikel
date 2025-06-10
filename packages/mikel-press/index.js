@@ -15,7 +15,6 @@ const getPlugins = (context, name) => {
 const press = (config = {}) => {
     const context = press.createContext(config);
     press.buildContext(context, context.nodes);
-    // start a watch server if the watch option has been provided
     if (config.watch === true) {
         press.watchContext(context);
     }
@@ -93,11 +92,9 @@ press.buildContext = (context, nodesToBuild = null) => {
 };
 
 // @description start a watch on the current context
-press.watchContext = context => {
-    // only PAGES, PARTIALS, or DATA nodes are allowed to rebuild
-    const nodesToRebuild = context.nodes.filter(node => {
-        return [press.LABEL_PAGE, press.LABEL_PARTIAL, press.LABEL_DATA].includes(node.label);
-    });
+press.watchContext = (context, options = {}) => {
+    const labelsToWatch = options.labels || [press.LABEL_PAGE, press.LABEL_PARTIAL, press.LABEL_DATA];
+    const nodesToRebuild = context.nodes.filter(node => labelsToWatch.includes(node.label));
     const rebuild = () => press.buildContext(context, nodesToRebuild);
     // create a watch for each registered node in the context
     nodesToRebuild.forEach(node => {
