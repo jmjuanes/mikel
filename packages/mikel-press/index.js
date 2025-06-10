@@ -2,13 +2,27 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import mikel from "mikel";
 
+// @description get all plugins of the given type
+const getPlugins = (context, name) => {
+    return context.plugins.filter(plugin => typeof plugin[name] === "function");
+};
+
 // @description press main function
 // @param {Object} config - configuration object
 // @param {String} config.source - source folder
 // @param {String} config.destination - destination folder to save the files
 // @param {Array} config.plugins - list of plugins to apply
 const press = (config = {}) => {
-    const {source, destination, plugins, extensions, exclude, mikelOptions, ...otherConfig} = config;
+    const context = press.createContext(config);
+    press.buildContext(context, context.nodes);
+    if (config.watch === true) {
+        press.watchContext(context);
+    }
+};
+
+// @description create a context object
+press.createContext = (config = {}) => {
+    const {source, destination, plugins, extensions, exclude, mikelOptions, watch, ...otherConfig} = config;
     const context = Object.freeze({
         config: otherConfig,
         source: path.resolve(source || "."),
@@ -22,14 +36,12 @@ const press = (config = {}) => {
         ],
         nodes: [],
     });
-    const getPlugins = name => context.plugins.filter(plugin => typeof plugin[name] === "function");
-    // 0. initialize
-    getPlugins("init").forEach(plugin => {
+    getPlugins(context, "init").forEach(plugin => {
         return plugin.init(context);
     });
-    // 1. load nodes into context
+    // load nodes into context
     const nodesPaths = new Set(); // prevent adding duplicated nodes
-    getPlugins("load").forEach(plugin => {
+    getPlugins(context, "load").forEach(plugin => {
         [plugin.load(context) || []].flat().forEach(node => {
             if (nodesPaths.has(node.source)) {
                 throw new Error(`File ${node.source} has been already processed by another plugin`);
@@ -38,29 +50,35 @@ const press = (config = {}) => {
             nodesPaths.add(node.source);
         });
     });
-    // 2. transform nodes
-    getPlugins("transform").forEach(plugin => {
+    return context;
+};
+
+// @description build the provided context
+press.buildContext = (context, nodesToBuild = null) => {
+    const nodes = Array.isArray(nodesToBuild) ? nodesToBuild : context.nodes;
+    // 1. transform nodes
+    getPlugins(context, "transform").forEach(plugin => {
         // special hook to initialize the transform plugin
         if (typeof plugin.beforeTransform === "function") {
             plugin.beforeTransform(context);
         }
         // run the transform in all nodes
-        context.nodes.forEach((node, _, allNodes) => {
+        nodes.forEach((node, _, allNodes) => {
             return plugin.transform(context, node, allNodes);
         });
     });
-    // 3. filter nodes and get only the ones that are going to be emitted
-    const shouldEmitPlugins = getPlugins("shouldEmit");
-    const filteredNodes = context.nodes.filter((node, _, allNodes) => {
+    // 2. filter nodes and get only the ones that are going to be emitted
+    const shouldEmitPlugins = getPlugins(context, "shouldEmit");
+    const filteredNodes = nodes.filter((node, _, allNodes) => {
         return shouldEmitPlugins.every(plugin => {
             return !!plugin.shouldEmit(context, node, allNodes);
         });
     });
-    // 4. before emit
-    getPlugins("beforeEmit").forEach(plugin => {
+    // 3. before emit
+    getPlugins(context, "beforeEmit").forEach(plugin => {
         return plugin.beforeEmit(context);
     });
-    // 5. emit each node
+    // 4. emit each node
     filteredNodes.forEach(node => {
         // 1. if node has been processed (aka node.content is an string), write the file
         if (typeof node.content === "string") {
@@ -70,6 +88,17 @@ const press = (config = {}) => {
         else if (fs.existsSync(node.source)) {
             press.utils.copy(node.source, path.join(context.destination, node.path));
         }
+    });
+};
+
+// @description start a watch on the current context
+press.watchContext = (context, options = {}) => {
+    const labelsToWatch = options.labels || [press.LABEL_PAGE, press.LABEL_PARTIAL, press.LABEL_DATA];
+    const nodesToRebuild = context.nodes.filter(node => labelsToWatch.includes(node.label));
+    const rebuild = () => press.buildContext(context, nodesToRebuild);
+    // create a watch for each registered node in the context
+    nodesToRebuild.forEach(node => {
+        press.utils.watch(node.source, rebuild);
     });
 };
 
@@ -107,6 +136,19 @@ press.utils = {
             .filter(file => (extensions === "*" || extensions.includes(path.extname(file))) && !exclude.includes(file))
             .filter(file => fs.statSync(path.join(folder, file)).isFile());
     },
+    // @description watch for file changes
+    // @param {String} filePath path to the file to watch
+    // @param {Function} listener method to listen for file changes
+    watch: (filePath, listener) => {
+        let lastModifiedTime = null;
+        fs.watch(filePath, "utf8", () => {
+            const modifiedTime = fs.statSync(filePath).mtimeMs;
+            if (lastModifiedTime !== modifiedTime) {
+                lastModifiedTime = modifiedTime;
+                return listener(filePath);
+            }
+        });
+    },
     // @description frontmatter parser
     // @params {String} content content to parse
     // @params {Function} parser parser function to use
@@ -130,7 +172,7 @@ press.LABEL_PARTIAL = "asset/partial";
 
 // @description source plugin
 press.SourcePlugin = (options = {}) => {
-    const shouldEmit = options?.shouldEmit ?? true;
+    const shouldEmit = options?.emit ?? true, shouldRead = options.read ?? true;
     const processedNodes = new Set();
     return {
         name: "SourcePlugin",
@@ -145,9 +187,13 @@ press.SourcePlugin = (options = {}) => {
                     label: options.label || press.LABEL_PAGE,
                     path: path.join(options?.basePath || ".", file),
                     url: path.normalize("/" + path.join(options?.basePath || ".", file)),
-                    content: press.utils.read(path.join(folder, file)),
                 };
             });
+        },
+        transform: (context, node) => {
+            if (processedNodes.has(node.source) && shouldRead) {
+                node.content = press.utils.read(node.source);
+            }
         },
         shouldEmit: (context, node) => {
             return !processedNodes.has(node.source) || shouldEmit;
@@ -157,27 +203,17 @@ press.SourcePlugin = (options = {}) => {
 
 // @description data plugin
 press.DataPlugin = (options = {}) => {
-    return press.SourcePlugin({folder: "./data", shouldEmit: false, extensions: [".json"], label: press.LABEL_DATA, ...options});
+    return press.SourcePlugin({folder: "./data", emit: false, extensions: [".json"], label: press.LABEL_DATA, ...options});
 };
 
 // @description partials plugin
 press.PartialsPlugin = (options = {}) => {
-    return press.SourcePlugin({folder: "./partials", shouldEmit: false, extensions: [".html"], label: press.LABEL_PARTIAL, ...options});
+    return press.SourcePlugin({folder: "./partials", emit: false, extensions: [".html"], label: press.LABEL_PARTIAL, ...options});
 };
 
 // @description assets plugin
 press.AssetsPlugin = (options = {}) => {
-    return {
-        name: "AssetsPlugin",
-        load: context => {
-            const folder = path.join(context.source, options?.folder || "./assets");
-            return press.utils.readdir(folder, options?.extensions || "*", options?.exclude || context.exclude).map(file => ({
-                source: path.join(folder, file),
-                label: options.label || press.LABEL_ASSET,
-                path: path.join(options?.basePath || ".", file),
-            }));
-        },
-    };
+    return press.SourcePlugin({folder: "./assets", read: false, extensions: "*", label: press.LABEL_ASSET, ...options});
 };
 
 // @description frontmatter plugin
