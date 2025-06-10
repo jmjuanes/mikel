@@ -2,6 +2,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import mikel from "mikel";
 
+// @description get all plugins of the given type
+const getPlugins = (context, name) => {
+    return context.plugins.filter(plugin => typeof plugin[name] === "function");
+};
+
 // @description press main function
 // @param {Object} config - configuration object
 // @param {String} config.source - source folder
@@ -32,13 +37,12 @@ press.createContext = (config = {}) => {
         ],
         nodes: [],
     });
-    const getPlugins = name => context.plugins.filter(plugin => typeof plugin[name] === "function");
-    getPlugins("init").forEach(plugin => {
+    getPlugins(context, "init").forEach(plugin => {
         return plugin.init(context);
     });
     // load nodes into context
     const nodesPaths = new Set(); // prevent adding duplicated nodes
-    getPlugins("load").forEach(plugin => {
+    getPlugins(context, "load").forEach(plugin => {
         [plugin.load(context) || []].flat().forEach(node => {
             if (nodesPaths.has(node.source)) {
                 throw new Error(`File ${node.source} has been already processed by another plugin`);
@@ -54,7 +58,7 @@ press.createContext = (config = {}) => {
 press.buildContext = (context, nodesToBuild = null) => {
     const nodes = Array.isArray(nodesToBuild) ? nodesToBuild : context.nodes;
     // 1. transform nodes
-    getPlugins("transform").forEach(plugin => {
+    getPlugins(context, "transform").forEach(plugin => {
         // special hook to initialize the transform plugin
         if (typeof plugin.beforeTransform === "function") {
             plugin.beforeTransform(context);
@@ -65,14 +69,14 @@ press.buildContext = (context, nodesToBuild = null) => {
         });
     });
     // 2. filter nodes and get only the ones that are going to be emitted
-    const shouldEmitPlugins = getPlugins("shouldEmit");
+    const shouldEmitPlugins = getPlugins(context, "shouldEmit");
     const filteredNodes = nodes.filter((node, _, allNodes) => {
         return shouldEmitPlugins.every(plugin => {
             return !!plugin.shouldEmit(context, node, allNodes);
         });
     });
     // 3. before emit
-    getPlugins("beforeEmit").forEach(plugin => {
+    getPlugins(context, "beforeEmit").forEach(plugin => {
         return plugin.beforeEmit(context);
     });
     // 4. emit each node
