@@ -1,6 +1,5 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import mikel from "mikel";
 
 // @description get all plugins of the given type
 const getPlugins = (context, name) => {
@@ -22,14 +21,14 @@ const press = (config = {}) => {
 
 // @description create a context object
 press.createContext = (config = {}) => {
-    const {source, destination, plugins, extensions, exclude, mikelOptions, watch, ...otherConfig} = config;
+    const {source, destination, plugins, extensions, exclude, template, watch, ...otherConfig} = config;
     const context = Object.freeze({
         config: otherConfig,
         source: path.resolve(source || "."),
         destination: path.resolve(destination || "./www"),
         extensions: extensions || [".html"],
         exclude: exclude || ["node_modules", ".git", ".gitignore", ".github"],
-        template: mikel.create("{{>content}}", mikelOptions || {}),
+        template: template,
         plugins: [
             press.SourcePlugin({folder: ".", label: press.LABEL_PAGE}),
             ...plugins,
