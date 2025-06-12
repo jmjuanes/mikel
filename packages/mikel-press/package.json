@@ -18,9 +18,6 @@
     "engines": {
         "node": ">=20"
     },
-    "dependencies": {
-        "mikel": "*"
-    },
     "files": [
         "README.md",
         "index.js"
