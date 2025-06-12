@@ -10,13 +10,13 @@
 To install **mikel-press**, ensure you have [Node.js](https://nodejs.org) installed on your system. Then, add this package as a dependency to your project using **yarn**:
 
 ```bash
-$ yarn add --dev mikel-press
+$ yarn add --dev mikel mikel-press
 ```
 
 Or **npm**:
 
 ```bash
-$ npm install --dev mikel-press
+$ npm install --dev mikel mikel-press
 ```
 
 ## Directory structure
@@ -52,18 +52,22 @@ A basic **mikel-press** directory structure looks like this:
 | `source` | The path to the directory containing the site folders. | `"."` |
 | `destination` | The output directory where the generated static site will be saved. | `"www"` |
 | `extensions` | List of file extensions to process. | `[".html"]` |
-| `mikelOptions` | An object containing custom configuration for the **mikel** templating engine. | `{}` |
+| `template` | An instance of `mikel.create` to compile templates. | - |
 | `plugins` | A list of plugins used to extend the functionality of **mikel-press**. | `[]` |
 | `*` | Any other properties passed in config will be available as `site.*` inside each page template. | - |
 
 Here is an example configuration object:
 
 ```javascript
+import mikel from "mikel";
 import press from "mikel-press";
 
 press({
     source: ".",
     destination: "./www",
+    template: mikel.create("", {
+        // define your custom helpers and functions here
+    }),
     title: "Hello world",
     description: "My awesome site",
     plugins: [
