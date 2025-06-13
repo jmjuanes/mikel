@@ -33,8 +33,8 @@ declare interface MikelOptions {
     variables?: Variables;
 }
 
-declare interface MikelTemplate {
-    (data?: any): string;
+declare interface MikelInstance {
+    (template: string, data?: any): string;
     use(options: Partial<MikelOptions>): MikelTemplate;
     addHelper(name: string, fn: HelperFunction): void;
     removeHelper(name: string): void;
@@ -46,7 +46,7 @@ declare interface MikelTemplate {
 
 declare const mikel: {
     (template: string, data?: any, options?: Partial<MikelOptions>): string;
-    create(template: string, options?: Partial<MikelOptions>): MikelTemplate;
+    create(options?: Partial<MikelOptions>): MikelInstance;
     escape(str: string): string;
     get(context: any, path: string): any;
     parse(value: string, context?: any, vars?: any): any;
