@@ -620,83 +620,89 @@ const result = mikel("Hello, {{name}}!", data);
 console.log(result); // Output: "Hello, World!"
 ```
 
-### `mikel.create(template [, options])`
+### `mikel.create(options)`
 
-Allows to create an isolated instance of mikel, useful when you want to compile the same template using different data. The `template` argument is the template string, and the optional `options` argument is the same options object that you can pass to `mikel` method.
+> Removed `template` argument in `v0.24.0`.
 
-It returns a function that you can call with the data to compile the template.
+Allows to create an isolated instance of mikel, useful when you want to use the same options for multiple templates without passing them every time. You can pass an `options` object with the same structure as the one used in the `mikel` function, which will be used for all templates compiled with this instance.
+
+It returns a function that you can call with the template and data to compile the template.
 
 ```javascript
 import mikel from "mikel";
 
-const template = mikel.create("Hello, {{name}}!");
+const mk = mikel.create({
+    partials: {
+        hello: "Hello, {{name}}!",
+    },
+});
 
-console.log(template({name: "Bob"})); // --> "Hello, Bob!"
-console.log(template({name: "Susan"})); // --> "Hello, Susan!"
+console.log(mk("{{>hello}}", {name: "Bob"})); // --> "Hello, Bob!"
+console.log(mk("{{>hello}}", {name: "Susan"})); // --> "Hello, Susan!"
 ```
 
 It also exposes the following additional methods:
 
-#### `template.use(options)`
+#### `mk.use(options)`
 
 > Added in `v0.19.0`.
 
 Allows to extend the templating with custom **helpers**, **functions**, and **partials**.
 
 ```javascript
-template.use({
+mk.use({
     partials: {
         foo: "bar",
     },
 });
 ```
 
-#### `template.addHelper(helperName, helperFn)`
+#### `mk.addHelper(helperName, helperFn)`
 
 Allows to register a new helper instead of using the `options` object.
 
 ```javascript
-template.addHelper("foo", () => { ... });
+mk.addHelper("foo", () => { ... });
 ```
 
-#### `template.removeHelper(helperName)`
+#### `mk.removeHelper(helperName)`
 
 Removes a previously added helper.
 
 ```javascript
-template.removeHelper("foo");
+mk.removeHelper("foo");
 ```
 
-#### `template.addPartial(partialName, partialCode)`
+#### `mk.addPartial(partialName, partialCode)`
 
 Registers a new partial instead of using the `options` object.
 
 ```javascript
-template.addPartial("bar", " ... ");
+mk.addPartial("bar", " ... ");
 ```
 
-#### `template.removePartial(partialName)`
+#### `mk.removePartial(partialName)`
 
 Removes a previously added partial.
 
 ```javascript
-template.removePartial("bar");
+mk.removePartial("bar");
 ```
 
-#### `template.addFunction(fnName, fn)`
+#### `mk.addFunction(fnName, fn)`
 
 Registers a new function instead of using the `options` object.
 
 ```javascript
-template.addFunction("foo", () => "...");
+mk.addFunction("foo", () => "...");
 ```
 
-#### `template.removeFunction(fnName)`
+#### `mk.removeFunction(fnName)`
 
 Removes a previously added function.
 
 ```javascript
-template.removeFunction("foo");
+mk.removeFunction("foo");
 ```
 
 ### `mikel.escape(str)`

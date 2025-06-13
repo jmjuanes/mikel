@@ -13,7 +13,7 @@ const get = (c, p) => (p === "." ? c : p.split(".").reduce((x, k) => x?.[k], c))
 // @description tokenize and untokenize methods
 const tokenize = (str = "") => str.split(/\{\{|\}\}/);
 const untokenize = (ts = [], s = "{{", e = "}}") => {
-    return ts.reduce((p, t, i) => p + (i % 2 === 0 ? e : s) + t);
+    return ts.length > 0 ? ts.reduce((p, t, i) => p + (i % 2 === 0 ? e : s) + t) : "";
 };
 
 // @description parse string arguments
@@ -80,9 +80,8 @@ const defaultHelpers = {
 };
 
 // @description create a new instance of mikel
-const create = (template = "", options = {}) => {
+const create = (options = {}) => {
     const ctx = {
-        tokens: tokenize(template),
         helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
         partials: Object.assign({}, options?.partials || {}),
         functions: options?.functions || {},
@@ -170,8 +169,8 @@ const create = (template = "", options = {}) => {
         return i;
     };
     // entry method to compile the template with the provided data object
-    const compileTemplate = (data = {}, output = []) => {
-        compile(ctx.tokens, output, data, {root: data, ...ctx.variables}, 0, "");
+    const compileTemplate = (template, data = {}, output = []) => {
+        compile(tokenize(template), output, data, {root: data, ...ctx.variables}, 0, "");
         return output.join("");
     };
     // assign api methods and return method to compile the template
@@ -198,7 +197,7 @@ const create = (template = "", options = {}) => {
 
 // @description main compiler function
 const mikel = (template = "", data = {}, options = {}) => {
-    return create(template, options)(data);
+    return create(options)(template, data);
 };
 
 // @description assign utilities
