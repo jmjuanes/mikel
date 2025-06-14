@@ -65,7 +65,7 @@ import press from "mikel-press";
 press({
     source: ".",
     destination: "./www",
-    template: mikel.create("", {
+    template: mikel.create({
         // define your custom helpers and functions here
     }),
     title: "Hello world",
