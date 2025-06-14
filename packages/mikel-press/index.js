@@ -259,10 +259,7 @@ press.ContentPagePlugin = (siteData = {}) => {
         },
         transform: (context, node) => {
             if (node.label === press.LABEL_PAGE && typeof node.content === "string") {
-                context.template.use(ctx => {
-                    ctx.tokens = mikel.tokenize(node.content || "");
-                });
-                node.content = context.template({site: siteData, page: node});
+                node.content = context.template(node.content || "", {site: siteData, page: node});
             }
         },
     };
