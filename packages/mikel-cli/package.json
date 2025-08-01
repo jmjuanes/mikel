@@ -1,0 +1,33 @@
+{
+    "name": "mikel-cli",
+    "description": "The cli tool for mikel templating.",
+    "version": "0.0.0",
+    "type": "module",
+    "license": "MIT",
+    "author": {
+        "name": "Josemi Juanes",
+        "email": "hello@josemi.xyz"
+    },
+    "repository": "https://github.com/jmjuanes/mikel",
+    "bugs": "https://github.com/jmjuanes/mikel/issues",
+    "exports": {
+        ".": "./index.js",
+        "./index.js": "./index.js",
+        "./package.json": "./package.json"
+    },
+    "bin": {
+        "mikel": "index.js"
+    },
+    "peerDependencies": {
+        "mikel": "*"
+    },
+    "files": [
+        "README.md",
+        "index.js"
+    ],
+    "keywords": [
+        "mikel",
+        "cli",
+        "templating"
+    ]
+}
