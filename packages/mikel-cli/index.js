@@ -69,9 +69,36 @@ const loadModules = async (files = []) => {
     return result;
 };
 
+// print the help of the tool
+const printHelp = () => {
+    console.log("Usage: ");
+    console.log("  mikel --help");
+    console.log("  mikel <template> [...options]");
+    console.log("");
+    console.log("  -h, --help              Prints the usage information");
+    console.log("  -P, --partial <file>    Register a partial");
+    console.log("  -H, --helper <file>     Register a helper");
+    console.log("  -D, --data <file>       Path to the data file to use (JSON)");
+    console.log("  -o, --output <file>     Output file");
+    console.log("");
+    console.log("Examples:");
+    console.log("");
+    console.log("mikel template.html --data data.json --output www/index.html");
+    console.log("mikel template.html --data data.json --partial header.html --partial footer.html --output www/index.html");
+    process.exit(0);
+};
+
 // @description main function
-const main = async (input, output = null, options = {}) => {
+const main = async (input = "", options = {}) => {
+    // check to print help
+    if (options.help) {
+        return printHelp();
+    }
+
     // make sure that input file exists
+    if (!input) {
+        throw new Error(`No input template file provided.`);
+    }
     const inputPath = path.resolve(process.cwd(), input);
     if (!fs.existsSync(inputPath)) {
         throw new Error(`Template file '${inputPath}' was not found.`);
@@ -89,18 +116,20 @@ const main = async (input, output = null, options = {}) => {
 
     // check if output argument has been provided to write the result to a file
     // this will also create any intermediary directory that does not exist
-    if (typeof output === "string" && !!output) {
-        const outputPath = path.resolve(process.cwd(), output);
+    if (options.output) {
+        const outputPath = path.resolve(process.cwd(), options.output);
         const outputDirectory = path.dirname(outputPath);
         // make sure that any directory containing the output file exists
         if (!existsSync(outputDirectory)) {
             await fs.mkdir(outputDirectory, { recursive: true });
         }
         await fs.writeFile(outputPath, result, "utf8");
+        process.exit(0);
     }
     // if no output file has been provided, print the result to console
     else {
         process.stdout.write(result);
+        process.exit(0);
     }
 };
 
@@ -110,6 +139,10 @@ const { positionals, values } = parseArgs({
         data: {
             type: "string",
             short: "D",
+        },
+        output: {
+            type: "string",
+            short: "o",
         },
         helper: {
             type: "string",
@@ -126,9 +159,16 @@ const { positionals, values } = parseArgs({
             short: "P",
             multiple: true,
         },
+        help: {
+            type: "boolean",
+            short: "h",
+        },
     },
     allowPositionals: true,
 });
 
 // run main script
-main(positionals[0], positionals[1], values);
+main(positionals[0], values).catch(error => {
+    console.error(error.message);
+    process.exit(1);
+});
