@@ -10,6 +10,9 @@
     },
     "repository": "https://github.com/jmjuanes/mikel",
     "bugs": "https://github.com/jmjuanes/mikel/issues",
+    "engines": {
+        "node": ">=24.0.0"
+    },
     "exports": {
         ".": "./index.js",
         "./index.js": "./index.js",
