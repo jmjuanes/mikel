@@ -6,6 +6,33 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import mikel from "mikel";
 
+// @description get the files that matches the provided patterns
+// this is a utility function to expand glob patterns to actual file paths.
+// it uses Node.js 24+ built-in fs.glob to handle glob patterns.
+const expandGlobPatterns = async (patterns = []) => {
+    const files = [];
+    for (let i = 0; i < patterns.length; i++) {
+        const pattern = patterns[i];
+        if (pattern.includes("*") || pattern.includes("?") || pattern.includes("[")) {
+            try {
+                // use Node.js 24+ built-in fs.glob
+                // https://nodejs.org/api/fs.html#fspromisesglobpattern-options
+                for await (const file of fs.glob(pattern, { cwd: process.cwd() })) {
+                    files.push(file);
+                }
+            } catch (error) {
+                files.push(pattern);
+            }
+        } else {
+            files.push(pattern);
+        }
+    }
+    // remove duplicates and resolve to absolute paths
+    return Array.from(new Set(files)).map(file => {
+        return path.resolve(process.cwd(), file);
+    });
+};
+
 // @description load JSON data from the provided path
 const loadData = async (file = null) => {
     if (!file) {
@@ -29,27 +56,23 @@ const loadData = async (file = null) => {
 };
 
 // @description load partials
-const loadPartials = async (files = []) => {
+const loadPartials = async (patterns = []) => {
     const partials = {}; // output partials object
-    // const files = [...partialsFiles]; // initialize files to load
-    // 1. load directories (TODO)
-    // for (let i = 0; i < partialsFolders.length; i++) {
-    //     const folder = path.resolve(process.cwd(), partialsFolders[i]);
-    //     if (!existsSync(folder)) {
-    //         throw new Error(`Folder '${folder}' does not exist.`);
-    //     }
-    //     // read the content and insert each file inside the files
-    //     // TODO: what if folder contains more folders?? Currently it is not supported
-    //     (await fs.readdir(folder)).forEach(file => {
-    //         files.push(path.join(partialsFolders[i], file));
-    //     });
-    // }
-    // 2. read all files
+    const files = await expandGlobPatterns(patterns);
+    
+    // load all files
     for (let i = 0; i < files.length; i++) {
-        const file = path.resolve(process.cwd(), files[i]);
+        const file = files[i]; // path.resolve(process.cwd(), uniqueFiles[i]);
         if (!existsSync(file)) {
             throw new Error(`Partial file '${file}' was not found.`);
         }
+        
+        // check if it's a file (not a directory)
+        const stats = await fs.stat(file);
+        if (!stats.isFile()) {
+            continue; // skip directories
+        }
+        
         // load the file and save it as a partial
         try {
             partials[path.basename(file)] = await fs.readFile(file, "utf8");
@@ -57,18 +80,27 @@ const loadPartials = async (files = []) => {
             throw new Error(`Failed to read partial file '${file}': ${error.message}`);
         }
     }
-    // 3. return partials object
+    
     return partials;
 };
 
 // @description load javascript modules
-const loadModules = async (files = []) => {
+const loadModules = async (patterns = []) => {
     const result = {};
+    const files = await expandGlobPatterns(patterns);
+    
     for (let i = 0; i < files.length; i++) {
-        const file = path.resolve(process.cwd(), files[i]);
+        const file = files[i]; // path.resolve(process.cwd(), uniqueFiles[i]);
         if (!existsSync(file)) {
             throw new Error(`Module '${file}' was not found.`);
         }
+        
+        // Check if it's a file (not a directory)
+        const stats = await fs.stat(file);
+        if (!stats.isFile()) {
+            continue; // Skip directories
+        }
+        
         const extension = path.extname(file);
         if (extension !== ".js" && extension !== ".mjs") {
             throw new Error(`Module '${file}' is not supported. Only ESM JavaScript (.js or .mjs) files are supported.`);
@@ -94,9 +126,9 @@ const printHelp = () => {
     console.log("");
     console.log("Options:");
     console.log("  -h, --help              Prints the usage information");
-    console.log("  -P, --partial <file>    Register a partial (can be used multiple times)");
-    console.log("  -H, --helper <file>     Register a helper (can be used multiple times)");
-    console.log("  -F, --function <file>   Register a function (can be used multiple times)");
+    console.log("  -P, --partial <file>    Register a partial (supports glob patterns, can be used multiple times)");
+    console.log("  -H, --helper <file>     Register a helper (supports glob patterns, can be used multiple times)");
+    console.log("  -F, --function <file>   Register a function (supports glob patterns, can be used multiple times)");
     console.log("  -D, --data <file>       Path to the data file to use (JSON)");
     console.log("  -o, --output <file>     Output file");
     console.log("");
@@ -104,6 +136,8 @@ const printHelp = () => {
     console.log("  mikel template.html --data data.json --output www/index.html");
     console.log("  mikel template.html --data data.json --partial header.html --partial footer.html --output www/index.html");
     console.log("  mikel template.html --helper helpers.js --function utils.js --output dist/index.html");
+    console.log("  mikel template.html --partial 'partials/*.html' --helper 'helpers/*.js' --output dist/index.html");
+    console.log("  mikel template.html --partial 'components/**/*.html' --output dist/index.html");
     console.log("");
     process.exit(0);
 };
