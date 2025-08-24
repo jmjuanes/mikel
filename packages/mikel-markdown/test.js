@@ -58,6 +58,12 @@ describe("parser", () => {
             });
         });
     });
+
+    describe("rule", () => {
+        it("should parse horizontal rules", () => {
+            assert.equal(mk("---"), `<p><hr /></p>`);
+        });
+    });
 });
 
 describe("{{#markdown}}", () => {

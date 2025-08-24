@@ -73,7 +73,7 @@ const allExpressions = {
     },
     rule: {
         regex: /^.*?(?:---|-\s-\s-|\*\s\*\s\*)/gm,
-        replacement: (args, cn) => render("hr", {class: cn.rule}),
+        replace: (args, cn) => render("hr", {class: cn.rule}),
     },
     list: {
         regex: /^[\t\s]*?(?:-|\+|\*)\s(.*)/gm,
