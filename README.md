@@ -50,7 +50,7 @@ const result = m("{{#isAdmin}}You are Admin{{/isAdmin}}", data);
 // Output: 'You are Admin'
 ```
 
-You can also use sections for looping over arrays. When looping over array of strings, you can use a dot `.` to reference the current item in the loop.
+You can also use sections for looping over arrays. When looping over array of strings, you can use a dot `.` or the `this` word to reference the current item in the loop.
 
 Example:
 
@@ -232,7 +232,7 @@ const data = {
     users: ["John", "Alice", "Bob"],
 };
 
-console.log(m("{{#each users}}{{.}}, {{/each}}", data)); // --> 'John, Alice, Bob, '
+console.log(m("{{#each users}}{{this}}, {{/each}}", data)); // --> 'John, Alice, Bob, '
 ```
 
 When looping throug arrays, you can use the variable `@index` to access to the current index of the item in the array:
@@ -242,7 +242,7 @@ const data = {
     users: ["John", "Alice", "Bob"],
 };
 
-console.log(m("{{#each users}}{{@index}}: {{.}}, {{/each}}", data)); // --> '0: John, 1: Alice, 2: Bob, '
+console.log(m("{{#each users}}{{@index}}: {{this}}, {{/each}}", data)); // --> '0: John, 1: Alice, 2: Bob, '
 ```
 
 The `each` helper can also iterate over objects:
@@ -254,7 +254,7 @@ const data = {
     },
 };
 
-console.log(m("{{#each values}}{{.}}{{/each}}", data)); // --> 'bar'
+console.log(m("{{#each values}}{{this}}{{/each}}", data)); // --> 'bar'
 ```
 
 When looping throug objects, you can use the variable `@key` to access to the current key in the object, and the variable `@value` to access to the corresponding value:
@@ -277,7 +277,7 @@ The `each` helper also supports the following options, provided as keyword argum
 Example:
 
 ```javascript
-console.log(m("{{each values limit=2}}{{.}}{{/each}}", {values: [0, 1, 2, 3]})); // --> '01'
+console.log(m("{{each values limit=2}}{{this}}{{/each}}", {values: [0, 1, 2, 3]})); // --> '01'
 ```
 
 
