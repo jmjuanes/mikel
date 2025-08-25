@@ -125,7 +125,7 @@ const parser = (str = "", options = {}) => {
     const htmlBlockRegex = /<!--html-->([\s\S]*?)<!--\/html-->/gm;
     str = str.replace(htmlBlockRegex, match => {
         ignoredBlocks.push(match);
-        return `<!--HTML_BLOCK_${(ignoredBlocks.length - 1)}-->`;
+        return `<!--HTML-BLOCK-${(ignoredBlocks.length - 1)}-->`;
     });
     // replace all expressions
     Object.keys(expressions).forEach(key => {
@@ -133,7 +133,7 @@ const parser = (str = "", options = {}) => {
             const value = expressions[key].replace(args, classNames);
             if (key === "pre" || key === "code") {
                 ignoredBlocks.push(value);
-                return `<!--HTML_BLOCK_${(ignoredBlocks.length - 1)}-->`;
+                return `<!--HTML-BLOCK-${(ignoredBlocks.length - 1)}-->`;
             }
             // other value --> return the value provided by the renderer
             return value;
@@ -145,7 +145,7 @@ const parser = (str = "", options = {}) => {
     });
     // replace all the ignored blocks
     ignoredBlocks.forEach((block, index) => {
-        str = str.replace(`<!--HTML_BLOCK_${index}-->`, block);
+        str = str.replace(`<!--HTML-BLOCK-${index}-->`, block);
     });
     return str;
 };
