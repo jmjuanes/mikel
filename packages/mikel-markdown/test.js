@@ -71,7 +71,7 @@ describe("parser", () => {
                 "This is the content of the line 1",
                 "This is the content of the line 2",
             ];
-            const result = mk(lines.join("\n")).split("\n");
+            const result = mk(lines.join("\n\n")).split("\n");
             lines.forEach((line, index) => {
                 assert.equal(result[index], `<p>${line}</p>`);
             });
