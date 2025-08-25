@@ -19,8 +19,8 @@ describe("templating", () => {
         });
 
         it("should allow to use 'this' or '.' to access current data", () => {
-            assert.equal(m(`Hello {{.}}`, "Bob"), "Hello bob");
-            assert.equal(m(`Hello {{this}}`, "Bob"), "Hello bob");
+            assert.equal(m(`Hello {{.}}`, "Bob"), "Hello Bob");
+            assert.equal(m(`Hello {{this}}`, "Bob"), "Hello Bob");
         });
 
         it("should support accessing to nested properties", () => {
