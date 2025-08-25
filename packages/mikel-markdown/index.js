@@ -101,8 +101,8 @@ const allExpressions = {
         regex: /^((?:.+(?:\n|$))+)/gm,
         replace: (args, cn) => {
             const line = args[0].trim();
-            // Check if the line starts with a block tag
-            if (/^\<\/?(ul|ol|bl|h\d|p|div|sty|scr).*/.test(line.slice(0, 4)) === true) {
+            // check if the line starts with a block tag
+            if (/^\<(\/? *(ul|ol|bl|h\d|p|di|st|sc|t)|!--)/.test(line.slice(0, 4)) === true) {
                 return line;
             }
             return render("p", {class: cn.paragraph}, line.replace(/\n/g, ""));
@@ -121,13 +121,19 @@ const parser = (str = "", options = {}) => {
     const expressions = options?.expressions || allExpressions; // custom expressions
     const ignoredBlocks = []; // chunks to ignore
     str = str.replace(/\r\n/g, "\n");
+    // ignore html blocks
+    const htmlBlockRegex = /<!--html-->([\s\S]*?)<!--\/html-->/gm;
+    str = str.replace(htmlBlockRegex, match => {
+        ignoredBlocks.push(match);
+        return `<!--HTML-BLOCK-${(ignoredBlocks.length - 1)}-->`;
+    });
     // replace all expressions
     Object.keys(expressions).forEach(key => {
         str = str.replace(expressions[key].regex, (...args) => {
             const value = expressions[key].replace(args, classNames);
             if (key === "pre" || key === "code") {
                 ignoredBlocks.push(value);
-                return `<pre>{IGNORED%${(ignoredBlocks.length - 1)}}</pre>`;
+                return `<!--HTML-BLOCK-${(ignoredBlocks.length - 1)}-->`;
             }
             // other value --> return the value provided by the renderer
             return value;
@@ -137,10 +143,10 @@ const parser = (str = "", options = {}) => {
             str = str.replace(expressions[key].afterRegex, "");
         }
     });
-    // Replace all the ignored blocks
-    for (let i = ignoredBlocks.length - 1; i >= 0; i--) {
-        str = str.replace(`<pre>{IGNORED%${i}}</pre>`, ignoredBlocks[i]);
-    }
+    // replace all the ignored blocks
+    ignoredBlocks.forEach((block, index) => {
+        str = str.replace(`<!--HTML-BLOCK-${index}-->`, block);
+    });
     return str;
 };
 

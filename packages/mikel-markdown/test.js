@@ -64,6 +64,25 @@ describe("parser", () => {
             assert.equal(mk("---"), `<p><hr /></p>`);
         });
     });
+
+    describe("paragraphs", () => {
+        it("should wrap lines into <p>", () => {
+            const lines = [
+                "This is the content of the line 1",
+                "This is the content of the line 2",
+            ];
+            const result = mk(lines.join("\n\n")).split("\n");
+            lines.forEach((line, index) => {
+                assert.equal(result[index], `<p>${line}</p>`);
+            });
+        });
+    });
+
+    describe("embedded html blocks", () => {
+        it("should support embedding html code", () => {
+            assert.equal(mk("<div>hello</div>"), "<div>hello</div>");
+        });
+    });
 });
 
 describe("{{#markdown}}", () => {
