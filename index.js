@@ -9,8 +9,11 @@ const escapedChars = {
 const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 
 // @description get the value in the provided object and the given path string
-const get = (c, p = ".") => {
-    return ((p === "." || p === "this") ? c : p.split(".").reduce((x, k) => x?.[k], c)) ?? "";
+const get = (data, path = ".") => {
+    if (path === "." || path === "this") {
+        return data ?? "";
+    }
+    return path.replace(/^this\./, "").split(".").reduce((x, k) => x?.[k], data) ?? "";
 };
 
 // @description tokenize and untokenize methods
