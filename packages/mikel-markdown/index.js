@@ -102,7 +102,7 @@ const allExpressions = {
         replace: (args, cn) => {
             const line = args[0].trim();
             // Check if the line starts with a block tag
-            if (/^\<\/?(ul|ol|bl|h\d|p|div|sty|scr).*/.test(line.slice(0, 4)) === true) {
+            if (/^\<\/? *\w+/.test(line.slice(0, 4)) === true) {
                 return line;
             }
             return render("p", {class: cn.paragraph}, line.replace(/\n/g, ""));
