@@ -55,6 +55,18 @@ And finally, compile your template:
 const result = m({}); // --> '<p>Hello <strong>world</strong></p>'
 ```
 
+### Embedded HTML Blocks
+
+By default, `mikel-markdown` transforms most content to ensure consistent Markdown rendering, including HTML blocks. However, if you need to include raw HTML blocks, such as `<div>`, `<section>`, or custom components, you can wrap your HTML block between `<!--html-->` and `<!--/html-->` like so:
+
+```html
+<!--html-->
+<div class="center">
+  <p>This content will be preserved as raw HTML.</p>
+</div>
+<!--/html-->
+```
+
 ## Helpers
 
 ### `#markdown`
