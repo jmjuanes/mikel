@@ -17,6 +17,11 @@ describe("templating", () => {
         it("should allow fallback values", () => {
             assert.equal(m(`Hello {{name || "world"}}!`, {}), "Hello world!");
         });
+
+        it("should allow to use 'this' or '.' to access current data", () => {
+            assert.equal(m(`Hello {{.}}`, "Bob"), "Hello bob");
+            assert.equal(m(`Hello {{this}}`, "Bob"), "Hello bob");
+        });
     });
 
     describe("{{! xyz }}", () => {
@@ -66,6 +71,7 @@ describe("templating", () => {
                 items: ["1", "2", "3"],
             };
             assert.equal(m("{{#items}}{{.}}{{/items}}", data), "123");
+            assert.equal(m("{{#items}}{{this}}{{/items}}", data), "123");
         });
 
         it("should iterate arrays of objects", () => {
@@ -194,7 +200,9 @@ describe("templating", () => {
 
         it("should iterate over an array of items", () => {
             assert.equal(m("{{#each values}}{{.}}{{/each}}", {values: ["a", "b"]}), "ab");
+            assert.equal(m("{{#each values}}{{this}}{{/each}}", {values: ["a", "b"]}), "ab");
             assert.equal(m("{{#each values}}{{@index}}:{{.}},{{/each}}", {values: ["a", "b"]}), "0:a,1:b,");
+            assert.equal(m("{{#each values}}{{@index}}:{{this}},{{/each}}", {values: ["a", "b"]}), "0:a,1:b,");
         });
 
         it("should iterate over an object", () => {
