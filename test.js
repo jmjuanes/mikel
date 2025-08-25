@@ -22,6 +22,16 @@ describe("templating", () => {
             assert.equal(m(`Hello {{.}}`, "Bob"), "Hello bob");
             assert.equal(m(`Hello {{this}}`, "Bob"), "Hello bob");
         });
+
+        it("should support accessing to nested properties", () => {
+            const data = {
+                user: {
+                    name: "Bob",
+                },
+            };
+            assert.equal(m(`Hello {{user.name}}`, data), "Hello Bob");
+            assert.equal(m(`Hello {{this.user.name}}`, data), "Hello Bob");
+        });
     });
 
     describe("{{! xyz }}", () => {
