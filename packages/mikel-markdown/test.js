@@ -30,6 +30,13 @@ describe("parser", () => {
         });
     });
 
+    describe("code blocks", () => {
+        it("should format code blocks", () => {
+            const code = "```\nThis is my code\n```";
+            assert.equal(mk(code), "<pre>This is my code</pre>");
+        });
+    });
+
     describe("links", () => {
         it("should parse links", () => {
             assert.equal(mk("[Home](home.html)"), `<p><a href="home.html">Home</a></p>`);
