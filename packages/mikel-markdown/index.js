@@ -25,28 +25,40 @@ const render = (tag, props = {}, content = "") => {
 // @description all available expressions
 const allExpressions = {
     pre: {
-        regex: /(?:^```(?:[^\n]*)\n([\s\S]*?)\n``` *$)/gm,
-        replace: (args, cn) => render("pre", {class: cn.pre}, escape(args[1])),
+        regex: /(?:^``` *([^\n]*)\n([\s\S]*?)\n``` *$)/gm,
+        replace: (args, opt) => {
+            const code = typeof opt?.highlight === "function" ? opt.highlight(args[2], args[1]) : escape(args[2]);
+            return render("pre", {class: opt.classNames?.pre}, code);
+        },
     },
     code: {
         regex: /`([^`]*?)`/g,
-        replace: (args, cn) => render("code", {class: cn.code}, escape(args[1])),
+        replace: (args, opt) => {
+            return render("code", {class: opt.classNames?.code}, escape(args[1]));
+        },
     },
     heading: {
         regex: /^(#+)\s+(.*)/gm,
-        replace: (args, cn) => render("h" + args[1].length, {class: cn.heading}, args[2]),
+        replace: (args, opt) => {
+            return render("h" + args[1].length, {class: opt.classNames?.heading}, args[2]);
+        },
     },
     blockquote: {
         regex: /^[\s]*>\s(.*)/gm,
-        replace: (args, cn) => render("blockquote", {class: cn.blockquote}, args[1]),
+        replace: (args, opt) => {
+            return render("blockquote", {class: opt.classNames?.blockquote}, args[1]);
+        },
     },
     image: {
         regex: /\!\[([^\]]*?)\]\(([^)]*?)\)/g,
-        replace: (args, cn) => render("img", {class: cn.image, alt: args[1], src: args[2]}),
+        replace: (args, opt) => {
+            return render("img", {class: opt.classNames?.image, alt: args[1], src: args[2]});
+        },
     },
     table: {
         regex: /^\|((?: +[^\n|]+ +\|?)+)\| *\n\|((?: *[:]?[-]+[:]? *\|?)+)\| *\n((?:^\|(?: +[^\n|]+ +\|?)+\| *\n)+)\n/gm,
-        replace: (args, cn) => {
+        replace: (args, opt) => {
+            const cn = opt.classNames || {};
             // args[1] --> table header
             // args[3] --> table body
             const head = args[1].trim().split("|").map(c => {
@@ -69,45 +81,51 @@ const allExpressions = {
     },
     link: {
         regex: /\[(.*?)\]\(([^\t\n\s]*?)\)/gm,
-        replace: (args, cn) => render("a", {class: cn.link, href: args[2]}, args[1]),
+        replace: (args, opt) => {
+            return render("a", {class: opt.classNames?.link, href: args[2]}, args[1]);
+        },
     },
     rule: {
         regex: /^.*?(?:---|-\s-\s-|\*\s\*\s\*)/gm,
-        replace: (args, cn) => render("hr", {class: cn.rule}),
+        replace: (args, opt) => render("hr", {class: opt.classNames?.rule}),
     },
     list: {
         regex: /^[\t\s]*?(?:-|\+|\*)\s(.*)/gm,
-        replace: (args, cn) => {
-            return render("ul", {class: cn.list}, render("li", {class: cn.listItem}, args[1]));
+        replace: (args, opt) => {
+            return render("ul", {class: opt.classNames?.list}, render("li", {class: opt.classNames?.listItem}, args[1]));
         },
         afterRegex: /(<\/ul>\n(?:.*)<ul ?(?:class="[^"]*")?>*)+/g
     },
     orderedList: {
         regex: /^[\t\s]*?(?:\d(?:\)|\.))\s(.*)/gm,
-        replace: (args, cn) => {
-            return render("ol", {class: cn.list}, render("li", {class: cn.listItem}, args[1]));
+        replace: (args, opt) => {
+            return render("ol", {class: opt.classNames?.list}, render("li", {class: opt.classNames?.listItem}, args[1]));
         },
         afterRegex: /(<\/ol>\n(?:.*)<ol ?(?:class="[^"]*")?>*)+/g
     },
     strong: {
         regex: /(?:\*\*|__)([^\n]+?)(?:\*\*|__)/g,
-        replace: (args, cn) => render("strong", {class: cn.strong}, args[1]),
+        replace: (args, opt) => {
+            return render("strong", {class: opt.classNames?.strong}, args[1]);
+        },
     },
     emphasis: {
         regex: /(?:\*|_)([^\n]+?)(?:\*|_)/g,
-        replace: (args, cn) => render("em", {class: cn.emphasis}, args[1]),
+        replace: (args, opt) => {
+            return render("em", {class: opt.classNames?.emphasis}, args[1]);
+        },
     },
     paragraph: {
         regex: /^((?:.+(?:\n|$))+)/gm,
-        replace: (args, cn) => {
+        replace: (args, opt) => {
             const line = args[0].trim();
             // check if the line starts with a block tag or is an empty line
             if (!line || /^\<(\/? *(ul|ol|bl|h\d|p|div|sty|scr|t)|!--)/.test(line.slice(0, 4))) {
                 return line;
             }
-            return render("p", {class: cn.paragraph}, line.replace(/\n/g, ""));
-        }
-    }
+            return render("p", {class: opt.classNames?.paragraph}, line.replace(/\n/g, ""));
+        },
+    },
 };
 
 // @description get only inline expressions
@@ -120,7 +138,6 @@ const getInlineExpressions = expressions => {
 
 // @description markdown parser
 const parser = (str = "", options = {}) => {
-    const classNames = options?.classNames || {}; // custom classNames
     const expressions = options?.expressions || allExpressions; // custom expressions
     const ignoredBlocks = []; // chunks to ignore
     str = str.replace(/\r\n/g, "\n");
@@ -133,7 +150,7 @@ const parser = (str = "", options = {}) => {
     // replace all expressions
     Object.keys(expressions).forEach(key => {
         str = str.replace(expressions[key].regex, (...args) => {
-            const value = expressions[key].replace(args, classNames);
+            const value = expressions[key].replace(args, options);
             if (key === "pre" || key === "code") {
                 ignoredBlocks.push(value);
                 return `<!--HTML-BLOCK-${(ignoredBlocks.length - 1)}-->`;
