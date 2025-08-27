@@ -27,7 +27,8 @@ const allExpressions = {
     pre: {
         regex: /(?:^``` *([^\n]*)\n([\s\S]*?)\n``` *$)/gm,
         replace: (args, opt) => {
-            return render("pre", {class: opt.classNames?.pre}, escape(args[2]));
+            const code = typeof opt?.highlight === "function" ? opt.highlight(args[2], args[1]) : escape(args[2]);
+            return render("pre", {class: opt.classNames?.pre}, code);
         },
     },
     code: {
