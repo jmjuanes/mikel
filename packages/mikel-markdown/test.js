@@ -82,6 +82,17 @@ describe("parser", () => {
                 assert.equal(mk(`${h} Heading ${i}`), `<h${i}>Heading ${i}</h${i}>`);
             });
         });
+
+        it("should support styling headings", () => {
+            const opt = {
+                classNames: {
+                    heading: "base",
+                    heading1: "text-1xl",
+                },
+            };
+            assert.equal(mk(`# Heading`, opt), `<h1 class="base text-1xl">Heading</h1>`);
+            assert.equal(mk(`## Heading`, opt), `<h2 class="base">Heading</h2>`);
+        });
     });
 
     describe("rule", () => {
