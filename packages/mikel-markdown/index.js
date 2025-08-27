@@ -40,7 +40,9 @@ const allExpressions = {
     heading: {
         regex: /^(#+)\s+(.*)/gm,
         replace: (args, opt) => {
-            return render("h" + args[1].length, {class: opt.classNames?.heading}, args[2]);
+            const level = args[1].length;
+            const cn = [opt.classNames?.heading, opt.classNames?.["heading" + level]];
+            return render("h" + level, {class: cn.filter(Boolean).join(" ")}, args[2]);
         },
     },
     blockquote: {
