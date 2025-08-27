@@ -83,6 +83,28 @@ describe("parser", () => {
             assert.equal(result[0], "");
             assert.equal(result[1], `<p>${lines[1]}</p>`);
         });
+
+        it("should ignore lines starting with block tags", () => {
+            const lines = [
+                "<div>This is a div</div>",
+                "<h1>This is a heading</h1>",
+                "<p>This is a paragraph</p>",
+                "<ul><li>Item 1</li><li>Item 2</li></ul>",
+                "<!-- This is a comment -->",
+                "",
+                "This is a normal line",
+            ];
+            const result = mk(lines.join("\n\n")).split("\n");
+            lines.forEach((line, index) => {
+                if (index < 5) {
+                    assert.equal(result[index], line);
+                } else if (index === 5 || index === 6) {
+                    assert.equal(result[index], "");
+                } else {
+                    assert.equal(result[index], `<p>${line}</p>`);
+                }
+            });
+        });
     });
 
     describe("embedded html blocks", () => {
