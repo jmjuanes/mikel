@@ -105,6 +105,20 @@ describe("parser", () => {
                 }
             });
         });
+
+        it("should not ignore lines starting with inline tags", () => {
+            const lines = [
+                "<span>This is a span</span>",
+                "<a href='#'>This is a link</a>",
+                "<strong>This is strong text</strong>",
+                "<em>This is emphasized text</em>",
+                "This is a normal line",
+            ];
+            const result = mk(lines.join("\n\n")).split("\n");
+            lines.forEach((line, index) => {
+                assert.equal(result[index], `<p>${line}</p>`);
+            });
+        });
     });
 
     describe("embedded html blocks", () => {
