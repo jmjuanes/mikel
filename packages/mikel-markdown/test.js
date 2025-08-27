@@ -35,6 +35,24 @@ describe("parser", () => {
             const code = "```\nThis is my code\n```";
             assert.equal(mk(code), "<pre>This is my code</pre>");
         });
+
+        it("should get language from code block", () => {
+            const code = "```html\nCode\n```";
+            const result = mk(code, {
+                expressions: {
+                    ...markdown.expressions,
+                    pre: {
+                        regex: markdown.expressions.pre.regex,
+                        replace: args => {
+                            assert.equal(args[0], "html");
+                            assert.equal(args[1], "Code");
+                            return markdown.render("pre", {}, args[1]);
+                        },
+                    },
+                },
+            });
+            assert.equal(result, "<pre>Code</pre>");
+        });
     });
 
     describe("links", () => {
