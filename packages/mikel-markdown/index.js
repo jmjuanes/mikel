@@ -110,10 +110,13 @@ const allExpressions = {
     }
 };
 
-// @description inline expressions
-const inlineExpressions = Object.fromEntries(["code", "link", "strong", "emphasis"].map(key => {
-    return [key, allExpressions[key]];
-}));
+// @description get only inline expressions
+const getInlineExpressions = expressions => {
+    const fields = ["code", "link", "strong", "emphasis", "image"].filter(key => !!expressions[key]);
+    return Object.fromEntries(fields.map(key => {
+        return [key, expressions[key]];
+    }));
+};
 
 // @description markdown parser
 const parser = (str = "", options = {}) => {
@@ -160,8 +163,8 @@ const markdownPlugin = (options = {}) => {
             },
             inlineMarkdown: params => {
                 return parser(params.fn(params.data) || "", {
-                    expressions: inlineExpressions,
                     ...options,
+                    expressions: getInlineExpressions(options.expressions || allExpressions),
                 });
             },
         },
