@@ -80,14 +80,14 @@ const allExpressions = {
         replace: (args, cn) => {
             return render("ul", {class: cn.list}, render("li", {class: cn.listItem}, args[1]));
         },
-        afterRegex: /(<\/ul>\n(?:.*)<ul ?(?:class=".*")?>*)+/g
+        afterRegex: /(<\/ul>\n(?:.*)<ul ?(?:class="[^"]*")?>*)+/g
     },
     orderedList: {
         regex: /^[\t\s]*?(?:\d(?:\)|\.))\s(.*)/gm,
         replace: (args, cn) => {
             return render("ol", {class: cn.list}, render("li", {class: cn.listItem}, args[1]));
         },
-        afterRegex: /(<\/ol>\n(?:.*)<ol ?(?:class=".*")?>*)+/g
+        afterRegex: /(<\/ol>\n(?:.*)<ol ?(?:class="[^"]*")?>*)+/g
     },
     strong: {
         regex: /(?:\*\*|__)([^\n]+?)(?:\*\*|__)/g,
