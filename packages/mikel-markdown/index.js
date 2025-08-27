@@ -33,7 +33,7 @@ const allExpressions = {
     code: {
         regex: /`([^`]*?)`/g,
         replace: (args, opt) => {
-            return render("code", {class: options.classNames?.code}, escape(args[1]));
+            return render("code", {class: opt.classNames?.code}, escape(args[1]));
         },
     },
     heading: {
@@ -51,7 +51,7 @@ const allExpressions = {
     image: {
         regex: /\!\[([^\]]*?)\]\(([^)]*?)\)/g,
         replace: (args, opt) => {
-            render("img", {class: opt.classNames?.image, alt: args[1], src: args[2]});
+            return render("img", {class: opt.classNames?.image, alt: args[1], src: args[2]});
         },
     },
     table: {
