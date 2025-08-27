@@ -44,9 +44,9 @@ describe("parser", () => {
                     pre: {
                         regex: markdown.expressions.pre.regex,
                         replace: args => {
-                            assert.equal(args[0], "html");
-                            assert.equal(args[1], "Code");
-                            return markdown.render("pre", {}, args[1]);
+                            assert.equal(args[1], "html");
+                            assert.equal(args[2], "Code");
+                            return markdown.render("pre", {}, args[2]);
                         },
                     },
                 },

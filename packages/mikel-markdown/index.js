@@ -25,8 +25,8 @@ const render = (tag, props = {}, content = "") => {
 // @description all available expressions
 const allExpressions = {
     pre: {
-        regex: /(?:^```(?:[^\n]*)\n([\s\S]*?)\n``` *$)/gm,
-        replace: (args, cn) => render("pre", {class: cn.pre}, escape(args[1])),
+        regex: /(?:^``` *([^\n]*)\n([\s\S]*?)\n``` *$)/gm,
+        replace: (args, cn) => render("pre", {class: cn.pre}, escape(args[2])),
     },
     code: {
         regex: /`([^`]*?)`/g,
