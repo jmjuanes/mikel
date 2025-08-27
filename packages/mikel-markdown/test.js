@@ -84,15 +84,14 @@ describe("parser", () => {
         });
 
         it("should support styling headings", () => {
-            const result = ml(`## Heading`, {
+            const opt = {
                 classNames: {
                     heading: "base",
-                    heading2: "text-2xl",
                     heading1: "text-1xl",
-                    heading3: "text-3xl",
                 },
-            });
-            assert.equal(result, `<h2 class="base text-2xl">Heading</h2>`);
+            };
+            assert.equal(mk(`# Heading`, opt), `<h1 class="base text-1xl">Heading</h1>`);
+            assert.equal(mk(`## Heading`, opt), `<h2 class="base">Heading</h2>`);
         });
     });
 
