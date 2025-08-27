@@ -84,6 +84,18 @@ describe("parser", () => {
             assert.equal(result[1], `<p>${lines[1]}</p>`);
         });
 
+        it("should join lines without empty line between", () => {
+            const lines = [
+                "This is the content of the line 1",
+                "This is the content of the line 2",
+                "",
+                "This is the content of the line 3",
+            ];
+            const result = mk(lines.join("\n")).split("\n");
+            assert.equal(result[0], `<p>${lines[0]}${lines[1]}</p>`);
+            assert.equal(result[1], `<p>${lines[3]}</p>`);
+        });
+
         it("should ignore lines starting with block tags", () => {
             const lines = [
                 "<div>This is a div</div>",
