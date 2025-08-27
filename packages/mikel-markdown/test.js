@@ -76,6 +76,61 @@ describe("parser", () => {
                 assert.equal(result[index], `<p>${line}</p>`);
             });
         });
+
+        it("should ignore empty lines", () => {
+            const lines = [" ", "This is a line"];
+            const result = mk(lines.join("\n\n")).split("\n");
+            assert.equal(result[0], "");
+            assert.equal(result[1], `<p>${lines[1]}</p>`);
+        });
+
+        it("should join lines without empty line between", () => {
+            const lines = [
+                "This is the content of the line 1",
+                "This is the content of the line 2",
+                "",
+                "This is the content of the line 3",
+            ];
+            const result = mk(lines.join("\n")).split("\n");
+            assert.equal(result[0], `<p>${lines[0]}${lines[1]}</p>`);
+            assert.equal(result[1], `<p>${lines[3]}</p>`);
+        });
+
+        it("should ignore lines starting with block tags", () => {
+            const lines = [
+                "<div>This is a div</div>",
+                "<h1>This is a heading</h1>",
+                "<p>This is a paragraph</p>",
+                "<ul><li>Item 1</li><li>Item 2</li></ul>",
+                "<!-- This is a comment -->",
+                "",
+                "This is a normal line",
+            ];
+            const result = mk(lines.join("\n\n")).split("\n");
+            lines.forEach((line, index) => {
+                if (index < 5) {
+                    assert.equal(result[index], line);
+                } else if (index === 5 || index === 6) {
+                    assert.equal(result[index], "");
+                } else {
+                    assert.equal(result[index], `<p>${line}</p>`);
+                }
+            });
+        });
+
+        it("should not ignore lines starting with inline tags", () => {
+            const lines = [
+                "<span>This is a span</span>",
+                "<a href='#'>This is a link</a>",
+                "<strong>This is strong text</strong>",
+                "<em>This is emphasized text</em>",
+                "This is a normal line",
+            ];
+            const result = mk(lines.join("\n\n")).split("\n");
+            lines.forEach((line, index) => {
+                assert.equal(result[index], `<p>${line}</p>`);
+            });
+        });
     });
 
     describe("embedded html blocks", () => {

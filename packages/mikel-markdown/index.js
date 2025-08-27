@@ -101,8 +101,8 @@ const allExpressions = {
         regex: /^((?:.+(?:\n|$))+)/gm,
         replace: (args, cn) => {
             const line = args[0].trim();
-            // check if the line starts with a block tag
-            if (/^\<(\/? *(ul|ol|bl|h\d|p|di|st|sc|t)|!--)/.test(line.slice(0, 4)) === true) {
+            // check if the line starts with a block tag or is an empty line
+            if (!line || /^\<(\/? *(ul|ol|bl|h\d|p|div|sty|scr|t)|!--)/.test(line.slice(0, 4))) {
                 return line;
             }
             return render("p", {class: cn.paragraph}, line.replace(/\n/g, ""));
