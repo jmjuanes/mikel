@@ -76,6 +76,13 @@ describe("parser", () => {
                 assert.equal(result[index], `<p>${line}</p>`);
             });
         });
+
+        it("should ignore empty lines", () => {
+            const lines = [" ", "This is a line"];
+            const result = mk(lines.join("\n\n")).split("\n");
+            assert.equal(result[0], "");
+            assert.equal(result[1], `<p>${lines[1]}</p>`);
+        });
     });
 
     describe("embedded html blocks", () => {
