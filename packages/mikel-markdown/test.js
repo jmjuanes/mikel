@@ -133,6 +133,72 @@ describe("parser", () => {
         });
     });
 
+    describe("lists", () => {
+        it("should parse unordered lists", () => {
+            const lines = [
+                "- Item 1",
+                "- Item 2",
+            ];
+            const result = mk(lines.join("\n")).split("\n");
+            assert.equal(result[0], `<ul><li>Item 1</li><li>Item 2</li></ul>`);
+        });
+
+        it("should parse ordered lists", () => {
+            const lines = [
+                "1. Item 1",
+                "2. Item 2",
+            ];
+            const result = mk(lines.join("\n")).split("\n");
+            assert.equal(result[0], `<ol><li>Item 1</li><li>Item 2</li></ol>`);
+        });
+
+        it("should parse ordered lists with inline markdown", () => {
+            const lines = [
+                "1. **Item 1**",
+                "2. *Item 2*",
+            ];
+            const result = mk(lines.join("\n")).split("\n");
+            assert.equal(result[0], `<ol><li><strong>Item 1</strong></li><li><em>Item 2</em></li></ol>`);
+        });
+
+        it("should parse unordered lists with inline markdown", () => {
+            const lines = [
+                "- **Item 1**",
+                "- *Item 2*",
+            ];
+            const result = mk(lines.join("\n")).split("\n");
+            assert.equal(result[0], `<ul><li><strong>Item 1</strong></li><li><em>Item 2</em></li></ul>`);
+        });
+
+        it("should parse ordered lists with custom class applied", () => {
+            const lines = [
+                "- Item 1",
+                "- Item 2",
+            ];
+            const result = mk(lines.join("\n"), {
+                classNames: {
+                    list: "my-list",
+                    listItem: "my-list-item"
+                }
+            }).split("\n");
+            assert.equal(result[0], `<ul class="my-list"><li class="my-list-item">Item 1</li><li class="my-list-item">Item 2</li></ul>`);
+        });
+
+        it("should parse unordered lists with custom class applied", () => {
+            const lines = [
+                "1. Item 1",
+                "2. Item 2",
+            ];
+            const result = mk(lines.join("\n"), {
+                classNames: {
+                    list: "my-list",
+                    listItem: "my-list-item"
+                }
+            }).split("\n");
+            assert.equal(result[0], `<ol class="my-list"><li class="my-list-item">Item 1</li><li class="my-list-item">Item 2</li></ol>`);
+        });
+    });
+
     describe("embedded html blocks", () => {
         it("should support embedding html code", () => {
             assert.equal(mk("<div>hello</div>"), "<div>hello</div>");
