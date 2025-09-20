@@ -168,13 +168,14 @@ press.LABEL_PAGE = "page";
 press.LABEL_ASSET = "asset";
 press.LABEL_DATA = "asset/data";
 press.LABEL_PARTIAL = "asset/partial";
+press.LABEL_LAYOUT = "asset/layout";
 
 // @description source plugin
 press.SourcePlugin = (options = {}) => {
     const shouldEmit = options?.emit ?? true, shouldRead = options.read ?? true;
     const processedNodes = new Set();
     return {
-        name: "SourcePlugin",
+        name: options?.name || "SourcePlugin",
         load: context => {
             const folder = path.join(context.source, options?.folder || ".");
             const extensions = options?.extensions || context.extensions;
@@ -213,6 +214,18 @@ press.PartialsPlugin = (options = {}) => {
 // @description assets plugin
 press.AssetsPlugin = (options = {}) => {
     return press.SourcePlugin({folder: "./assets", read: false, extensions: "*", label: press.LABEL_ASSET, ...options});
+};
+
+// @description layouts plugin
+press.LayoutsPlugin = (options = {}) => {
+    return press.SourcePlugin({
+        name: "LayoutsPlugin",
+        folder: "./layouts",
+        label: press.LABEL_LAYOUT,
+        emit: false,
+        extensions: [ ".html", ".mustache" ],
+        ...options,
+    });
 };
 
 // @description frontmatter plugin
@@ -255,6 +268,27 @@ press.ContentPagePlugin = (siteData = {}) => {
                     body: partial.content || "",
                     attributes: partial.attributes || {},
                 });
+            });
+            // 3. process layouts files
+            const applyLayout = page => {
+                return `{{>>layout:${page.attributes.layout}}}\n\n${page.content}\n\n{{/layout:${page.attributes.layout}}}\n`;
+            };
+            getNodes(press.LABEL_LAYOUT).forEach(layout => {
+                // 3.1. apply the layout to this layout node
+                if (layout?.attributes?.layout && layout?.content) {
+                    layout.content = applyLayout(layout);
+                }
+                // 3.2. register layouts into the template
+                context.template.addPartial("layout:" + path.basename(layout.path), {
+                    body: layout.content || "",
+                    attributes: layout.attributes || {},
+                });
+            });
+            // 4. apply layout to all pages
+            siteData.pages.forEach(page => {
+                if (page?.attributes?.layout && page?.content) {
+                    page.content = applyLayout(page);
+                }
             });
         },
         transform: (context, node) => {
