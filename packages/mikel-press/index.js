@@ -6,6 +6,11 @@ const getPlugins = (context, name) => {
     return context.plugins.filter(plugin => typeof plugin[name] === "function");
 };
 
+// @description apply the layout to the provided node
+const applyLayout = page => {
+    return `{{>>layout:${page.attributes.layout}}}\n\n${page.content}\n\n{{/layout:${page.attributes.layout}}}\n`;
+};
+
 // @description press main function
 // @param {Object} config - configuration object
 // @param {String} config.source - source folder
@@ -21,16 +26,16 @@ const press = (config = {}) => {
 
 // @description create a context object
 press.createContext = (config = {}) => {
-    const {source, destination, plugins, extensions, exclude, template, watch, ...otherConfig} = config;
+    const { source, destination, plugins, extensions, exclude, template, watch, ...otherConfig } = config;
     const context = Object.freeze({
         config: otherConfig,
         source: path.resolve(source || "."),
         destination: path.resolve(destination || "./www"),
-        extensions: extensions || [".html"],
-        exclude: exclude || ["node_modules", ".git", ".gitignore", ".github"],
+        extensions: extensions || [ ".html", ".mustache" ],
+        exclude: exclude || [ "node_modules", ".git", ".gitignore", ".github" ],
         template: template,
         plugins: [
-            press.SourcePlugin({folder: ".", label: press.LABEL_PAGE}),
+            press.SourcePlugin({ folder: ".", label: press.LABEL_PAGE }),
             ...plugins,
         ],
         nodes: [],
@@ -168,13 +173,13 @@ press.LABEL_PAGE = "page";
 press.LABEL_ASSET = "asset";
 press.LABEL_DATA = "asset/data";
 press.LABEL_PARTIAL = "asset/partial";
+press.LABEL_LAYOUT = "asset/layout";
 
 // @description source plugin
 press.SourcePlugin = (options = {}) => {
     const shouldEmit = options?.emit ?? true, shouldRead = options.read ?? true;
     const processedNodes = new Set();
     return {
-        name: "SourcePlugin",
         load: context => {
             const folder = path.join(context.source, options?.folder || ".");
             const extensions = options?.extensions || context.extensions;
@@ -202,23 +207,49 @@ press.SourcePlugin = (options = {}) => {
 
 // @description data plugin
 press.DataPlugin = (options = {}) => {
-    return press.SourcePlugin({folder: "./data", emit: false, extensions: [".json"], label: press.LABEL_DATA, ...options});
+    return press.SourcePlugin({
+        folder: "./data",
+        emit: false,
+        extensions: [".json"],
+        label: press.LABEL_DATA,
+        ...options,
+    });
 };
 
 // @description partials plugin
 press.PartialsPlugin = (options = {}) => {
-    return press.SourcePlugin({folder: "./partials", emit: false, extensions: [".html"], label: press.LABEL_PARTIAL, ...options});
+    return press.SourcePlugin({
+        folder: "./partials",
+        emit: false,
+        label: press.LABEL_PARTIAL,
+        ...options,
+    });
 };
 
 // @description assets plugin
 press.AssetsPlugin = (options = {}) => {
-    return press.SourcePlugin({folder: "./assets", read: false, extensions: "*", label: press.LABEL_ASSET, ...options});
+    return press.SourcePlugin({
+        folder: "./assets",
+        read: false,
+        extensions: "*",
+        label: press.LABEL_ASSET,
+        ...options,
+    });
+};
+
+// @description layouts plugin
+press.LayoutsPlugin = (options = {}) => {
+    return press.SourcePlugin({
+        folder: "./layouts",
+        label: press.LABEL_LAYOUT,
+        emit: false,
+        ...options,
+    });
 };
 
 // @description frontmatter plugin
 press.FrontmatterPlugin = () => {
     return {
-        name: "FrontmatterPlugin",
         transform: (_, node) => {
             if (typeof node.content === "string") {
                 const result = press.utils.frontmatter(node.content, JSON.parse);
@@ -237,7 +268,6 @@ press.FrontmatterPlugin = () => {
 // @description plugin to generate pages content
 press.ContentPagePlugin = (siteData = {}) => {
     return {
-        name: "ContentPagePlugin",
         beforeTransform: context => {
             const getNodes = label => context.nodes.filter(n => n.label === label);
             // 1. prepare site data
@@ -247,6 +277,7 @@ press.ContentPagePlugin = (siteData = {}) => {
                     return [path.basename(node.path, ".json"), JSON.parse(node.content)];
                 })),
                 partials: getNodes(press.LABEL_PARTIAL),
+                layouts: getNodes(press.LABEL_LAYOUT),
                 assets: getNodes(press.LABEL_ASSET),
             });
             // 2. register partials into template
@@ -256,10 +287,30 @@ press.ContentPagePlugin = (siteData = {}) => {
                     attributes: partial.attributes || {},
                 });
             });
+            // 3. process layouts files
+            siteData.layouts.forEach(layout => {
+                // 3.1. apply the layout to this layout node
+                if (layout?.attributes?.layout && layout?.content) {
+                    layout.content = applyLayout(layout);
+                }
+                // 3.2. register layouts into the template
+                context.template.addPartial("layout:" + path.basename(layout.path), {
+                    body: layout.content || "",
+                    attributes: layout.attributes || {},
+                });
+            });
+            // 4. apply layouts to all pages
+            if (siteData.layouts.length > 0 && siteData.pages.length > 0) {
+                siteData.pages.forEach(page => {
+                    if (page?.attributes?.layout && page?.content) {
+                        page.content = applyLayout(page);
+                    }
+                });
+            }
         },
         transform: (context, node) => {
             if (node.label === press.LABEL_PAGE && typeof node.content === "string") {
-                node.content = context.template(node.content || "", {site: siteData, page: node});
+                node.content = context.template(node.content, { site: siteData, page: node });
             }
         },
     };
@@ -268,7 +319,6 @@ press.ContentPagePlugin = (siteData = {}) => {
 // @description plugin to register mikel helpers and functions
 press.UsePlugin = mikelPlugin => {
     return {
-        name: "UsePlugin",
         init: context => {
             context.template.use(mikelPlugin);
         },
@@ -278,7 +328,6 @@ press.UsePlugin = mikelPlugin => {
 // @description copy plugin
 press.CopyAssetsPlugin = (options = {}) => {
     return {
-        name: "CopyAssetsPlugin",
         load: () => {
             return (options?.patterns || [])
                 .filter(item => item.from && fs.existsSync(path.resolve(item.from)))
