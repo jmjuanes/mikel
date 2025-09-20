@@ -98,8 +98,9 @@ Each HTML file processed by **mikel-press** will be handled by the mikel templat
 | Variable | Description |
 |----------|-------------|
 | `site.pages` | A list containing all pages processed by **mikel-press**. |
-| `site.data` | An object containing all data items loaded by `DataLoaderPlugin`. |
-| `site.partials` | A list containing all partials files loaded by the `PartialsLoaderPlugin`. |
+| `site.data` | An object containing all data items loaded by `DataPlugin`. |
+| `site.partials` | A list containing all partials files loaded by the `PartialsPlugin`. |
+| `site.layouts` | A list containing all layout files loaded by the `LayoutsPlugin`. |
 | `site.*` | All the additional configuration fields provided in the configuration. |
 
 #### Page variables
@@ -133,6 +134,15 @@ This plugin accepts the following options:
 - `options.folder` (string): To change the directory to load the partials files. Default is `./partials`.
 - `options.extensions` (array): Defines the file extensions that should be processed. If not provided, it will use `config.extensions`.
 
+### `press.LayoutsPlugin(options)`
+
+An alias of `press.SourcePlugin` that will read all files in the `layouts` folder and include them as layouts. In each page, you can use the `attributes.layout` field to set the layout to apply to this page.
+
+This plugin accepts the following options:
+
+- `options.folder` (string): To change the directory to load the layouts files. Default is `./layouts`.
+- `options.extensions` (array): Defines the file extensions that should be processed. If not provided, it will use `config.extensions`.
+
 ### `press.DataPlugin(options)`
 
 This plugin loads JSON files from the specified directory and makes them available in the site context. This plugin accepts the following options:
@@ -154,7 +164,7 @@ This plugin processes and parses the frontmatter in each file. The parsed frontm
 
 ### `press.ContentPagePlugin()`
 
-This plugin processes each page and saves it into `config.destination`.
+This plugin processes each page using the mikel templating.
 
 ### `press.CopyAssetsPlugin(options)`
 
