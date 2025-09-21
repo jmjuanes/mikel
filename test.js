@@ -554,6 +554,25 @@ describe("templating", () => {
             assert.equal(m("{{=greet}}", data, options), "Hello Bob!");
         });
     });
+
+    describe("{{!-- --}}", () => {
+        it("removes single-line comments", () => {
+            assert.equal(m("Hello {{!-- Susan --}}Bob"), "Hello Bob");
+        });
+
+        it("removes multi-line comments", () => {
+            const template = [
+                "Start{{!--",
+                "content",
+                "--}}End",
+            ];
+            assert.equal(m(template.join("\n")), "StartEnd");
+        });
+
+        it("removes multiple comments", () => {
+            assert.equal(m("A{{!-- first --}}B{{!-- second --}}C"), "ABC");
+        });
+    });
 });
 
 describe("mikel", () => {
