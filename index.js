@@ -16,8 +16,12 @@ const get = (data, path = ".") => {
     return path.replace(/^this\./, "").split(".").reduce((x, k) => x?.[k], data) ?? "";
 };
 
-// @description tokenize and untokenize methods
-const tokenize = (str = "") => str.split(/\{\{|\}\}/);
+// @description tokenize the provided string
+const tokenize = (str = "") => {
+    return str.replace(/\{\{!--[\s\S]*?--}}/g, "").split(/\{\{|\}\}/);
+}
+
+// @description untokenize the provided tokens array and get a string
 const untokenize = (ts = [], s = "{{", e = "}}") => {
     return ts.length > 0 ? ts.reduce((p, t, i) => p + (i % 2 === 0 ? e : s) + t) : "";
 };
