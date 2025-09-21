@@ -36,6 +36,18 @@ const result = m(`Hello {{name || "World"}}!`, {});
 // Output: 'Hello World!'
 ```
 
+### Comments
+
+> This feature was added in `v0.27.0`.
+
+Any content between `{{!--` and `--}}` will be completely ignored during template rendering. Comments can span multiple lines and are not included in the output or parsed AST.
+
+```
+{{!-- This is a comment --}}
+```
+
+> **Note**: Nested comments are not supported. The first closing `--}}` encountered will terminate the comment block.
+
 ### Sections
 
 Sections allow for conditional rendering of blocks of content based on the presence or absence of a value in the data object. Use the pound symbol `#` to start a section and the caret `^` to denote an inverted section. End the section with a forward slash `/`.
