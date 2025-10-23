@@ -147,9 +147,10 @@ const create = (options = {}) => {
                         ...vars,
                         content: blockContent.join(""),
                         partial: {
+                            name: t,
                             attributes: ctx.partials[t]?.attributes || ctx.partials[t]?.data || {},
-                            args: args,
-                            opt: opt,
+                            args: args || [],
+                            opt: opt || {},
                         },
                     };
                     compile(tokenize(ctx.partials[t]?.body || ctx.partials[t]), output, newData, newVars, 0, "");
