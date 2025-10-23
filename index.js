@@ -148,6 +148,7 @@ const create = (options = {}) => {
                         content: blockContent.join(""),
                         partial: {
                             attributes: ctx.partials[t]?.attributes || ctx.partials[t]?.data || {},
+                            args: args,
                             opt: opt,
                         },
                     };
