@@ -112,6 +112,13 @@ const result = m("{{> hello}}", data, {partials});
 // Output: 'Hello Bob!'
 ```
 
+Partial metadata can be accessed using the `@partial` variable inside the partial. It contains the following fields:
+
+- `name`: the name of the partial being rendered.
+- `args`: an array containing the positional arguments provided to the partial (if any). See the **Custom context in partials** section for more details.
+- `opt`: an object containing the keyword arguments provided to the partial (if any). See the **Keyword arguments in partials** section for more details.
+- `attributes`: the custom data provided to the partial (if any). See the **Partials data** section for more details.
+
 #### Custom context in partials
 
 > This feature was added in `v0.3.1`.
@@ -132,13 +139,6 @@ const partials = {
 const result = m("User: {{> user currentUser}}", data, {partials});
 // Output: 'User: John Doe <john@example.com>'
 ```
-
-Partial metadata can be accessed using the `@partial` variable inside the partial. It contains the following fields:
-
-- `name`: the name of the partial being rendered.
-- `attributes`: the custom data provided to the partial (if any). See the **Partials data** section for more details.
-- `args`: an array containing the positional arguments provided to the partial (if any).
-- `opt`: an object containing the keyword arguments provided to the partial (if any). See the **Keyword arguments in partials** section for more details.
 
 #### Keyword arguments in partials
 
