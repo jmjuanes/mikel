@@ -133,6 +133,13 @@ const result = m("User: {{> user currentUser}}", data, {partials});
 // Output: 'User: John Doe <john@example.com>'
 ```
 
+Partial metadata can be accessed using the `@partial` variable inside the partial. It contains the following fields:
+
+- `name`: the name of the partial being rendered.
+- `attributes`: the custom data provided to the partial (if any). See the **Partials data** section for more details.
+- `args`: an array containing the positional arguments provided to the partial (if any).
+- `opt`: an object containing the keyword arguments provided to the partial (if any). See the **Keyword arguments in partials** section for more details.
+
 #### Keyword arguments in partials
 
 > This feature was added in `v0.13.0`.
@@ -205,7 +212,7 @@ Partials allows you to define custom data. Instead of providing a string with th
 - `body`: a string with the partial content.
 - `data`: an object with your custom data for the partial. You can also use `attributes` as an alias.
 
-Custom data will be available in the partial content as a variable `@partial`.
+Custom data will be available in the partial content in the `@partial.attributes` variable.
 
 Example:
 
@@ -213,7 +220,7 @@ Example:
 const options = {
     partials: {
         foo: {
-            body: "Hello {{@partial.name}}!",
+            body: "Hello {{@partial.attributes.name}}!",
             data: {
                 name: "Bob",
             },
