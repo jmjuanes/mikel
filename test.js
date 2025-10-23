@@ -189,11 +189,18 @@ describe("templating", () => {
             assert.equal(m("{{>foo ...partialArgs}}", data, {partials}), "Hello Bob! You are 30 years old.");
         });
 
-        it("should support accessing to partial arguments from @partial.opt variable", () => {
+        it("should support accessing to partial options from @partial.opt variable", () => {
             const partials = {
                 foo: "Hello {{@partial.opt.name}}!",
             };
             assert.equal(m(`{{>foo name="Bob"}}`, {}, {partials}), "Hello Bob!");
+        });
+
+        it("should support accessing to partial arguments from @partial.args variable", () => {
+            const partials = {
+                foo: "Tags: {{#each @partial.args}}{{this}},{{/each}}",
+            };
+            assert.equal(m(`{{>foo "tag1" "tag2" "tag3"}}`, {}, {partials}), "Tags: tag1,tag2,tag3,");
         });
     });
 
