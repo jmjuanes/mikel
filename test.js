@@ -167,7 +167,7 @@ describe("templating", () => {
         it("should allow partial variables", () => {
             const partials = {
                 foo: {
-                    body: "Hello {{@partial.name}}!",
+                    body: "Hello {{@partial.attributes.name}}!",
                     attributes: {
                         name: "Bob",
                     },
@@ -187,6 +187,13 @@ describe("templating", () => {
                 foo: "Hello {{name}}! You are {{age}} years old.",
             };
             assert.equal(m("{{>foo ...partialArgs}}", data, {partials}), "Hello Bob! You are 30 years old.");
+        });
+
+        it("should support accessing to partial arguments from @partial.opt variable", () => {
+            const partials = {
+                foo: "Hello {{@partial.opt.name}}!",
+            };
+            assert.equal(m(`{{>foo name="Bob"}}`, {}, {partials}), "Hello Bob!");
         });
     });
 
