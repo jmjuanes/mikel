@@ -110,12 +110,25 @@ const create = (options = {}) => {
                 i = findClosingToken(tokens, j, t);
                 output.push(ctx.helpers[t]({
                     args: args,
-                    opt: opt,
+                    opt: opt, // deprecated
+                    options: opt,
                     tokens: tokens.slice(j, i),
                     data: data,
                     variables: vars,
                     fn: (blockData = {}, blockVars = {}, blockOutput = []) => {
-                        compile(tokens, blockOutput, blockData, {...vars, ...blockVars, parent: data, root: vars.root}, j, t);
+                        const helperVars = {
+                            ...vars,
+                            ...blockVars,
+                            helper: {
+                                name: t,
+                                options: opt,
+                                args: args,
+                                context: blockData,
+                            },
+                            parent: data,
+                            root: vars.root,
+                        };
+                        compile(tokens, blockOutput, blockData, helperVars, j, t);
                         return blockOutput.join("");
                     },
                 }));
