@@ -153,8 +153,8 @@ const create = (options = {}) => {
                 const lastIndex = partialTokens.findIndex((token, j) => {
                     return j % 2 !== 0 && token.trim().startsWith("/") && token.trim().endsWith(t);
                 });
-                if (typeof partials[t] === "undefined") {
-                    partials[t] = untokenize(partialTokens.slice(0, lastIndex));
+                if (typeof ctx.partials[t] === "undefined") {
+                    ctx.partials[t] = untokenize(partialTokens.slice(0, lastIndex));
                 }
                 i = i + lastIndex + 1;
             }
