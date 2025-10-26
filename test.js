@@ -446,6 +446,17 @@ describe("templating", () => {
             };
             assert.equal(m("{{#greet}}{{/greet}}", data, options), "Hello Bob!");
         });
+
+        it("shoudl support accessing helper content using the @helper variable", () => {
+            const options = {
+                helpers: {
+                    foo: params => params.fn({value: "bar"}),
+                },
+            };
+            assert.equal(m("{{#foo}}Helper name: {{@helper.name}}{{/foo}}", {}, options), "Helper name: foo");
+            assert.equal(m("{{#foo value=2}}Helper option: {{@helper.options.value}}{{/foo}}", {}, options), "Helper option: 2");
+            assert.equal(m("{{#foo}}Helper context: {{@helper.context.value}}{{/foo}}", {}, options), "Helper context: bar");
+        });
     });
 
     describe("{{@root}}", () => {

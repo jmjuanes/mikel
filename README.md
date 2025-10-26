@@ -447,7 +447,7 @@ console.log(result); // --> "0: John, 1: Alice, 2: Bob,"
 
 #### Expand helper arguments using the spread operator
 
-> This feature was addedin `v0.20.0`.
+> This feature was added in `v0.20.0`.
 
 You can use the spread operator `...` to expand the arguments of a helper. This allows you to pass an array of values as individual arguments to the helper, or to pass an object as keyword arguments.
 
@@ -471,6 +471,18 @@ const options = {
 const result = m("{{#join ...items ...options}}{{/join}}", data, options);
 console.log(result); // --> "John, Alice, Bob"
 ```
+
+#### Accessing to helper metadata
+
+> Introduced in `v0.28.0`.
+
+Inside any helper block, you can access metadata about the current invocation through the `@helper` variable. It exposes the following fields:
+
+- `@helper.name`: the name of the helper being invoked.
+- `@helper.args`: an array of positional arguments passed to the helper.
+- `@helper.options`: an object containing named (key-value) arguments.
+- `@helper.context`: the current rendering context.
+
 
 ### Runtime Variables
 
