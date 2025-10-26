@@ -148,6 +148,16 @@ const create = (options = {}) => {
                     i = compile(tokens, includeOutput ? output : [], data, vars, i + 1, t);
                 }
             }
+            else if (tokens[i].startsWith(">*")) {
+                const t = tokens[i].slice(2).trim(), partialTokens = tokens.slice(i + 1);
+                const lastIndex = partialTokens.findIndex((token, j) => {
+                    return j % 2 !== 0 && token.trim().startsWith("/") && token.trim().endsWith(t);
+                });
+                if (typeof partials[t] === "undefined") {
+                    partials[t] = untokenize(partialTokens.slice(0, lastIndex));
+                }
+                i = i + lastIndex + 1;
+            }
             else if (tokens[i].startsWith(">")) {
                 const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), data, vars);
                 const blockContent = []; // to store partial block content
