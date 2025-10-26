@@ -112,13 +112,6 @@ const result = m("{{> hello}}", data, {partials});
 // Output: 'Hello Bob!'
 ```
 
-Partial metadata can be accessed using the `@partial` variable inside the partial. It contains the following fields:
-
-- `name`: the name of the partial being rendered.
-- `args`: an array containing the positional arguments provided to the partial (if any). See the **Custom context in partials** section for more details.
-- `opt`: an object containing the keyword arguments provided to the partial (if any). See the **Keyword arguments in partials** section for more details.
-- `attributes`: the custom data provided to the partial (if any). See the **Partials data** section for more details.
-
 #### Custom context in partials
 
 > This feature was added in `v0.3.1`.
@@ -231,6 +224,18 @@ const options = {
 const result = m("{{>foo}}", {}, options);
 // Output: 'Hello Bob!'
 ```
+
+#### Accessing to partial metadata using the `@partial` variable
+
+> Introduced in `v0.28.0`.
+
+Partial metadata can be accessed using the `@partial` variable inside the partial. It contains the following fields:
+
+- `@partial.name`: the name of the partial being rendered.
+- `@partial.args`: an array containing the positional arguments provided to the partial (if any).
+- `@partial.options`: an object containing the keyword arguments provided to the partial (if any).
+- `@partial.attributes`: the custom data provided to the partial (if any).
+- `@partial.context`: the current rendering context.
 
 ### Helpers
 
@@ -472,7 +477,7 @@ const result = m("{{#join ...items ...options}}{{/join}}", data, options);
 console.log(result); // --> "John, Alice, Bob"
 ```
 
-#### Accessing to helper metadata
+#### Accessing to helper metadata using the `@helper` variable
 
 > Introduced in `v0.28.0`.
 
@@ -482,7 +487,6 @@ Inside any helper block, you can access metadata about the current invocation th
 - `@helper.args`: an array of positional arguments passed to the helper.
 - `@helper.options`: an object containing named (key-value) arguments.
 - `@helper.context`: the current rendering context.
-
 
 ### Runtime Variables
 
