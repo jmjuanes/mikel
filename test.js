@@ -189,9 +189,9 @@ describe("templating", () => {
             assert.equal(m("{{>foo ...partialArgs}}", data, {partials}), "Hello Bob! You are 30 years old.");
         });
 
-        it("should support accessing to partial options from @partial.opt variable", () => {
+        it("should support accessing to partial options from @partial.options variable", () => {
             const partials = {
-                foo: "Hello {{@partial.opt.name}}!",
+                foo: "Hello {{@partial.options.name}}!",
             };
             assert.equal(m(`{{>foo name="Bob"}}`, {}, {partials}), "Hello Bob!");
         });
