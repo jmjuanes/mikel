@@ -121,8 +121,8 @@ const create = (options = {}) => {
                             ...blockVars,
                             helper: {
                                 name: t,
-                                options: opt,
-                                args: args,
+                                options: opt || {},
+                                args: args || [],
                                 context: blockData,
                             },
                             parent: data,
