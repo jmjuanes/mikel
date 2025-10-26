@@ -163,7 +163,8 @@ const create = (options = {}) => {
                             name: t,
                             attributes: ctx.partials[t]?.attributes || ctx.partials[t]?.data || {},
                             args: args || [],
-                            opt: opt || {},
+                            options: opt || {},
+                            context: newData,
                         },
                     };
                     compile(tokenize(ctx.partials[t]?.body || ctx.partials[t]), output, newData, newVars, 0, "");
