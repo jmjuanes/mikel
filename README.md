@@ -227,7 +227,7 @@ const result = m("{{>foo}}", {}, options);
 
 #### Accessing to partial metadata using the `@partial` variable
 
-> Introduced in `v0.28.0`.
+> Added in `v0.28.0`.
 
 Partial metadata can be accessed using the `@partial` variable inside the partial. It contains the following fields:
 
@@ -236,6 +236,19 @@ Partial metadata can be accessed using the `@partial` variable inside the partia
 - `@partial.options`: an object containing the keyword arguments provided to the partial (if any).
 - `@partial.attributes`: the custom data provided to the partial (if any).
 - `@partial.context`: the current rendering context.
+
+### Inline partials
+
+> Added in `v0.28.0`.
+
+Inline partials allows you to define partials directly in your template. Use `>*` followed by the partial name to start the partial definition, and end the partial definition with a slash `/` followed by the partial name. For example, `{{>*foo}}` begins a partial definition called `foo`, and `{{/foo}}` ends it.
+
+Example:
+
+```javascript
+const result = m(`{{>*foo}}Hello {{name}}!{{/foo}}{{>foo name="Bob"}}`, {});
+// Output: 'Hello Bob!'
+```
 
 ### Helpers
 
