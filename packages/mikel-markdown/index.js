@@ -141,8 +141,13 @@ const getInlineExpressions = expressions => {
 // @description markdown parser
 const parser = (str = "", options = {}) => {
     const expressions = options?.expressions || allExpressions; // custom expressions
+    const hooks = options?.hooks || {};
     const ignoredBlocks = []; // chunks to ignore
     str = str.replace(/\r\n/g, "\n");
+    // call preprocess hook
+    if (typeof hooks?.preprocess === "function") {
+        str = hooks.preprocess(str, options);
+    }
     // ignore html blocks
     const htmlBlockRegex = /<!--html-->([\s\S]*?)<!--\/html-->/gm;
     str = str.replace(htmlBlockRegex, match => {
@@ -169,6 +174,10 @@ const parser = (str = "", options = {}) => {
     ignoredBlocks.forEach((block, index) => {
         str = str.replace(`<!--HTML-BLOCK-${index}-->`, block);
     });
+    // call postprocess hook
+    if (typeof hooks?.postprocess === "function") {
+        str = hooks.postprocess(str, options);
+    }
     return str;
 };
 
