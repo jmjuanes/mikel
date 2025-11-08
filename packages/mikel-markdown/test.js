@@ -242,6 +242,28 @@ describe("parser", () => {
     });
 });
 
+describe("hooks", () => {
+    const mk = markdown.parser;
+
+    it("should allow to provide a hook to preprocess markdown content", () => {
+        const result = mk("**Bob**", {
+            hooks: {
+                preprocess: str => "Hello " + str,
+            },
+        });
+        assert.equal(result, "<p>Hello <strong>Bob</strong></p>");
+    });
+
+    it("should allow to provide a hook to postprocess markdown content", () => {
+        const result = mk("**Bob**", {
+            hooks: {
+                postprocess: str => "Hello " + str,
+            },
+        });
+        assert.equal(result, "Hello <p><strong>Bob</strong></p>");
+    });
+});
+
 describe("{{#markdown}}", () => {
     const options = markdown();
 
