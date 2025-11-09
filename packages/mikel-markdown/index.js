@@ -141,8 +141,13 @@ const getInlineExpressions = expressions => {
 // @description markdown parser
 const parser = (str = "", options = {}) => {
     const expressions = options?.expressions || allExpressions; // custom expressions
+    const hooks = options?.hooks || {};
     const ignoredBlocks = []; // chunks to ignore
     str = str.replace(/\r\n/g, "\n");
+    // call preprocess hook
+    if (typeof hooks?.preprocess === "function") {
+        str = hooks.preprocess(str, options);
+    }
     // ignore html blocks
     const htmlBlockRegex = /<!--html-->([\s\S]*?)<!--\/html-->/gm;
     str = str.replace(htmlBlockRegex, match => {
@@ -152,7 +157,22 @@ const parser = (str = "", options = {}) => {
     // replace all expressions
     Object.keys(expressions).forEach(key => {
         str = str.replace(expressions[key].regex, (...args) => {
-            const value = expressions[key].replace(args, options);
+            // call the before render hook
+            if (typeof hooks?.beforeRender === "function") {
+                const newArgs = hooks.beforeRender(key, args, options);
+                if (newArgs && Array.isArray(newArgs)) {
+                    args = newArgs;
+                }
+            }
+            // get the result
+            let value = expressions[key].replace(args, options);
+            // call the after render hook
+            if (typeof hooks?.afterRender === "function") {
+                let newValue = hooks.afterRender(value, key, args, options);
+                if (typeof newValue === "string" && newValue !== value) {
+                    value = newValue;
+                }
+            }
             if (key === "pre" || key === "code") {
                 ignoredBlocks.push(value);
                 return `<!--HTML-BLOCK-${(ignoredBlocks.length - 1)}-->`;
@@ -169,6 +189,10 @@ const parser = (str = "", options = {}) => {
     ignoredBlocks.forEach((block, index) => {
         str = str.replace(`<!--HTML-BLOCK-${index}-->`, block);
     });
+    // call postprocess hook
+    if (typeof hooks?.postprocess === "function") {
+        str = hooks.postprocess(str, options);
+    }
     return str;
 };
 

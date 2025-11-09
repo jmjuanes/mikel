@@ -242,6 +242,50 @@ describe("parser", () => {
     });
 });
 
+describe("hooks", () => {
+    const mk = markdown.parser;
+
+    it("should allow to provide a hook to preprocess markdown content", () => {
+        const result = mk("**Bob**", {
+            hooks: {
+                preprocess: str => "Hello " + str,
+            },
+        });
+        assert.equal(result, "<p>Hello <strong>Bob</strong></p>");
+    });
+
+    it("should allow to provide a hook to postprocess markdown content", () => {
+        const result = mk("**Bob**", {
+            hooks: {
+                postprocess: str => "Hello " + str,
+            },
+        });
+        assert.equal(result, "Hello <p><strong>Bob</strong></p>");
+    });
+
+    it("should allow to modify the render arguments using the beforeRender hook", () => {
+        const result = mk("Hello **Bob**", {
+            hooks: {
+                beforeRender: (type, args) => {
+                    return type === "strong" ? [args[0], "Susan"] : args;
+                },
+            },
+        });
+        assert.equal(result, "<p>Hello <strong>Susan</strong></p>");
+    });
+
+    it("should allow to modify the result of the render using the afterRender hook", () => {
+        const result = mk("Hello **Bob**", {
+            hooks: {
+                afterRender: (value, type) => {
+                    return type === "strong" ? "<b>Bob</b>" : value;
+                },
+            },
+        });
+        assert.equal(result, "<p>Hello <b>Bob</b></p>");
+    });
+});
+
 describe("{{#markdown}}", () => {
     const options = markdown();
 
