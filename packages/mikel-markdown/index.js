@@ -157,7 +157,22 @@ const parser = (str = "", options = {}) => {
     // replace all expressions
     Object.keys(expressions).forEach(key => {
         str = str.replace(expressions[key].regex, (...args) => {
-            const value = expressions[key].replace(args, options);
+            // call the before render hook
+            if (typeof hooks?.beforeRender === "function") {
+                const newArgs = hooks.beforeRender(key, args, options);
+                if (newArgs && Array.isArray(newArgs)) {
+                    args = newArgs;
+                }
+            }
+            // get the result
+            let value = expressions[key].replace(args, options);
+            // call the after render hook
+            if (typeof hooks?.afterRender === "function") {
+                let newValue = hooks.afterRender(value, key, args, options);
+                if (typeof newValue === "string" && newValue !== value) {
+                    value = newValue;
+                }
+            }
             if (key === "pre" || key === "code") {
                 ignoredBlocks.push(value);
                 return `<!--HTML-BLOCK-${(ignoredBlocks.length - 1)}-->`;

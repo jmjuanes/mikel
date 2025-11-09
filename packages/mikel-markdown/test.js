@@ -262,6 +262,28 @@ describe("hooks", () => {
         });
         assert.equal(result, "Hello <p><strong>Bob</strong></p>");
     });
+
+    it("should allow to modify the render arguments using the beforeRender hook", () => {
+        const result = mk("Hello **Bob**", {
+            hooks: {
+                beforeRender: (type, args) => {
+                    return type === "strong" ? [args[0], "Susan"] : args;
+                },
+            },
+        });
+        assert.equal(result, "<p>Hello <strong>Susan</strong></p>");
+    });
+
+    it("should allow to modify the result of the render using the afterRender hook", () => {
+        const result = mk("Hello **Bob**", {
+            hooks: {
+                afterRender: (value, type) => {
+                    return type === "strong" ? "<b>Bob</b>" : value;
+                },
+            },
+        });
+        assert.equal(result, "<p>Hello <b>Bob</b></p>");
+    });
 });
 
 describe("{{#markdown}}", () => {
