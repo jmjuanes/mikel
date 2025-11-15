@@ -79,7 +79,7 @@ describe("parser", () => {
         ["#", "##", "###", "####", "#####", "######"].forEach(h => {
             const i = h.length;
             it(`should parse h${i}`, () => {
-                assert.equal(mk(`${h} Heading ${i}`), `<h${i}>Heading ${i}</h${i}>`);
+                assert.equal(mk(`${h} Heading ${i}`), `<h${i} name="heading-${i}">Heading ${i}</h${i}>`);
             });
         });
 
@@ -90,8 +90,8 @@ describe("parser", () => {
                     heading1: "text-1xl",
                 },
             };
-            assert.equal(mk(`# Heading`, opt), `<h1 class="base text-1xl">Heading</h1>`);
-            assert.equal(mk(`## Heading`, opt), `<h2 class="base">Heading</h2>`);
+            assert.equal(mk(`# Heading`, opt), `<h1 class="base text-1xl" name="heading">Heading</h1>`);
+            assert.equal(mk(`## Heading`, opt), `<h2 class="base" name="heading">Heading</h2>`);
         });
     });
 
@@ -291,6 +291,36 @@ describe("{{#markdown}}", () => {
 
     it("should parse markdown code", () => {
         assert.equal(m("{{#markdown}}This is `inline code`{{/markdown}}", {}, options), "<p>This is <code>inline code</code></p>");
+    });
+
+    it("should generate a toc", () => {
+        const code = [
+            `{{#markdown}}`,
+            `# Heading-1`,
+            `This is some text`,
+            `## Heading-2`,
+            `### Heading-3`,
+            `{{/markdown}}`,
+            `{{#each @toc}}`,
+            `:: level={{this.level}} text={{this.text}} slug={{this.slug}}`,
+            `{{/each}}`,
+        ];
+        const expectedValues = [
+            {level: "1", text: "Heading-1", slug: "heading-1"},
+            {level: "2", text: "Heading-2", slug: "heading-2"},
+            {level: "3", text: "Heading-3", slug: "heading-3"},
+        ];
+
+        m(code.join("\n"), {}, options)
+            .split("\n")
+            .filter(line => line.trim().startsWith("::"))
+            .forEach((line, index) => {
+                const expectedValue = expectedValues[index];
+                line.slice(2).trim().split(" ").forEach(item => {
+                    const [key, value] = item.split("=");
+                    assert.equal(value, expectedValue[key]);
+                });
+            });
     });
 });
 
