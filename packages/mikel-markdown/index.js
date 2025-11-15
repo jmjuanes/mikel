@@ -41,8 +41,15 @@ const allExpressions = {
         regex: /^(#+)\s+(.*)/gm,
         replace: (args, opt) => {
             const level = args[1].length;
-            const cn = [opt.classNames?.heading, opt.classNames?.["heading" + level]];
-            return render("h" + level, {class: cn.filter(Boolean).join(" ")}, args[2]);
+            const headingClassNames = [
+                opt.classNames?.heading,
+                opt.classNames?.["heading" + level]
+            ];
+            const headingProps = {
+                class: headingClassNames.filter(Boolean).join(" "),
+                name: args[2].toLowerCase().replaceAll(" ", "-").replaceAll("_", "-"),
+            };
+            return render("h" + level, headingProps, args[2]);
         },
     },
     blockquote: {
