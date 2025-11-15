@@ -79,7 +79,7 @@ describe("parser", () => {
         ["#", "##", "###", "####", "#####", "######"].forEach(h => {
             const i = h.length;
             it(`should parse h${i}`, () => {
-                assert.equal(mk(`${h} Heading ${i}`), `<h${i}>Heading ${i}</h${i}>`);
+                assert.equal(mk(`${h} Heading ${i}`), `<h${i} name="heading-${i}">Heading ${i}</h${i}>`);
             });
         });
 
@@ -90,8 +90,8 @@ describe("parser", () => {
                     heading1: "text-1xl",
                 },
             };
-            assert.equal(mk(`# Heading`, opt), `<h1 class="base text-1xl">Heading</h1>`);
-            assert.equal(mk(`## Heading`, opt), `<h2 class="base">Heading</h2>`);
+            assert.equal(mk(`# Heading`, opt), `<h1 class="base text-1xl" name="heading">Heading</h1>`);
+            assert.equal(mk(`## Heading`, opt), `<h2 class="base" name="heading">Heading</h2>`);
         });
     });
 
