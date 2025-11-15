@@ -296,19 +296,19 @@ describe("{{#markdown}}", () => {
     it("should generate a toc", () => {
         const code = [
             `{{#markdown}}`,
-            `# Heading_1`,
+            `# Heading-1`,
             `This is some text`,
-            `## Heading_2`,
-            `### Heading_3`,
+            `## Heading-2`,
+            `### Heading-3`,
             `{{/markdown}}`,
             `{{#each @toc}}`,
             `:: level={{this.level}} text={{this.text}} slug={{this.slug}}`,
             `{{/each}}`,
         ];
         const expectedValues = [
-            {level: "1", text: "Heading_1", slug: "heading-1"},
-            {level: "2", text: "Heading_2", slug: "heading-2"},
-            {level: "3", text: "Heading_3", slug: "heading-3"},
+            {level: "1", text: "Heading-1", slug: "heading-1"},
+            {level: "2", text: "Heading-2", slug: "heading-2"},
+            {level: "3", text: "Heading-3", slug: "heading-3"},
         ];
 
         m(code.join("\n"), {}, options)
