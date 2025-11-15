@@ -292,6 +292,36 @@ describe("{{#markdown}}", () => {
     it("should parse markdown code", () => {
         assert.equal(m("{{#markdown}}This is `inline code`{{/markdown}}", {}, options), "<p>This is <code>inline code</code></p>");
     });
+
+    it("should generate a toc", () => {
+        const code = [
+            `{{#markdown}}`,
+            `# Heading_1`,
+            `This is some text`,
+            `## Heading_2`,
+            `### Heading_3`,
+            `{{/markdown}}`,
+            `{{#each @toc}}`,
+            `:: level={{this.level}} text={{this.text}} slug={{this.slug}}`,
+            `{{/each}}`,
+        ];
+        const expectedValues = [
+            {level: "1", text: "Heading_1", slug: "heading-1"},
+            {level: "2", text: "Heading_2", slug: "heading-2"},
+            {level: "3", text: "Heading_3", slug: "heading-3"},
+        ];
+
+        m(code.join("\n"), {}, options)
+            .split("\n")
+            .filter(line => line.trim().startsWith("::"))
+            .forEach((line, index) => {
+                const expectedValue = expectedValues[index];
+                line.slice(2).trim().split(" ").forEach(item => {
+                    const [key, value] = item.split("=");
+                    assert.equal(value, expectedValue[key]);
+                });
+            });
+    });
 });
 
 describe("{{#inlineMarkdown}}", () => {
