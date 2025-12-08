@@ -326,19 +326,21 @@ press.UsePlugin = mikelPlugin => {
 };
 
 // @description copy plugin
-press.CopyAssetsPlugin = (options = {}) => {
-    return {
-        load: () => {
-            return (options?.patterns || [])
-                .filter(item => item.from && fs.existsSync(path.resolve(item.from)))
-                .map(item => ({
+press.CopyAssetsPlugin = (options = {}) => ({
+    load: () => {
+        const assetsFound = [];
+        (options?.patterns || []).forEach(item => {
+            if (item.from && fs.existsSync(path.resolve(item.from))) {
+                assetsFound.push({
                     source: path.resolve(item.from),
                     path: path.join(options?.basePath || ".", item.to || path.basename(item.from)),
                     label: options?.label || press.LABEL_ASSET,
-                }));
-        },
-    };
-};
+                });
+            }
+        });
+        return assetsFound;
+    },
+});
 
 // export press generator
 export default press;
