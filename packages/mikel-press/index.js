@@ -250,7 +250,9 @@ press.LayoutsPlugin = (options = {}) => {
 // @description generic transform plugin
 press.TransformPlugin = (options = {}) => ({
     transform: (context, node) => {
-        return null;
+        if (typeof options?.transform === "function") {
+            return options.transform(context, node);
+        }
     },
 });
 
