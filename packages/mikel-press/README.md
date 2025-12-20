@@ -162,6 +162,20 @@ This plugin loads additional files (aka assets) and includes them in the build f
 
 This plugin processes and parses the frontmatter in each file. The parsed frontmatter content will be available in `page.attributes` field.
 
+### `press.TransformPlugin(options)`
+
+A generic transform plugin that will execute the provided `options.transform` function with the `context` and the current `node` object. Example:
+
+```javascript
+press.TransformPlugin({
+    transform: (context, node) => {
+        if (node.label === press.LABEL_PAGE && node.content && path.extname(node.source) === ".md") {
+            node.content = `{{#markdown}}\n\n${node.content}\n\n{{/markdown}}\n`;
+        }
+    },
+});
+```
+
 ### `press.ContentPagePlugin()`
 
 This plugin processes each page using the mikel templating.
