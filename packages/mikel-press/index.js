@@ -247,6 +247,13 @@ press.LayoutsPlugin = (options = {}) => {
     });
 };
 
+// @description generic transform plugin
+press.TransformPlugin = (options = {}) => ({
+    transform: (context, node) => {
+        return null;
+    },
+});
+
 // @description frontmatter plugin
 press.FrontmatterPlugin = () => {
     return {
