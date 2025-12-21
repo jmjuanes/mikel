@@ -168,7 +168,7 @@ A generic transform plugin that will execute the provided `options.transform` fu
 
 ```javascript
 press.TransformPlugin({
-    transform: (context, node) => {
+    transform: node => {
         if (node.label === press.LABEL_PAGE && node.content && path.extname(node.source) === ".md") {
             node.content = `{{#markdown}}\n\n${node.content}\n\n{{/markdown}}\n`;
         }
