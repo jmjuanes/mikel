@@ -248,13 +248,12 @@ press.LayoutsPlugin = (options = {}) => {
 };
 
 // @description generic transform plugin
-press.TransformPlugin = (options = {}) => ({
-    transform: (context, node) => {
-        if (typeof options?.transform === "function") {
-            return options.transform(context, node);
-        }
-    },
-});
+press.TransformPlugin = (options = {}) => {
+    const transformFn = typeof options?.transform === "function" ? options.transform : options;
+    return {
+        transform: (_, node) => transformFn(node),
+    };
+};
 
 // @description frontmatter plugin
 press.FrontmatterPlugin = () => {
