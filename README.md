@@ -562,10 +562,10 @@ Mikel allows users to define custom functions that can be used within templates 
 
 Functions should be provided in the `options.functions` field of the options object when rendering a template. Each function is defined by a name and a corresponding function that performs the desired operation.
 
-Functions will receive a single object as argument, containing the following keys:
+Functions will receive a single `params` object as argument, containing the following keys:
 
 - `args`: an array containing the variables with the function is called in the template.
-- `opt`: an object containing the keyword arguments provided to the function.
+- `options`: an object containing the keyword arguments provided to the function.
 - `data`: the current data object where the function has been executed.
 - `variables`: an object containing the runtime variables available in the current context (e.g., `@root`, `@index`, etc.).
 
@@ -632,7 +632,7 @@ const data = {
 const options = {
     functions: {
         fullName: params => {
-            return `${params.opt.firstName} ${params.opt.lastName}`;
+            return `${params.options.firstName} ${params.options.lastName}`;
         }
     },
 };
