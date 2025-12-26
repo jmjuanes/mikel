@@ -433,10 +433,10 @@ const result = m(template, data, options);
 console.log(result); // Output: "Hello, World!"
 ```
 
-Custom helper functions receive a single object as argument, containing the following keys:
+Custom helper functions receive a single `params` object as argument, containing the following fields:
 
 - `args`: an array containing the variables with the helper is called in the template.
-- `opt`: an object containing the keyword arguments provided to the helper.
+- `options`: an object containing the keyword arguments provided to the helper.
 - `data`: the current data where the helper has been executed.
 - `variables`: an object containing the runtime variables available in the current context (e.g., `@root`, `@index`, etc.).
 - `fn`: a function that executes the template provided in the helper block and returns a string with the evaluated template in the provided context.
