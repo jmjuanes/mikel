@@ -1,6 +1,7 @@
 export type MikelHelper = (params: {
     args: any[];
-    opt: Record<string, any>;
+    opt?: Record<string, any>;
+    options: Record<string, any>;
     tokens: string[];
     data: Record<string, any>;
     variables: Record<string, any>;
@@ -14,7 +15,8 @@ export type MikelPartial = {
 
 export type MikelFunction = (params: {
     args: any[];
-    opt: Record<string, any>;
+    opt?: Record<string, any>;
+    options: Record<string,any>;
     data: Record<string, any>;
     variables: Record<string, any>;
 }) => string | void;
