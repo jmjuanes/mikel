@@ -75,9 +75,17 @@ const findClosingToken = (tokens, i, token) => {
 const defaultHelpers = {
     "each": p => {
         const items = typeof p.args[0] === "object" ? Object.entries(p.args[0] || {}) : [];
-        const limit = Math.min(items.length - (p.opt.skip || 0), p.opt.limit || items.length);
-        return items.slice(p.opt.skip || 0, (p.opt.skip || 0) + limit)
-            .map((item, index) => p.fn(item[1], {index: index, key: item[0], value: item[1], first: index === 0, last: index === items.length - 1}))
+        const limit = Math.min(items.length - (p.options?.skip || 0), p.options?.limit || items.length);
+        return items.slice(p.options?.skip || 0, (p.options?.skip || 0) + limit)
+            .map((item, index) => {
+                return p.fn(item[1], {
+                    index: index, 
+                    key: item[0],
+                    value: item[1],
+                    first: index === 0,
+                    last: index === items.length - 1,
+                });
+            })
             .join("");
     },
     "if": p => !!p.args[0] ? p.fn(p.data) : "",
@@ -183,7 +191,7 @@ const create = (options = {}) => {
             else if (tokens[i].startsWith("=")) {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), data, vars);
                 if (typeof ctx.functions[t] === "function") {
-                    output.push(ctx.functions[t]({args, opt, data, variables: vars}) || "");
+                    output.push(ctx.functions[t]({args, opt, options: opt, data, variables: vars}) || "");
                 }
             }
             else if (tokens[i].startsWith("/")) {
