@@ -402,7 +402,7 @@ describe("templating", () => {
         it("should allow to provide keyword arguments", () => {
             const options = {
                 helpers: {
-                    concat: params => params.args.join(params.opt.delimiter || " "),
+                    concat: params => params.args.join(params.options.delimiter || " "),
                 },
             };
             assert.equal(m(`{{#concat a b delimiter=","}}{{/concat}}`, {a: "hello", b: "world"}, options), "hello,world");
@@ -429,7 +429,7 @@ describe("templating", () => {
             };
             const options = {
                 helpers: {
-                    concat: params => params.opt.values.join(params.opt.delimiter || " "),
+                    concat: params => params.options.values.join(params.options.delimiter || " "),
                 },
             };
             assert.equal(m("{{#concat ...helperArgs}}{{/concat}}", data, options), "Hello,World");
@@ -444,7 +444,7 @@ describe("templating", () => {
             };
             const options = {
                 helpers: {
-                    concat: params => params.args.join(params.opt.delimiter || " "),
+                    concat: params => params.args.join(params.options.delimiter || " "),
                 },
             };
             assert.equal(m("{{#concat ...values ...options}}{{/concat}}", data, options), "Hello,World");
@@ -502,7 +502,7 @@ describe("templating", () => {
         const options = {
             functions: {
                 toUpperCase: params => params.args[0].toUpperCase(),
-                concat: params => params.args.join(params.opt.delimiter || " "),
+                concat: params => params.args.join(params.options.delimiter || " "),
                 equal: params => {
                     const values = params.args[0].split(" == ");
                     return values[0] === values[1] ? "YES" : "NO";
