@@ -191,7 +191,7 @@ const create = (options = {}) => {
             else if (tokens[i].startsWith("=")) {
                 const [t, args, opt] = parseArgs(tokens[i].slice(1), data, vars);
                 if (typeof ctx.functions[t] === "function") {
-                    output.push(ctx.functions[t]({args, opt, data, variables: vars}) || "");
+                    output.push(ctx.functions[t]({args, opt, options: opt, data, variables: vars}) || "");
                 }
             }
             else if (tokens[i].startsWith("/")) {
