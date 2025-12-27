@@ -60,7 +60,7 @@ press.createContext = (config = {}) => {
 
 // @description build the provided context
 press.buildContext = (context, nodesToBuild = null) => {
-    const nodes = Array.isArray(nodesToBuild) ? nodesToBuild : context.nodes;
+    const nodes = (Array.isArray(nodesToBuild) ? nodesToBuild : context.nodes).slice();
     const createNode = (nodeLabel, nodeObject = {}) => {
         nodes.push({ label: nodeLabel, content: "", ...nodeObject });
     };
