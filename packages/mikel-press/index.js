@@ -260,7 +260,7 @@ press.LayoutsPlugin = (options = {}) => {
 press.TransformPlugin = (options = {}) => {
     const transformFn = typeof options?.transform === "function" ? options.transform : options;
     return {
-        transform: (_, node) => transformFn(node),
+        transform: (context, node) => transformFn(node, context),
     };
 };
 
