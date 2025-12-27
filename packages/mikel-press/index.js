@@ -39,6 +39,7 @@ press.createContext = (config = {}) => {
             ...plugins,
         ],
         nodes: [],
+        actions: {},
     });
     getPlugins(context, "init").forEach(plugin => {
         return plugin.init(context);
@@ -59,7 +60,15 @@ press.createContext = (config = {}) => {
 
 // @description build the provided context
 press.buildContext = (context, nodesToBuild = null) => {
-    const nodes = Array.isArray(nodesToBuild) ? nodesToBuild : context.nodes;
+    const nodes = (Array.isArray(nodesToBuild) ? nodesToBuild : context.nodes).slice();
+    const createNode = (nodeLabel, nodeObject = {}) => {
+        nodes.push({ label: nodeLabel, content: "", ...nodeObject });
+    };
+    // 0. assign actions to context
+    Object.assign(context.actions, {
+        createPage: pageObject => createNode(press.LABEL_PAGE, pageObject),
+        createAsset: assetObject => createNode(press.LABEL_ASSET, assetObject),
+    });
     // 1. transform nodes
     getPlugins(context, "transform").forEach(plugin => {
         // special hook to initialize the transform plugin
@@ -251,7 +260,7 @@ press.LayoutsPlugin = (options = {}) => {
 press.TransformPlugin = (options = {}) => {
     const transformFn = typeof options?.transform === "function" ? options.transform : options;
     return {
-        transform: (_, node) => transformFn(node),
+        transform: (context, node) => transformFn(node, context),
     };
 };
 
