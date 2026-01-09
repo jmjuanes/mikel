@@ -377,5 +377,19 @@ press.CopyAssetsPlugin = (options = {}) => {
     };
 };
 
+// @description redirections plugin
+press.RedirectsPlugin = (options = {}) => {
+    return {
+        load: () => {
+            return (options.redirects || []).map(redirection => ({
+                source: item.from,
+                path: path.join(options?.basePath || ".", item.from),
+                label: press.LABEL_ASSET,
+                content: generateRedirectHTML(redirection.to),
+            }));
+        },
+    };
+};
+
 // export press generator
 export default press;
