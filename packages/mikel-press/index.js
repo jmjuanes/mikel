@@ -11,6 +11,26 @@ const applyLayout = page => {
     return `{{>>layout:${page.attributes.layout}}}\n\n${page.content}\n\n{{/layout:${page.attributes.layout}}}\n`;
 };
 
+// @description generate the content for the redirection page
+const generateRedirectHTML = (to, status) => {
+    const content = [
+        `<!DOCTYPE html>`,
+        `<html lang="en">`,
+        `<head>`,
+        `    <meta charset="utf-8" />`,
+        `    <title>Redirecting...</title>`,
+        `    <meta http-equiv="refresh" content="0; url=${to}" />`,
+        `    <link rel="canonical" href="${to}" />`,
+        `    <script>window.location.replace("${to}");</script>`,
+        `</head>`,
+        `<body>`,
+        `    <p>Redirectig to <a href="${to}">${to}</a>...</p>`,
+        `</body>`,
+        `</html>`,
+    ];
+    return content.join("\n");
+};
+
 // @description press main function
 // @param {Object} config - configuration object
 // @param {String} config.source - source folder
@@ -353,6 +373,20 @@ press.CopyAssetsPlugin = (options = {}) => {
                     path: path.join(options?.basePath || ".", item.to || path.basename(item.from)),
                     label: options?.label || press.LABEL_ASSET,
                 }));
+        },
+    };
+};
+
+// @description redirections plugin
+press.RedirectsPlugin = (options = {}) => {
+    return {
+        load: () => {
+            return (options.redirects || []).map(redirection => ({
+                source: item.from,
+                path: path.join(options?.basePath || ".", item.from),
+                label: press.LABEL_ASSET,
+                content: generateRedirectHTML(redirection.to),
+            }));
         },
     };
 };
