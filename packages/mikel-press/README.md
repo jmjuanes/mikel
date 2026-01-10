@@ -187,6 +187,21 @@ This plugin copies static files from the source to the destination.
 Options:
 - `options.patterns` (array): List of file patterns to copy. Each pattern should have `from` and `to`.
 
+### `press.RedirectsPlugin(options)`
+
+The RedirectsPlugin lets you define URL redirects. For each redirect rule, the plugin generates a small HTML file that forwards visitors to the target URL using both HTML and JavaScript fallbacks.
+
+Options:
+- `options.redirects` (array): list of redirections. Each redirection should have `from` and `to`.
+
+```javascript
+press.RedirectsPlugin({
+    redirects: [
+        { from: "/socials/github.html", to: "https://github.com/jmjuanes" },
+    ],
+});
+```
+
 ## API
 
 **mikel-press** exposes a single function that triggers the build with the given configuration object provided as an argument.
