@@ -27,8 +27,15 @@ const untokenize = (ts = [], s = "{{", e = "}}") => {
 };
 
 // @description tokenize args
-const tokenizeArgs = (str = "", tokens = []) => {
+const tokenizeArgs = (str = "", tokens = [], strings = []) => {
     let current = "", depth = 0;
+    // 1. replace strings
+    str = str.replace(/"([^"\\]|\\.)*"/g, (match) => {
+        const id = `__STR${strings.length}__`;
+        strings.push(match);
+        return id;
+    });
+    // 2. tokenize arguments
     for (let i = 0; i < str.length; i++) {
         const c = str[i];
         if (c === "(") {
@@ -46,10 +53,14 @@ const tokenizeArgs = (str = "", tokens = []) => {
             current = current + c;
         }
     }
+    // 3. add current token
     if (current.trim()) {
         tokens.push(current.trim());
     }
-    return tokens;
+    // 4. replace strings back and return parsed tokens
+    return tokens.map(token => {
+        return token.replace(/__STR(\d+)__/g, (_, i) => strings[i]);
+    });
 };
 
 // @description parse string arguments
