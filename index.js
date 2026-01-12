@@ -87,7 +87,7 @@ const parseArgs = (str = "", data = {}, vars = {}, fns = {}, argv = [], opt = {}
 
 // @description evaluate an expression
 const evaluateExpression = (str = "", data = {}, vars = {}, fns = {}) => {
-    const [ fnName, args, opt ] = parseArgs(str.slice(1, -1).trim(), data, vars, fns);
+    const [ fnName, args, opt ] = parseArgs(str, data, vars, fns);
     if (typeof fns[fnName] === "function") {
         return fns[fnName]({args, opt, options: opt, data, variables: vars}) || "";
     }
@@ -100,7 +100,7 @@ const evaluateExpression = (str = "", data = {}, vars = {}, fns = {}) => {
 const parse = (v, data = {}, vars = {}, fns = {}) => {
     if (v.startsWith("(") && v.endsWith(")")) {
         // return parseSubexpression(v, data, vars, fns);
-        return evaluateExpression(v, data, vars, fns);
+        return evaluateExpression(v.slice(1, -1).trim(), data, vars, fns);
     }
     if ((v.startsWith(`"`) && v.endsWith(`"`)) || /^-?\d+\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
         return JSON.parse(v);
@@ -247,7 +247,7 @@ const create = (options = {}) => {
                 // if (typeof ctx.functions[t] === "function") {
                 //     output.push(ctx.functions[t]({args, opt, options: opt, data, variables: vars}) || "");
                 // }
-                output.push(evaluateExpression(tokens[i].slice(1), data, vars, ctx.functions));
+                output.push(evaluateExpression(tokens[i].slice(1), data, vars, ctx.functions) || "");
             }
             else if (tokens[i].startsWith("/")) {
                 if (tokens[i].slice(1).trim() !== section) {
