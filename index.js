@@ -76,7 +76,7 @@ const parseArgs = (str = "", ctx, data = {}, vars = {}, argv = [], opt = {}) => 
 
 // @description parse subexpressions
 const parseSubexpression = (str = "", ctx, data = {}, vars = {}) => {
-    const [ fnName, args, opt ] = parseArgs(str.slice(1, -1).trim(), data, vars);
+    const [ fnName, args, opt ] = parseArgs(str.slice(1, -1).trim(), ctx, data, vars);
     return executeFunction(fnName, ctx, args, opt, data, vars);
 };
 
@@ -250,10 +250,10 @@ const create = (options = {}) => {
                 const t = tokens[i].split("||").map(v => {
                     // check if the returned value should not be escaped
                     if (v.trim().startsWith("!")) {
-                        return parse(v.trim().slice(1).trim(), data, vars);
+                        return parse(v.trim().slice(1).trim(), ctx, data, vars);
                     }
                     // escape the returned value
-                    return escape(parse(v.trim(), data, vars));
+                    return escape(parse(v.trim(), ctx, data, vars));
                 });
                 output.push(t.find(v => !!v) ?? "");
             }
