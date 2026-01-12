@@ -65,7 +65,6 @@ const tokenizeArgs = (str = "", tokens = [], strings = []) => {
 
 // @description parse string arguments
 const parseArgs = (str = "", data = {}, vars = {}, fns = {}, argv = [], opt = {}) => {
-    // const [t, ...args] = str.trim().match(/(?:[^\s"]+|"[^"]*")+/g);
     const [t, ...args] = tokenizeArgs(str.trim());
     args.forEach(argStr => {
         if (argStr.includes("=") && !argStr.startsWith(`"`)) {
@@ -99,7 +98,6 @@ const evaluateExpression = (str = "", data = {}, vars = {}, fns = {}) => {
 // @description parse a string value to a native type
 const parse = (v, data = {}, vars = {}, fns = {}) => {
     if (v.startsWith("(") && v.endsWith(")")) {
-        // return parseSubexpression(v, data, vars, fns);
         return evaluateExpression(v.slice(1, -1).trim(), data, vars, fns);
     }
     if ((v.startsWith(`"`) && v.endsWith(`"`)) || /^-?\d+\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
@@ -242,11 +240,6 @@ const create = (options = {}) => {
                 }
             }
             else if (tokens[i].startsWith("=")) {
-                // const [t, args, opt] = parseArgs(tokens[i].slice(1), ctx, data, vars);
-                // output.push(executeFunction(t, ctx, args, opt, data, vars));
-                // if (typeof ctx.functions[t] === "function") {
-                //     output.push(ctx.functions[t]({args, opt, options: opt, data, variables: vars}) || "");
-                // }
                 output.push(evaluateExpression(tokens[i].slice(1), data, vars, ctx.functions) || "");
             }
             else if (tokens[i].startsWith("/")) {
