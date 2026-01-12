@@ -593,6 +593,15 @@ describe("templating", () => {
             };
             assert.equal(m("{{=greet}}", data, options), "Hello Bob!");
         });
+
+        it("should support subexpressions", () => {
+            const options = {
+                functions: {
+                    sum: params => params.args[0] + params.args[1],
+                },
+            };
+            assert.equal(m("{{=sum (sum 1 1) 2}}", {}, options), "4");
+        });
     });
 
     describe("{{!-- --}}", () => {
