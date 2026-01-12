@@ -26,29 +26,65 @@ const untokenize = (ts = [], s = "{{", e = "}}") => {
     return ts.length > 0 ? ts.reduce((p, t, i) => p + (i % 2 === 0 ? e : s) + t) : "";
 };
 
+// @description tokenize args
+const tokenizeArgs = (str = "", tokens = []) => {
+    let current = "", depth = 0;
+    for (let i = 0; i < str.length; i++) {
+        const c = str[i];
+        if (c === "(") {
+            depth++;
+            current = current + c;
+        } else if (c === ")") {
+            depth--;
+            current = current + c;
+        } else if (c === " " && depth === 0) {
+            if (current.trim()) {
+                tokens.push(current.trim());
+            }
+            current = "";
+        } else {
+            current = current + c;
+        }
+    }
+    if (current.trim()) {
+        tokens.push(current.trim());
+    }
+    return tokens;
+};
+
 // @description parse string arguments
-const parseArgs = (str = "", data = {}, vars = {}, argv = [], opt = {}) => {
-    const [t, ...args] = str.trim().match(/(?:[^\s"]+|"[^"]*")+/g);
+const parseArgs = (str = "", ctx, data = {}, vars = {}, argv = [], opt = {}) => {
+    // const [t, ...args] = str.trim().match(/(?:[^\s"]+|"[^"]*")+/g);
+    const [t, ...args] = tokenizeArgs(str.trim());
     args.forEach(argStr => {
         if (argStr.includes("=") && !argStr.startsWith(`"`)) {
             const [k, v] = argStr.split("=");
-            opt[k] = parse(v, data, vars);
+            opt[k] = parse(v, ctx, data, vars);
         }
         else if (argStr.startsWith("...")) {
-            const value = parse(argStr.replace(/^\.{3}/, ""), data, vars);
+            const value = parse(argStr.replace(/^\.{3}/, ""), ctx, data, vars);
             if (!!value && typeof value === "object") {
                 Array.isArray(value) ? argv.push(...value) : Object.assign(opt, value);
             }
         }
         else {
-            argv.push(parse(argStr, data, vars));
+            argv.push(parse(argStr, ctx, data, vars));
         }
     });
     return [t, argv, opt];
 };
 
+// @description parse subexpressions
+const parseSubexpression = (str = "", ctx, data = {}, vars = {}) => {
+    const [ fnName, args, opt ] = parseArgs(str.slice(1, -1).trim(), data, vars);
+    return executeFunction(fnName, ctx, args, opt, data, vars);
+};
+
 // @description parse a string value to a native type
-const parse = (v, data = {}, vars = {}) => {
+const parse = (v, ctx, data = {}, vars = {}) => {
+    if (v.startsWith("(") && v.endsWith(")")) {
+        return parseSubexpression(v, ctx, data, vars);
+    }
     if ((v.startsWith(`"`) && v.endsWith(`"`)) || /^-?\d+\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
         return JSON.parse(v);
     }
@@ -69,6 +105,15 @@ const findClosingToken = (tokens, i, token) => {
         i = i + 1;
     }
     throw new Error(`Unmatched section end: {{${token}}}`);
+};
+
+// @description execute the provided function
+const executeFunction = (fnName, ctx, args = [], opt = {}, data = {}, vars = {}) => {
+    if (typeof ctx.functions[fnName] === "function") {
+        return ctx.functions[fnName]({args, opt, options: opt, data, variables: vars}) || "";
+    }
+    // if no function has been found with this name
+    throw new Error(`Unknown function '${fnName}'`);
 };
 
 // @description default helpers
@@ -113,7 +158,7 @@ const create = (options = {}) => {
                 output.push(tokens[i]);
             }
             else if (tokens[i].startsWith("#") && typeof ctx.helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
-                const [t, args, opt] = parseArgs(tokens[i].slice(1), data, vars);
+                const [t, args, opt] = parseArgs(tokens[i].slice(1), ctx, data, vars);
                 const j = i + 1;
                 i = findClosingToken(tokens, j, t);
                 output.push(ctx.helpers[t]({
@@ -167,7 +212,7 @@ const create = (options = {}) => {
                 i = i + lastIndex + 1;
             }
             else if (tokens[i].startsWith(">")) {
-                const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), data, vars);
+                const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), ctx, data, vars);
                 const blockContent = []; // to store partial block content
                 if (tokens[i].startsWith(">>")) {
                     i = compile(tokens, blockContent, data, vars, i + 1, t);
@@ -189,10 +234,11 @@ const create = (options = {}) => {
                 }
             }
             else if (tokens[i].startsWith("=")) {
-                const [t, args, opt] = parseArgs(tokens[i].slice(1), data, vars);
-                if (typeof ctx.functions[t] === "function") {
-                    output.push(ctx.functions[t]({args, opt, options: opt, data, variables: vars}) || "");
-                }
+                const [t, args, opt] = parseArgs(tokens[i].slice(1), ctx, data, vars);
+                output.push(executeFunction(t, ctx, args, opt, data, vars));
+                // if (typeof ctx.functions[t] === "function") {
+                //     output.push(ctx.functions[t]({args, opt, options: opt, data, variables: vars}) || "");
+                // }
             }
             else if (tokens[i].startsWith("/")) {
                 if (tokens[i].slice(1).trim() !== section) {
