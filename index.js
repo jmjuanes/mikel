@@ -53,37 +53,43 @@ const tokenizeArgs = (str = "", tokens = []) => {
 };
 
 // @description parse string arguments
-const parseArgs = (str = "", ctx, data = {}, vars = {}, argv = [], opt = {}) => {
+const parseArgs = (str = "", data = {}, vars = {}, fns = {}, argv = [], opt = {}) => {
     // const [t, ...args] = str.trim().match(/(?:[^\s"]+|"[^"]*")+/g);
     const [t, ...args] = tokenizeArgs(str.trim());
     args.forEach(argStr => {
         if (argStr.includes("=") && !argStr.startsWith(`"`)) {
             const [k, v] = argStr.split("=");
-            opt[k] = parse(v, ctx, data, vars);
+            opt[k] = parse(v, data, vars, fns);
         }
         else if (argStr.startsWith("...")) {
-            const value = parse(argStr.replace(/^\.{3}/, ""), ctx, data, vars);
+            const value = parse(argStr.replace(/^\.{3}/, ""), data, vars, fns);
             if (!!value && typeof value === "object") {
                 Array.isArray(value) ? argv.push(...value) : Object.assign(opt, value);
             }
         }
         else {
-            argv.push(parse(argStr, ctx, data, vars));
+            argv.push(parse(argStr, data, vars, fns));
         }
     });
     return [t, argv, opt];
 };
 
-// @description parse subexpressions
-const parseSubexpression = (str = "", ctx, data = {}, vars = {}) => {
-    const [ fnName, args, opt ] = parseArgs(str.slice(1, -1).trim(), ctx, data, vars);
-    return executeFunction(fnName, ctx, args, opt, data, vars);
+// @description evaluate an expression
+const evaluateExpression = (str = "", data = {}, vars = {}, fns = {}) => {
+    const [ fnName, args, opt ] = parseArgs(str.slice(1, -1).trim(), data, vars, fns);
+    if (typeof fns[fnName] === "function") {
+        return fns[fnName]({args, opt, options: opt, data, variables: vars}) || "";
+    }
+    // if no function has been found with this name
+    // throw new Error(`Unknown function '${fnName}'`);
+    return "";
 };
 
 // @description parse a string value to a native type
-const parse = (v, ctx, data = {}, vars = {}) => {
+const parse = (v, data = {}, vars = {}, fns = {}) => {
     if (v.startsWith("(") && v.endsWith(")")) {
-        return parseSubexpression(v, ctx, data, vars);
+        // return parseSubexpression(v, data, vars, fns);
+        return evaluateExpression(v, data, vars, fns);
     }
     if ((v.startsWith(`"`) && v.endsWith(`"`)) || /^-?\d+\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
         return JSON.parse(v);
@@ -105,15 +111,6 @@ const findClosingToken = (tokens, i, token) => {
         i = i + 1;
     }
     throw new Error(`Unmatched section end: {{${token}}}`);
-};
-
-// @description execute the provided function
-const executeFunction = (fnName, ctx, args = [], opt = {}, data = {}, vars = {}) => {
-    if (typeof ctx.functions[fnName] === "function") {
-        return ctx.functions[fnName]({args, opt, options: opt, data, variables: vars}) || "";
-    }
-    // if no function has been found with this name
-    throw new Error(`Unknown function '${fnName}'`);
 };
 
 // @description default helpers
@@ -158,7 +155,7 @@ const create = (options = {}) => {
                 output.push(tokens[i]);
             }
             else if (tokens[i].startsWith("#") && typeof ctx.helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
-                const [t, args, opt] = parseArgs(tokens[i].slice(1), ctx, data, vars);
+                const [t, args, opt] = parseArgs(tokens[i].slice(1), data, vars);
                 const j = i + 1;
                 i = findClosingToken(tokens, j, t);
                 output.push(ctx.helpers[t]({
@@ -212,7 +209,7 @@ const create = (options = {}) => {
                 i = i + lastIndex + 1;
             }
             else if (tokens[i].startsWith(">")) {
-                const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), ctx, data, vars);
+                const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), data, vars);
                 const blockContent = []; // to store partial block content
                 if (tokens[i].startsWith(">>")) {
                     i = compile(tokens, blockContent, data, vars, i + 1, t);
@@ -234,11 +231,12 @@ const create = (options = {}) => {
                 }
             }
             else if (tokens[i].startsWith("=")) {
-                const [t, args, opt] = parseArgs(tokens[i].slice(1), ctx, data, vars);
-                output.push(executeFunction(t, ctx, args, opt, data, vars));
+                // const [t, args, opt] = parseArgs(tokens[i].slice(1), ctx, data, vars);
+                // output.push(executeFunction(t, ctx, args, opt, data, vars));
                 // if (typeof ctx.functions[t] === "function") {
                 //     output.push(ctx.functions[t]({args, opt, options: opt, data, variables: vars}) || "");
                 // }
+                output.push(evaluateExpression(tokens[i].slice(1), data, vars, ctx.functions));
             }
             else if (tokens[i].startsWith("/")) {
                 if (tokens[i].slice(1).trim() !== section) {
@@ -250,10 +248,10 @@ const create = (options = {}) => {
                 const t = tokens[i].split("||").map(v => {
                     // check if the returned value should not be escaped
                     if (v.trim().startsWith("!")) {
-                        return parse(v.trim().slice(1).trim(), ctx, data, vars);
+                        return parse(v.trim().slice(1).trim(), data, vars);
                     }
                     // escape the returned value
-                    return escape(parse(v.trim(), ctx, data, vars));
+                    return escape(parse(v.trim(), data, vars));
                 });
                 output.push(t.find(v => !!v) ?? "");
             }
