@@ -26,29 +26,80 @@ const untokenize = (ts = [], s = "{{", e = "}}") => {
     return ts.length > 0 ? ts.reduce((p, t, i) => p + (i % 2 === 0 ? e : s) + t) : "";
 };
 
+// @description tokenize args
+const tokenizeArgs = (str = "", tokens = [], strings = []) => {
+    let current = "", depth = 0;
+    // 1. replace strings
+    str = str.replace(/"([^"\\]|\\.)*"/g, (match) => {
+        const id = `__STR${strings.length}__`;
+        strings.push(match);
+        return id;
+    });
+    // 2. tokenize arguments
+    for (let i = 0; i < str.length; i++) {
+        const c = str[i];
+        if (c === "(") {
+            depth++;
+            current = current + c;
+        } else if (c === ")") {
+            depth--;
+            current = current + c;
+        } else if (c === " " && depth === 0) {
+            if (current.trim()) {
+                tokens.push(current.trim());
+            }
+            current = "";
+        } else {
+            current = current + c;
+        }
+    }
+    // 3. add current token
+    if (current.trim()) {
+        tokens.push(current.trim());
+    }
+    // 4. replace strings back and return parsed tokens
+    return tokens.map(token => {
+        return token.replace(/__STR(\d+)__/g, (_, i) => strings[i]);
+    });
+};
+
 // @description parse string arguments
-const parseArgs = (str = "", data = {}, vars = {}, argv = [], opt = {}) => {
-    const [t, ...args] = str.trim().match(/(?:[^\s"]+|"[^"]*")+/g);
+const parseArgs = (str = "", data = {}, vars = {}, fns = {}, argv = [], opt = {}) => {
+    const [t, ...args] = tokenizeArgs(str.trim());
     args.forEach(argStr => {
         if (argStr.includes("=") && !argStr.startsWith(`"`)) {
             const [k, v] = argStr.split("=");
-            opt[k] = parse(v, data, vars);
+            opt[k] = parse(v, data, vars, fns);
         }
         else if (argStr.startsWith("...")) {
-            const value = parse(argStr.replace(/^\.{3}/, ""), data, vars);
+            const value = parse(argStr.replace(/^\.{3}/, ""), data, vars, fns);
             if (!!value && typeof value === "object") {
                 Array.isArray(value) ? argv.push(...value) : Object.assign(opt, value);
             }
         }
         else {
-            argv.push(parse(argStr, data, vars));
+            argv.push(parse(argStr, data, vars, fns));
         }
     });
     return [t, argv, opt];
 };
 
+// @description evaluate an expression
+const evaluateExpression = (str = "", data = {}, vars = {}, fns = {}) => {
+    const [ fnName, args, opt ] = parseArgs(str, data, vars, fns);
+    if (typeof fns[fnName] === "function") {
+        return fns[fnName]({args, opt, options: opt, data, variables: vars});
+    }
+    // if no function has been found with this name
+    // throw new Error(`Unknown function '${fnName}'`);
+    return "";
+};
+
 // @description parse a string value to a native type
-const parse = (v, data = {}, vars = {}) => {
+const parse = (v, data = {}, vars = {}, fns = {}) => {
+    if (v.startsWith("(") && v.endsWith(")")) {
+        return evaluateExpression(v.slice(1, -1).trim(), data, vars, fns);
+    }
     if ((v.startsWith(`"`) && v.endsWith(`"`)) || /^-?\d+\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
         return JSON.parse(v);
     }
@@ -189,10 +240,7 @@ const create = (options = {}) => {
                 }
             }
             else if (tokens[i].startsWith("=")) {
-                const [t, args, opt] = parseArgs(tokens[i].slice(1), data, vars);
-                if (typeof ctx.functions[t] === "function") {
-                    output.push(ctx.functions[t]({args, opt, options: opt, data, variables: vars}) || "");
-                }
+                output.push(evaluateExpression(tokens[i].slice(1), data, vars, ctx.functions) ?? "");
             }
             else if (tokens[i].startsWith("/")) {
                 if (tokens[i].slice(1).trim() !== section) {
