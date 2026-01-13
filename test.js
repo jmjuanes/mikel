@@ -604,6 +604,56 @@ describe("templating", () => {
         });
     });
 
+    describe("subexpressions", () => {
+        const options = {
+            functions: {
+                sum: params => params.args.reduce((a, b) => a + b, 0),
+                upper: params => params.args[0].toUpperCase(),
+                concat: params => params.args.join(params.options.delimiter || " "),
+            },
+        };
+
+        it("should support simple subexpressions", () => {
+            assert.equal(m("{{=sum (sum 3 4) 3}}", {}, options), "10");
+        });
+
+        it("should support nested subexpressions", () => {
+            assert.equal(m("{{=sum (sum 1 (sum 2 3)) 4}}", {}, options), "10");
+        });
+
+        it("should support subexpressions with variables", () => {
+            const data = {
+                price: 10,
+                tax: 2,
+                shipping: 3,
+            };
+            assert.equal(m("{{=sum (sum price tax) shipping}}", data, options), "15");
+        });
+            
+        it("should support subexpressions with strings", () => {
+            const data = {
+                name: "world",
+            };
+            assert.equal(m(`{{=concat "Hello" (upper name)}}`, data, options), "Hello WORLD");
+        });
+        
+        it("should support ubexpression with quoted strings containing spaces", () => {
+            assert.equal(m(`{{=concat (concat "Hello" "dear") "world"}}`, {}, options), "Hello dear world");
+        });
+        
+        it("should support multiple subexpressions in the same call", () => {
+            assert.equal(m("{{=sum (sum 1 2) (sum 3 4)}}", {}, options), "10");
+        });
+        
+        it("should support deeply nested subexpressions", () => {
+            assert.equal(m("{{=sum (sum (sum 1 1) (sum (sum 1 1) 2)) 1}}", {}, options), "7");
+        });
+        
+        it("should support subexpressions inside a string argument should not be evaluated", () => {
+            assert.equal(m(`{{=concat "(sum 1 2)" "test"}}`, {}, options), "(sum 1 2) test");
+        });
+    });
+
     describe("{{!-- --}}", () => {
         it("should remove single-line comments", () => {
             assert.equal(m("Hello {{!-- Susan --}}Bob"), "Hello Bob");
