@@ -592,7 +592,7 @@ console.log(result); // --> "My name is: John Doe"
 
 #### Expand function arguments using the spread operator
 
-> This feature was addedin `v0.20.0`.
+> This feature was added in `v0.20.0`.
 
 You can use the spread operator `...` to expand the arguments of a function. This allows you to pass an array of values as individual arguments to the function, or to pass an object as keyword arguments.
 
@@ -640,6 +640,66 @@ const options = {
 const result = m("Users: {{=fullName ...user1}} and {{=fullName ...user2}}", data, options);
 console.log(result); // --> "Users: John Doe and Alice Smith"
 ```
+
+Of course, Jose — here’s a version of the **Subexpressions** documentation written to perfectly match the tone, structure, and formatting conventions of the current README.  
+It follows the same patterns: short intro, version note, examples, concise explanations, no extra fluff.
+
+### Subexpressions  
+
+> Added in `v0.30.0`.
+
+Subexpressions allow you to evaluate a function call inside another function call. They are written using parentheses, and can be used anywhere a normal function argument is allowed. Example:
+
+```hbs
+{{=sum (sum 3 4) 3}}
+```
+
+In this example, the inner expression is evaluated first:
+
+- `(sum 3 4)` → `7`  
+- `sum 7 3` → `10`
+
+Result:
+
+```
+10
+```
+
+#### Nested subexpressions
+
+Subexpressions can be nested to any depth:
+
+```hbs
+{{=sum (sum 1 (sum 2 3)) 4}}
+```
+
+#### Using strings inside subexpressions
+
+Strings behave the same way inside subexpressions, including quoted strings with spaces:
+
+```hbs
+{{=concat "Hello " (upper name)}}
+```
+
+If `name = "world"`:
+
+```
+Hello WORLD
+```
+
+#### Variables inside subexpresspressions
+
+You can reference variables or paths normally:
+
+```hbs
+{{=sum (sum price tax) shipping}}
+```
+
+#### Limitations
+
+- Subexpressions are currently supported **only for functions** (`{{=...}}`).
+- Subexpressions inside helper arguments are not yet supported.
+- Parentheses must be balanced; malformed expressions will throw an error.
 
 
 ## API
