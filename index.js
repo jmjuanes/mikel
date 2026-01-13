@@ -88,7 +88,7 @@ const parseArgs = (str = "", data = {}, vars = {}, fns = {}, argv = [], opt = {}
 const evaluateExpression = (str = "", data = {}, vars = {}, fns = {}) => {
     const [ fnName, args, opt ] = parseArgs(str, data, vars, fns);
     if (typeof fns[fnName] === "function") {
-        return fns[fnName]({args, opt, options: opt, data, variables: vars}) || "";
+        return fns[fnName]({args, opt, options: opt, data, variables: vars});
     }
     // if no function has been found with this name
     // throw new Error(`Unknown function '${fnName}'`);
@@ -240,7 +240,7 @@ const create = (options = {}) => {
                 }
             }
             else if (tokens[i].startsWith("=")) {
-                output.push(evaluateExpression(tokens[i].slice(1), data, vars, ctx.functions) || "");
+                output.push(evaluateExpression(tokens[i].slice(1), data, vars, ctx.functions) ?? "");
             }
             else if (tokens[i].startsWith("/")) {
                 if (tokens[i].slice(1).trim() !== section) {
