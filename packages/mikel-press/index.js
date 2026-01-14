@@ -1,6 +1,11 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+// @description internal method to get the first node that ends with the provided string
+const getNodeFromSource = (nodes = [], endingStr = "") => {
+    return (nodes || []).find(node => (node.source || "").endsWith(endingStr || ""));
+};
+
 // @description get all plugins of the given type
 const getPlugins = (context, name) => {
     return context.plugins.filter(plugin => typeof plugin[name] === "function");
@@ -61,6 +66,14 @@ press.createContext = (config = {}) => {
         nodes: [],
         actions: {},
     });
+    // register helpers and funcions
+    context.template.addFunction("getPageUrl", params => {
+        return getNodeFromSource(params?.variables?.root?.site?.pages || [], params.args[0])?.url || "";
+    });
+    context.template.addFunction("getAssetUrl", params => {
+        return getNodeFromSource(params?.variables?.root?.site?.assets || [], params.args[0])?.url || "";
+    });
+    // initialize plugins
     getPlugins(context, "init").forEach(plugin => {
         return plugin.init(context);
     });
