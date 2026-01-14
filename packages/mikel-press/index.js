@@ -73,6 +73,18 @@ press.createContext = (config = {}) => {
     context.template.addFunction("getAssetUrl", params => {
         return getNodeFromSource(params?.variables?.root?.site?.assets || [], params.args[0])?.url || "";
     });
+    context.template.addHelper("pages", params => {
+        const draft = params?.options?.draft ?? params?.opt?.draft;
+        const collection = params?.opt?.collection || params?.options?.collection || null;
+        const items = (params.data?.site?.pages || []).filter(page => {
+            if (typeof draft === "boolean" && draft !== !!page?.attributes?.draft) {
+                return false;
+            }
+            return !collection || page.attributes?.collection === collection;
+        });
+        const limit = Math.min(items.length, params.options?.limit || params.opt?.limit || items.length);
+        return items.slice(0, limit).reverse().map((c, i) => params.fn(c, {index: i})).join("");
+    });
     // initialize plugins
     getPlugins(context, "init").forEach(plugin => {
         return plugin.init(context);
