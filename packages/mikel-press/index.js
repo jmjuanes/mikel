@@ -162,6 +162,10 @@ press.watchContext = (context, options = {}) => {
 
 // @description general utilities
 press.utils = {
+    // @description normalize a path
+    normalizePath: (rawPath) => {
+        return path.normalize("/" + rawPath);
+    },
     // @description read a file from disk
     // @param {String} file path to the file to read
     read: (file, encoding = "utf8") => {
@@ -197,7 +201,7 @@ press.utils = {
     // @description walk through the given folder and get all files
     // @params {String} folder folder to walk through
     // @params {Array|String} extensions extensions to include. Default: "*"
-    walkdir: (folder, extensions = "*") => {
+    walkdir: (folder, extensions = "*", exclude = []) => {
         const walkSync = (currentFolder, files = []) => {
             const fullFolderPath = path.join(folder, currentFolder);
             fs.readdirSync(fullFolderPath).forEach(file => {
@@ -264,7 +268,7 @@ press.SourcePlugin = (options = {}) => {
                     source: path.join(folder, file),
                     label: options.label || press.LABEL_PAGE,
                     path: path.join(options?.basePath || ".", file),
-                    url: path.normalize("/" + path.join(options?.basePath || ".", file)),
+                    url: press.utils.normalizePath(path.join(options?.basePath || ".", file)),
                 };
             });
         },
@@ -340,7 +344,7 @@ press.FrontmatterPlugin = () => {
                 node.title = node.attributes?.title || node.path;
                 if (node.attributes.permalink) {
                     node.path = node.attributes.permalink;
-                    node.url = path.normalize("/" + node.path);
+                    node.url = press.utils.normalizePath(node.path);
                 }
             }
         },
@@ -408,33 +412,37 @@ press.UsePlugin = mikelPlugin => {
 };
 
 // @description copy plugin
-press.CopyAssetsPlugin = (options = {}) => {
-    return {
-        load: () => {
-            return (options?.patterns || [])
-                .filter(item => item.from && fs.existsSync(path.resolve(item.from)))
-                .map(item => ({
-                    source: path.resolve(item.from),
-                    path: path.join(options?.basePath || ".", item.to || path.basename(item.from)),
-                    label: options?.label || press.LABEL_ASSET,
-                }));
-        },
-    };
-};
+press.CopyAssetsPlugin = (options = {}) => ({
+    name: "CopyAssetsPlugin",
+    load: () => {
+        const filesToCopy = (options?.patterns || []).filter(item => {
+            return item.from && fs.existsSync(path.resolve(item.from));
+        });
+        return filesToCopy.map(item => {
+            const filePath = path.join(options?.basePath || ".", item.to || path.basename(item.from));
+            return {
+                source: path.resolve(item.from),
+                path: filePath,
+                url: press.utils.normalizePath(filePath),
+                label: options?.label || press.LABEL_ASSET,
+            };
+        });
+    },
+});
 
 // @description redirections plugin
-press.RedirectsPlugin = (options = {}) => {
-    return {
-        load: () => {
-            return (options.redirects || []).map(redirection => ({
-                source: item.from,
-                path: path.join(options?.basePath || ".", item.from),
-                label: press.LABEL_ASSET,
-                content: generateRedirectHTML(redirection.to),
-            }));
-        },
-    };
-};
+press.RedirectsPlugin = (options = {}) => ({
+    name: "RedirectsPlugin",
+    load: () => {
+        return (options.redirects || []).map(redirection => ({
+            source: redirection.from,
+            path: path.join(options?.basePath || ".", redirection.from),
+            url: press.utils.normalizePath(path.join(options?.basePath || ".", redirection.from)),
+            label: press.LABEL_ASSET,
+            content: generateRedirectHTML(redirection.to),
+        }));
+    },
+});
 
 // export press generator
 export default press;
