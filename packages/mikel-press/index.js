@@ -194,6 +194,26 @@ press.utils = {
             .filter(file => (extensions === "*" || extensions.includes(path.extname(file))) && !exclude.includes(file))
             .filter(file => fs.statSync(path.join(folder, file)).isFile());
     },
+    // @description walk through the given folder and get all files
+    // @params {String} folder folder to walk through
+    // @params {Array|String} extensions extensions to include. Default: "*"
+    walkdir: (folder, extensions = "*") => {
+        const walkSync = (currentFolder, files = []) => {
+            const fullFolderPath = path.join(folder, currentFolder);
+            fs.readdirSync(fullFolderPath).forEach(file => {
+                const filePath = path.join(currentFolder, file);
+                const fullFilePath = path.join(fullFolderPath, file);
+                if (fs.statSync(fullFilePath).isDirectory()) {
+                    return walkSync(filePath, files);
+                }
+                if (extensions === "*" || extensions.includes(path.extname(file))) {
+                    files.push(filePath);
+                }
+            });
+            return files;
+        };
+        return walkSync("./", []);
+    },
     // @description watch for file changes
     // @param {String} filePath path to the file to watch
     // @param {Function} listener method to listen for file changes
