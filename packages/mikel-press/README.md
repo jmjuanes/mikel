@@ -110,6 +110,9 @@ Each HTML file processed by **mikel-press** will be handled by the mikel templat
 | `page.content` | The raw content of the page before begin processed by **mikel**. |
 | `page.title` | The title of the page. |
 | `page.path` | The path to the page. Example: `about/index.html`. |
+| `page.dir` | The directory of the page. Example: `about`. |
+| `page.name` | The name of the page without extension. Example: `index`. |
+| `page.ext` | The file extension of the page. Example: `.html`. |
 | `page.url` | The path to the page including the leading `/`. Example: `/about/index.html`. |
 | `page.attributes` | An object containing all the frontmatter variables in the page processed by `FrontmatterPlugin`. |
 
