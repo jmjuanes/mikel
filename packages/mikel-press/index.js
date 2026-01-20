@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import * as crypto from "node:crypto";
 
 // @description internal method to get the first node that ends with the provided string
 const getNodeFromSource = (nodes = [], endingStr = "") => {
@@ -162,9 +163,17 @@ press.watchContext = (context, options = {}) => {
 
 // @description general utilities
 press.utils = {
-    // @description normalize a path
-    normalizePath: (rawPath) => {
-        return path.normalize("/" + rawPath);
+    // @description generate the md5 hash of the given content
+    // @param {String} content - content to hash
+    // @returns {String} md5 hash
+    md5: content => {
+        return crypto.createHash("md5").update(content).digest("hex");
+    },
+    // @description generate a random identifier
+    // @param {Number} length - length of the identifier
+    // @returns {String} random identifier
+    randomId: (length = 20) => {
+        return crypto.randomBytes(Math.ceil(length / 2)).toString("hex").slice(0, length);
     },
     // @description read a file from disk
     // @param {String} file path to the file to read
@@ -268,7 +277,6 @@ press.SourcePlugin = (options = {}) => {
                     source: path.join(folder, file),
                     label: options.label || press.LABEL_PAGE,
                     path: path.join(options?.basePath || ".", file),
-                    url: press.utils.normalizePath(path.join(options?.basePath || ".", file)),
                 };
             });
         },
@@ -342,10 +350,7 @@ press.FrontmatterPlugin = () => {
                 node.content = result.body || "";
                 node.attributes = result.attributes || {};
                 node.title = node.attributes?.title || node.path;
-                if (node.attributes.permalink) {
-                    node.path = node.attributes.permalink;
-                    node.url = press.utils.normalizePath(node.path);
-                }
+                node.path = node.attributes?.permalink || node.path;
             }
         },
     };
@@ -393,6 +398,15 @@ press.ContentPagePlugin = (siteData = {}) => {
                     }
                 });
             }
+            // 5. fix pages and assets variables
+            [...siteData.pages, ...siteData.assets].forEach(node => {
+                return Object.assign(node, {
+                    ext: path.extname(node.path),
+                    name: path.basename(node.path, path.extname(node.path)),
+                    dir: path.dirname(node.path),
+                    url: path.normalize(path.join("/", node.path)),
+                });
+            });
         },
         transform: (context, node) => {
             if (node.label === press.LABEL_PAGE && typeof node.content === "string") {
@@ -419,11 +433,9 @@ press.CopyAssetsPlugin = (options = {}) => ({
             return item.from && fs.existsSync(path.resolve(item.from));
         });
         return filesToCopy.map(item => {
-            const filePath = path.join(options?.basePath || ".", item.to || path.basename(item.from));
             return {
                 source: path.resolve(item.from),
-                path: filePath,
-                url: press.utils.normalizePath(filePath),
+                path: path.join(options?.basePath || ".", item.to || path.basename(item.from)),
                 label: options?.label || press.LABEL_ASSET,
             };
         });
@@ -437,7 +449,6 @@ press.RedirectsPlugin = (options = {}) => ({
         return (options.redirects || []).map(redirection => ({
             source: redirection.from,
             path: path.join(options?.basePath || ".", redirection.from),
-            url: press.utils.normalizePath(path.join(options?.basePath || ".", redirection.from)),
             label: press.LABEL_ASSET,
             content: generateRedirectHTML(redirection.to),
         }));
