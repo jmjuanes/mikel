@@ -98,6 +98,7 @@ Each HTML file processed by **mikel-press** will be handled by the mikel templat
 | Variable | Description |
 |----------|-------------|
 | `site.pages` | A list containing all pages processed by **mikel-press**. |
+| `site.assets` | A list containing all assets files loaded by the `AssetsPlugin`. |
 | `site.data` | An object containing all data items loaded by `DataPlugin`. |
 | `site.partials` | A list containing all partials files loaded by the `PartialsPlugin`. |
 | `site.layouts` | A list containing all layout files loaded by the `LayoutsPlugin`. |
@@ -115,6 +116,16 @@ Each HTML file processed by **mikel-press** will be handled by the mikel templat
 | `page.ext` | The file extension of the page. Example: `.html`. |
 | `page.url` | The path to the page including the leading `/`. Example: `/about/index.html`. |
 | `page.attributes` | An object containing all the frontmatter variables in the page processed by `FrontmatterPlugin`. |
+
+#### Asset variables
+
+| Variable | Description |
+|----------|-------------|
+| `asset.path` | The path to the asset file. Example: `images/logo.png`. |
+| `asset.dir` | The directory of the asset file. Example: `images`. |
+| `asset.name` | The name of the asset file without extension. Example: `logo`. |
+| `asset.ext` | The file extension of the asset file. Example: `.png`. |
+| `asset.url` | The path to the asset file including the leading `/`. Example: `/images/logo.png`. |
 
 ## Plugins
 
