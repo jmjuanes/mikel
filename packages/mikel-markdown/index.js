@@ -47,7 +47,7 @@ const allExpressions = {
             ];
             const headingProps = {
                 class: headingClassNames.filter(Boolean).join(" "),
-                name: args[2].toLowerCase().replaceAll(" ", "-"),
+                id: args[2].toLowerCase().replaceAll(" ", "-"),
             };
             return render("h" + level, headingProps, args[2]);
         },
