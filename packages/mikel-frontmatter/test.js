@@ -158,6 +158,21 @@ describe("yamlParser", () => {
                 ],
             });
         });
+
+        it("should parse inline arrays", () => {
+            assert.deepEqual(parseYAML(`items: [apple, banana, cherry]`), {
+                items: ["apple", "banana", "cherry"],
+            });
+            assert.deepEqual(parseYAML(`colors: [red, green, blue]`), {
+                colors: ["red", "green", "blue"],
+            });
+            assert.deepEqual(parseYAML(`numbers: [1, 2, 3, 4]`), {
+                numbers: [1, 2, 3, 4],
+            });
+            assert.deepEqual(parseYAML(`flags: [true, false, true]`), {
+                flags: [true, false, true],
+            });
+        });
     });
 
     describe("complex structures", () => {
