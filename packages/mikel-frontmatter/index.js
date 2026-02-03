@@ -7,7 +7,7 @@ const parseValue = (str = "") => {
     }
     // 2. inline array
     if (str.startsWith("[") && str.endsWith("]")) {
-        return str.slice(1, -1).split(',').map(s => parseValue(s));
+        return str.slice(1, -1).split(",").map(item => parseValue(item.trim()));
     }
     // 3. inline object
     if (str.startsWith("{") && str.endsWith("}")) {
