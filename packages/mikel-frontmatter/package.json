@@ -1,0 +1,31 @@
+{
+    "name": "mikel-frontmatter",
+    "description": "A mikel plugin to define new data inside templates using a frontmatter-like syntax.",
+    "version": "0.0.0",
+    "type": "module",
+    "license": "MIT",
+    "author": "Josemi Juanes",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/jmjuanes/mikel.git",
+        "directory": "packages/mikel-frontmatter"
+    },
+    "exports": {
+        ".": "./index.js",
+        "./index.js": "./index.js",
+        "./package.json": "./package.json"
+    },
+    "types": "./index.d.ts",
+    "files": [
+        "README.md",
+        "index.js",
+        "index.d.ts"
+    ],
+    "keywords": [
+        "mikel",
+        "plugin",
+        "frontmatter",
+        "metadata",
+        "yaml"
+    ]
+}

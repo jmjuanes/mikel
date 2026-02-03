@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: [mikel-press, mikel-markdown, mikel-eval, mikel-cli]
+        package: [mikel-press, mikel-markdown, mikel-eval, mikel-frontmatter, mikel-cli]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
