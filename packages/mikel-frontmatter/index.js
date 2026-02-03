@@ -131,7 +131,7 @@ const parseFrontmatterBlock = (content = "", parser = null) => {
     }
     // 2. guess format (YAML or JSON)
     const trimmed = content.trim();
-    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
         return JSON.parse(content);
     }
     return parseYaml(content);
