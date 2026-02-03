@@ -19,8 +19,9 @@
     },
     "scripts": {
         "release": "node ./scripts/release.js",
-        "test": "node test.js && yarn test:eval && yarn test:markdown",
+        "test": "node test.js && yarn test:eval && yarn test:frontmatter && yarn test:markdown",
         "test:eval": "node ./packages/mikel-eval/test.js",
+        "test:frontmatter": "node ./packages/mikel-frontmatter/test.js",
         "test:markdown": "node ./packages/mikel-markdown/test.js"
     },
     "keywords": [
