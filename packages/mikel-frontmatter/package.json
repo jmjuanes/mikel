@@ -15,9 +15,11 @@
         "./index.js": "./index.js",
         "./package.json": "./package.json"
     },
+    "types": "./index.d.ts",
     "files": [
         "README.md",
-        "index.js"
+        "index.js",
+        "index.d.ts"
     ],
     "keywords": [
         "mikel",
