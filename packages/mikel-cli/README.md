@@ -34,6 +34,7 @@ $ mikel <template> [options]
 | `--help` | `-h` | Display help information |
 | `--data <file>` | `-D` | Path to JSON data file |
 | `--output <file>` | `-o` | Output file path |
+| `--plugin <module>` | `-L` | Load a Mikel plugin from a JavaScript module (can be used multiple times) |
 | `--partial <file>` | `-P` | Register a partial template (supports glob patterns, can be used multiple times) |
 | `--helper <file>` | `-H` | Register helper functions from a JavaScript module (supports glob patterns, can be used multiple times) |
 | `--function <file>` | `-F` | Register functions from a JavaScript module (supports glob patterns, can be used multiple times) |
