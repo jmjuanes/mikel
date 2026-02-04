@@ -138,7 +138,7 @@ const main = async (input = "", options = {}) => {
         let pluginModule;
         try {
             // try to import the plugin from node_modules
-            pluginModule = await import(pluginName)?.default;
+            pluginModule = (await import(pluginName))?.default;
             if (typeof pluginModule !== "function") {
                 throw new Error(`Plugin '${pluginName}' does not export a valid plugin function.`);
             }
@@ -186,7 +186,7 @@ const main = async (input = "", options = {}) => {
     // compile the template
     let result;
     try {
-        result = mikel(template, data || {}, { helpers, functions, partials });
+        result = mikelInstance(template, data || {});
     } catch (error) {
         throw new Error(`Template compilation failed: ${error.message}`);
     }
