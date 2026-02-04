@@ -55,44 +55,14 @@ const loadData = async (file = null) => {
     }
 };
 
-// @description load partials
-const loadPartials = async (patterns = []) => {
-    const partials = {}; // output partials object
-    const files = await expandGlobPatterns(patterns);
-    
-    // load all files
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i]; // path.resolve(process.cwd(), uniqueFiles[i]);
-        if (!existsSync(file)) {
-            throw new Error(`Partial file '${file}' was not found.`);
-        }
-        
-        // check if it's a file (not a directory)
-        const stats = await fs.stat(file);
-        if (!stats.isFile()) {
-            continue; // skip directories
-        }
-        
-        // load the file and save it as a partial
-        try {
-            partials[path.basename(file)] = await fs.readFile(file, "utf8");
-        } catch (error) {
-            throw new Error(`Failed to read partial file '${file}': ${error.message}`);
-        }
-    }
-    
-    return partials;
-};
-
 // @description load javascript modules
-const loadModules = async (patterns = []) => {
-    const result = {};
+const loadModules = async (patterns = [], callback) => {
     const files = await expandGlobPatterns(patterns);
     
     for (let i = 0; i < files.length; i++) {
         const file = files[i]; // path.resolve(process.cwd(), uniqueFiles[i]);
         if (!existsSync(file)) {
-            throw new Error(`Module '${file}' was not found.`);
+            throw new Error(`File '${file}' was not found.`);
         }
         
         // Check if it's a file (not a directory)
@@ -101,21 +71,13 @@ const loadModules = async (patterns = []) => {
             continue; // Skip directories
         }
         
-        const extension = path.extname(file);
-        if (extension !== ".js" && extension !== ".mjs") {
-            throw new Error(`Module '${file}' is not supported. Only ESM JavaScript (.js or .mjs) files are supported.`);
-        }
         // import the module
         try {
-            const content = (await import(file)) || {};
-            if (typeof content === "object" && !!content) {
-                Object.assign(result, content);
-            }
+            await callback(file);
         } catch (error) {
-            throw new Error(`Failed to import module '${file}': ${error.message}`);
+            throw new Error(`Failed to load '${file}': ${error.message}`);
         }
     }
-    return result;
 };
 
 // print the help of the tool
@@ -129,6 +91,7 @@ const printHelp = () => {
     console.log("  -P, --partial <file>    Register a partial (supports glob patterns, can be used multiple times)");
     console.log("  -H, --helper <file>     Register a helper (supports glob patterns, can be used multiple times)");
     console.log("  -F, --function <file>   Register a function (supports glob patterns, can be used multiple times)");
+    console.log("  -L, --plugin <file>     Load a plugin from node_modules (can be used multiple times)");
     console.log("  -D, --data <file>       Path to the data file to use (JSON)");
     console.log("  -o, --output <file>     Output file");
     console.log("");
@@ -165,16 +128,65 @@ const main = async (input = "", options = {}) => {
         throw new Error(`Failed to read template file '${inputPath}': ${error.message}`);
     }
 
-    // load additional data
+    // initialize the template engine
+    const mikelInstance = mikel.create({});
     const data = await loadData(options.data);
-    const partials = await loadPartials(options.partial);
-    const helpers = await loadModules(options.helper);
-    const functions = await loadModules(options.function);
+
+    // load plugins
+    for (let i = 0; i < (options.plugin || []).length; i++) {
+        const pluginName = options.plugin[i];
+        let pluginModule;
+        try {
+            // try to import the plugin from node_modules
+            pluginModule = (await import(pluginName))?.default;
+            if (typeof pluginModule !== "function") {
+                throw new Error(`Plugin '${pluginName}' does not export a valid plugin function.`);
+            }
+            mikelInstance.use(pluginModule());
+        } catch (error) {
+            throw new Error(`Failed to load plugin '${pluginName}': ${error.message}`);
+        }
+    }
+
+    // load additional partials, helpers, and functions
+    await loadModules(options.partial, async (file) => {
+        try {
+            mikelInstance.addPartial(path.basename(file), await fs.readFile(file, "utf8"));
+        } catch (error) {
+            throw new Error(`Failed to read partial file '${file}': ${error.message}`);
+        }
+    });
+    await loadModules(options.helper, async (file) => {
+        const extension = path.extname(file);
+        if (extension !== ".js" && extension !== ".mjs") {
+            throw new Error(`Module '${file}' is not supported. Only ESM JavaScript (.js or .mjs) files are supported.`);
+        }
+        // import the module
+        const content = (await import(file)) || {};
+        if (typeof content === "object" && !!content) {
+            Object.keys(content).forEach(helperName => {
+                mikelInstance.addHelper(helperName, content[helperName]);
+            });
+        }
+    });
+    await loadModules(options.function, async (file) => {
+        const extension = path.extname(file);
+        if (extension !== ".js" && extension !== ".mjs") {
+            throw new Error(`Module '${file}' is not supported. Only ESM JavaScript (.js or .mjs) files are supported.`);
+        }
+        // import the module
+        const content = (await import(file)) || {};
+        if (typeof content === "object" && !!content) {
+            Object.keys(content).forEach(functionName => {
+                mikelInstance.addFunction(functionName, content[functionName]);
+            });
+        }
+    });
 
     // compile the template
     let result;
     try {
-        result = mikel(template, data || {}, { helpers, functions, partials });
+        result = mikelInstance(template, data || {});
     } catch (error) {
         throw new Error(`Template compilation failed: ${error.message}`);
     }
@@ -231,6 +243,11 @@ const { positionals, values } = parseArgs({
         partial: {
             type: "string",
             short: "P",
+            multiple: true,
+        },
+        plugin: {
+            type: "string",
+            short: "L",
             multiple: true,
         },
         help: {
