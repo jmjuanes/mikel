@@ -57,20 +57,20 @@ const parseYaml = (yaml = "") => {
                 i++;
                 continue;
             }
-            // Return if dedented
+            // return if dedented
             if (indent < minIndent) {
                 return result;
             }
-            // Array item
+            // array item
             if (trimmed.startsWith("- ")) {
-                // First array item - initialize array
+                // first array item - initialize array
                 if (!Array.isArray(result)) {
                     result = [];
                 }
                 const content = trimmed.slice(2).trim();
                 i++;
+                // check for nested content on next lines
                 if (!content) {
-                    // Nested content on next lines
                     result.push(parse(indent + 2, {}));
                 }
                 // inline content with key:value (object)
@@ -80,7 +80,7 @@ const parseYaml = (yaml = "") => {
                     const key = content.slice(0, colonIdx).trim();
                     const value = content.slice(colonIdx + 1).trim();
                     obj[key] = !!value ? parseValue(value) : null;
-                    // Check for nested content on following lines
+                    // check for nested content on following lines
                     if (i < lines.length && getIndent(lines[i]) > indent) {
                         Object.assign(obj, parse(indent + 2, {}));
                     }
