@@ -1,6 +1,5 @@
 // @description parse a single value from YAML
 const parseValue = (str = "") => {
-    // str = str.trim();
     // 1. quoted strings
     if ((str.startsWith(`"`) && str.endsWith(`"`)) || (str.startsWith(`'`) && str.endsWith(`'`))) {
         return str.slice(1, -1);
@@ -78,17 +77,17 @@ const parseYaml = (yaml = "") => {
                 else if (content.includes(":")) {
                     const obj = {};
                     const colonIdx = content.indexOf(":");
-                    if (colonIdx > 0) {
-                        obj[content.slice(0, colonIdx).trim()] = parseValue(content.slice(colonIdx + 1).trim());
-                    }
+                    const key = content.slice(0, colonIdx).trim();
+                    const value = content.slice(colonIdx + 1).trim();
+                    obj[key] = !!value ? parseValue(value) : null;
                     // Check for nested content on following lines
                     if (i < lines.length && getIndent(lines[i]) > indent) {
                         Object.assign(obj, parse(indent + 2, {}));
                     }
                     result.push(obj);
                 }
+                // simple value
                 else {
-                    // Simple value
                     result.push(parseValue(content));
                 }
             }
