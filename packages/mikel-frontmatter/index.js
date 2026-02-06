@@ -42,6 +42,15 @@ const getIndent = (line = "") => {
     return line.length - line.trimStart().length;
 };
 
+// @description extract a key-value pair from a line
+const extractKeyValue = (line = "", separator = ":") => {
+    const separatorIndex = line.indexOf(separator);
+    return [
+        line.slice(0, separatorIndex).trim(),
+        line.slice(separatorIndex + 1).trim(),
+    ];
+};
+
 // @description parse a simple YAML string into an object
 const parseYaml = (yaml = "") => {
     const lines = yaml.split("\n");
@@ -76,9 +85,7 @@ const parseYaml = (yaml = "") => {
                 // inline content with key:value (object)
                 else if (content.includes(":")) {
                     const obj = {};
-                    const colonIdx = content.indexOf(":");
-                    const key = content.slice(0, colonIdx).trim();
-                    const value = content.slice(colonIdx + 1).trim();
+                    const [key, value] = extractKeyValue(content, ":");
                     obj[key] = !!value ? parseValue(value) : null;
                     // check for nested content on following lines
                     if (i < lines.length && getIndent(lines[i]) > indent) {
@@ -93,9 +100,7 @@ const parseYaml = (yaml = "") => {
             }
             // Key-value pair
             else if (trimmed.includes(":")) {
-                const colonIdx = trimmed.indexOf(":");
-                const key = trimmed.slice(0, colonIdx).trim();
-                const value = trimmed.slice(colonIdx + 1).trim();
+                const [key, value] = extractKeyValue(trimmed, ":");
                 i++;
                 if (!value) {
                     // Check if next line is an array or object
@@ -121,6 +126,36 @@ const parseYaml = (yaml = "") => {
     };
     return parse(0, {});
 };
+
+// @description parse a simple TOML string into an object
+const parseToml = (toml = "") => {
+    const lines = toml.split("\n");
+    const result = {};
+    let currentTable = result;
+    let currentTableName = "";
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!!line && !line.startsWith("#")) {
+            // 1. table header [section]
+            if (line.startsWith("[") && line.endsWith("]")) {
+                currentTableName = line.slice(1, -1).trim();
+                currentTable = result;
+                currentTableName.split(".").forEach(part => {
+                    if (typeof currentTable[part] === "undefined") {
+                        currentTable[part] = {};
+                    }
+                    currentTable = currentTable[part];
+                });
+            }
+            // 2. key-value pair: key = value
+            else if (line.includes("=")) {
+                const [key, value] = extractKeyValue(line, "=");
+                currentTable[key] = parseValue(value);
+            }
+        }
+    }
+    return result;
+}; 
 
 // @description internal method to parse the content of the frontmatter block
 const parseFrontmatterBlock = (content = "", parser = null) => {
@@ -159,6 +194,7 @@ const mikelFrontmatter = (options = {}) => {
 
 // assign additional metadata to the plugin function
 mikelFrontmatter.yamlParser = parseYaml;
+mikelFrontmatter.tomlParser = parseToml;
 
 // export the plugin as default
 export default mikelFrontmatter;
