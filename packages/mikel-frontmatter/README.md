@@ -3,7 +3,7 @@
 ![npm version](https://badgen.net/npm/v/mikel-frontmatter?labelColor=1d2734&color=21bf81)
 ![license](https://badgen.net/github/license/jmjuanes/mikel?labelColor=1d2734&color=21bf81)
 
-A [mikel](https://github.com/jmjuanes/mikel) plugin to define new data inside templates using a frontmatter-like syntax. Supports both **YAML** and **JSON** formats.
+A [mikel](https://github.com/jmjuanes/mikel) plugin to define new data inside templates using a frontmatter-like syntax. Supports **YAML**, **JSON**, and **TOML** formats.
 
 ## Installation
 
@@ -73,12 +73,39 @@ name: Bob
 <div>Hello {{@meta.name}}</div>
 ```
 
+#### format
+
+The format of the frontmatter content. Supported values are `yaml` (default), `json`, and `toml`.
+
+Example using JSON:
+
+```html
+{{#frontmatter format="json"}}
+{
+  "title": "My JSON Page",
+  "tags": ["json", "mikel"]
+}
+{{/frontmatter}}
+```
+
+Example using TOML:
+
+```html
+{{#frontmatter format="toml"}}
+title = "My TOML Page"
+tags = ["toml", "mikel"]
+
+[author]
+name = "John Doe"
+{{/frontmatter}}
+```
+
 ## API
 
 ### mikelFrontmatter(options?)
 
 Creates a new instance of the frontmatter plugin. It accepts an `options` parameters containing the following fields:
-- `parser` (Function): Custom parser function to override the default YAML/JSON parser.
+- `parser` (Function): Custom parser function to override the default YAML/JSON/TOML parser.
 
 
 ## Custom Parser
@@ -86,8 +113,8 @@ Creates a new instance of the frontmatter plugin. It accepts an `options` parame
 You can provide a custom parser function if you need special parsing logic:
 
 ```javascript
-const customParser = (content) => {
-    // Your custom parsing logic
+const customParser = (content, format) => {
+    // Your custom parsing logic based on content and format
     return parsedData;
 };
 
@@ -105,16 +132,29 @@ This plugin includes a basic YAML parser that supports:
 - ✅ Nested objects (with indentation).
 - ✅ Arrays (using `- item` syntax).
 - ✅ Arrays of objects.
-- ✅ Strings, numbers, booleans, null.
-- ✅ Quoted strings (`"..."` or `'...'`).
-- ✅ Comments (lines starting with `#`).
+- ✅ Inline arrays `[item1, item2, ...]`.
+- ✅ Inline objects `{key1: value1, key2: value2, ...}`.
 - ✅ Boolean variants (`yes/no`, `on/off`, `true/false`).
 - ❌ Multi-line strings (with `|` or `>`).
+- ❌ Multi-document syntax (`---`).
 - ❌ Anchors and aliases (`&anchor`, `*alias`).
-- ❌ Inline objects.
-- ❌ Complex YAML features.
+- ❌ Complex YAML features (e.g., tags, merge keys).
 
-For most common use cases, this subset is sufficient.
+## TOML Support
+
+The plugin includes a basic TOML parser that supports:
+
+- ✅ Key-value pairs (`key = "value"`).
+- ✅ Tables (`[section]`).
+- ✅ Nested tables (`[section.subsection]`).
+- ✅ Array of Tables (`[[table]]`).
+- ✅ Inline arrays and objects.
+- ✅ Strings, integers, floats, booleans, and null.
+- ✅ Comments (starting with `#`).
+- ❌ Multi-line strings (`"""` or `'''`).
+- ❌ Date and time values.
+- ❌ Dotted keys (e.g. `a.b = "val"`) in a single line.
+- ❌ Hex, octal, binary, and scientific notation.
 
 ## JSON Support
 

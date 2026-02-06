@@ -148,19 +148,36 @@ const parseToml = (toml = "") => {
     const lines = toml.split("\n");
     const result = {};
     let currentTable = result;
-    let currentTableName = "";
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!!line && !line.startsWith("#")) {
-            // 1. table header [section]
+            // 1. table header [section] or [[array]]
             if (line.startsWith("[") && line.endsWith("]")) {
-                currentTableName = line.slice(1, -1).trim();
+                const isArray = line.startsWith("[[") && line.endsWith("]]");
+                const path = isArray ? line.slice(2, -2).trim() : line.slice(1, -1).trim();
                 currentTable = result;
-                currentTableName.split(".").forEach(part => {
-                    if (typeof currentTable[part] === "undefined") {
-                        currentTable[part] = {};
+                path.split(".").forEach((part, index, parts) => {
+                    const isLast = index === parts.length - 1;
+                    // 1.1. if is an array of tables and is the last part
+                    if (isLast && isArray) {
+                        if (!Array.isArray(currentTable[part])) {
+                            currentTable[part] = [];
+                        }
+                        currentTable[part].push({});
+                        currentTable = currentTable[part][currentTable[part].length - 1];
                     }
-                    currentTable = currentTable[part];
+                    // 1.2. other cases
+                    else {
+                        if (!currentTable[part]) {
+                            currentTable[part] = {};
+                        }
+                        if (Array.isArray(currentTable[part])) {
+                            currentTable = currentTable[part][currentTable[part].length - 1];
+                        }
+                        else {
+                            currentTable = currentTable[part];
+                        }
+                    }
                 });
             }
             // 2. key-value pair: key = value
@@ -171,19 +188,23 @@ const parseToml = (toml = "") => {
         }
     }
     return result;
-}; 
+};
+ 
 
 // @description internal method to parse the content of the frontmatter block
-const parseFrontmatterBlock = (content = "", parser = null) => {
+const parseFrontmatterBlock = (content = "", format = "yaml", parser = null) => {
     // 1. use custom parser if provided
     if (typeof parser === "function") {
-        return parser(content);
+        return parser(content, format);
     }
-    // 2. guess format (YAML or JSON)
-    const trimmed = content.trim();
-    if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
-        return JSON.parse(content);
+    // 2. use the appropriate parser based on the format
+    if (format === "json") {
+        return JSON.parse(content.trim());
     }
+    if (format === "toml") {
+        return parseToml(content);
+    }
+    // 3. fallback to YAML
     return parseYaml(content);
 };
 
@@ -195,11 +216,10 @@ const mikelFrontmatter = (options = {}) => {
         helpers: {
             frontmatter: params => {
                 const variableName = params.options.as || "frontmatter";
-                // const format = params.options.format || "yaml";
-                const content = parseFrontmatterBlock(params.fn(params.data) || "", options.parser);
+                const format = params.options.format || "yaml";
                 // register the variable (overwrite if it already exists)
                 Object.assign(params.variables, {
-                    [variableName]: content,
+                    [variableName]: parseFrontmatterBlock(params.fn(params.data) || "", format, options.parser),
                 });
                 // don't render anything
                 return "";
