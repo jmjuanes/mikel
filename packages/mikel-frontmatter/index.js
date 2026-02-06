@@ -1,3 +1,29 @@
+// @description split a string by separator, ignoring separators inside quotes
+const splitSafe = (str = "", separator = ",") => {
+    const result = [];
+    let current = "", inQuotes = false, quoteChar = null;
+    for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+        if ((char === '"' || char === "'")) {
+            if (!inQuotes) {
+                inQuotes = true;
+                quoteChar = char;
+            } else if (char === quoteChar) {
+                inQuotes = false;
+                quoteChar = null;
+            }
+        }
+        if (char === separator && !inQuotes) {
+            result.push(current);
+            current = "";
+        } else {
+            current = current + char;
+        }
+    }
+    result.push(current);
+    return result;
+};
+
 // @description parse a single value from YAML
 const parseValue = (str = "") => {
     // 1. quoted strings
@@ -6,11 +32,11 @@ const parseValue = (str = "") => {
     }
     // 2. inline array
     if (str.startsWith("[") && str.endsWith("]")) {
-        return str.slice(1, -1).split(",").map(item => parseValue(item.trim()));
+        return splitSafe(str.slice(1, -1), ",").map(item => parseValue(item.trim()));
     }
     // 3. inline object
     if (str.startsWith("{") && str.endsWith("}")) {
-        return str.slice(1, -1).split(",").reduce((result, pair) => {
+        return splitSafe(str.slice(1, -1), ",").reduce((result, pair) => {
             const [key, value] = pair.split(":");
             if (key && value) {
                 result[key.trim()] = parseValue(value.trim());
@@ -42,32 +68,36 @@ const getIndent = (line = "") => {
     return line.length - line.trimStart().length;
 };
 
+// @description extract a key-value pair from a line
+const extractKeyValue = (line = "", separator = ":") => {
+    const separatorIndex = line.indexOf(separator);
+    return [
+        line.slice(0, separatorIndex).trim(),
+        line.slice(separatorIndex + 1).trim(),
+    ];
+};
+
 // @description parse a simple YAML string into an object
 const parseYaml = (yaml = "") => {
-    const lines = yaml.split("\n");
+    const lines = yaml.split("\n").filter(line => {
+        return line.trim() !== "" && !line.trim().startsWith("#");
+    });
     let i = 0;
     const parse = (minIndent = 0, result = {}) => {
         while (i < lines.length) {
-            const line = lines[i];
-            const trimmed = line.trim();
-            const indent = getIndent(line);
-      
-            // skip empty and comments
-            if (!trimmed || trimmed[0] === "#") {
-                i++;
-                continue;
-            }
-            // return if dedented
+            const line = lines[i].trim();
+            const indent = getIndent(lines[i]);
+            // 1. return if dedented
             if (indent < minIndent) {
                 return result;
             }
-            // array item
-            if (trimmed.startsWith("- ")) {
+            // 2. array item
+            else if (line.startsWith("- ")) {
                 // first array item - initialize array
                 if (!Array.isArray(result)) {
                     result = [];
                 }
-                const content = trimmed.slice(2).trim();
+                const content = line.slice(2).trim();
                 i++;
                 // check for nested content on next lines
                 if (!content) {
@@ -76,9 +106,7 @@ const parseYaml = (yaml = "") => {
                 // inline content with key:value (object)
                 else if (content.includes(":")) {
                     const obj = {};
-                    const colonIdx = content.indexOf(":");
-                    const key = content.slice(0, colonIdx).trim();
-                    const value = content.slice(colonIdx + 1).trim();
+                    const [key, value] = extractKeyValue(content, ":");
                     obj[key] = !!value ? parseValue(value) : null;
                     // check for nested content on following lines
                     if (i < lines.length && getIndent(lines[i]) > indent) {
@@ -91,28 +119,21 @@ const parseYaml = (yaml = "") => {
                     result.push(parseValue(content));
                 }
             }
-            // Key-value pair
-            else if (trimmed.includes(":")) {
-                const colonIdx = trimmed.indexOf(":");
-                const key = trimmed.slice(0, colonIdx).trim();
-                const value = trimmed.slice(colonIdx + 1).trim();
+            // 3. key-value pair
+            else if (line.includes(":")) {
+                const [key, value] = extractKeyValue(line, ":");
                 i++;
-                if (!value) {
-                    // Check if next line is an array or object
-                    if (i < lines.length && getIndent(lines[i]) > indent) {
-                        const nextLine = lines[i].trim();
-                        if (nextLine.startsWith("- ")) {
-                            result[key] = parse(indent + 2, []);
-                        } else {
-                            result[key] = parse(indent + 2, {});
-                        }
-                    } else {
-                        result[key] = null;
-                    }
-                } else {
+                result[key] = null;
+                // check for inline content with key: value (object)
+                if (value) {
                     result[key] = parseValue(value);
                 }
+                // check if the next line is an array or object
+                else if (!value && i < lines.length && getIndent(lines[i]) > indent) {
+                    result[key] = parse(indent + 2, lines[i].trim().startsWith("- ") ? [] : {});
+                }
             }
+            // 4. other case??
             else {
                 i++;
             }
@@ -122,17 +143,68 @@ const parseYaml = (yaml = "") => {
     return parse(0, {});
 };
 
+// @description parse a simple TOML string into an object
+const parseToml = (toml = "") => {
+    const lines = toml.split("\n");
+    const result = {};
+    let currentTable = result;
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!!line && !line.startsWith("#")) {
+            // 1. table header [section] or [[array]]
+            if (line.startsWith("[") && line.endsWith("]")) {
+                const isArray = line.startsWith("[[") && line.endsWith("]]");
+                const path = isArray ? line.slice(2, -2).trim() : line.slice(1, -1).trim();
+                currentTable = result;
+                path.split(".").forEach((part, index, parts) => {
+                    const isLast = index === parts.length - 1;
+                    // 1.1. if is an array of tables and is the last part
+                    if (isLast && isArray) {
+                        if (!Array.isArray(currentTable[part])) {
+                            currentTable[part] = [];
+                        }
+                        currentTable[part].push({});
+                        currentTable = currentTable[part][currentTable[part].length - 1];
+                    }
+                    // 1.2. other cases
+                    else {
+                        if (!currentTable[part]) {
+                            currentTable[part] = {};
+                        }
+                        if (Array.isArray(currentTable[part])) {
+                            currentTable = currentTable[part][currentTable[part].length - 1];
+                        }
+                        else {
+                            currentTable = currentTable[part];
+                        }
+                    }
+                });
+            }
+            // 2. key-value pair: key = value
+            else if (line.includes("=")) {
+                const [key, value] = extractKeyValue(line, "=");
+                currentTable[key] = parseValue(value);
+            }
+        }
+    }
+    return result;
+};
+ 
+
 // @description internal method to parse the content of the frontmatter block
-const parseFrontmatterBlock = (content = "", parser = null) => {
+const parseFrontmatterBlock = (content = "", format = "yaml", parser = null) => {
     // 1. use custom parser if provided
     if (typeof parser === "function") {
-        return parser(content);
+        return parser(content, format);
     }
-    // 2. guess format (YAML or JSON)
-    const trimmed = content.trim();
-    if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
-        return JSON.parse(content);
+    // 2. use the appropriate parser based on the format
+    if (format === "json") {
+        return JSON.parse(content.trim());
     }
+    if (format === "toml") {
+        return parseToml(content);
+    }
+    // 3. fallback to YAML
     return parseYaml(content);
 };
 
@@ -144,11 +216,10 @@ const mikelFrontmatter = (options = {}) => {
         helpers: {
             frontmatter: params => {
                 const variableName = params.options.as || "frontmatter";
-                // const format = params.options.format || "yaml";
-                const content = parseFrontmatterBlock(params.fn(params.data) || "", options.parser);
+                const format = params.options.format || "yaml";
                 // register the variable (overwrite if it already exists)
                 Object.assign(params.variables, {
-                    [variableName]: content,
+                    [variableName]: parseFrontmatterBlock(params.fn(params.data) || "", format, options.parser),
                 });
                 // don't render anything
                 return "";
@@ -159,6 +230,7 @@ const mikelFrontmatter = (options = {}) => {
 
 // assign additional metadata to the plugin function
 mikelFrontmatter.yamlParser = parseYaml;
+mikelFrontmatter.tomlParser = parseToml;
 
 // export the plugin as default
 export default mikelFrontmatter;

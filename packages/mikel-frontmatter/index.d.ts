@@ -7,7 +7,7 @@ export interface MikelFrontmatterOptions {
      * @param content - The raw frontmatter content string
      * @returns Parsed data object
      */
-    parser?: (content: string) => Record<string, any>;
+    parser?: (content: string, format: string) => Record<string, any>;
 }
 
 /**
@@ -16,6 +16,13 @@ export interface MikelFrontmatterOptions {
  * @returns Parsed object
  */
 export type YamlParser = (yaml: string) => Record<string, any>;
+
+/**
+ * TOML parser function
+ * @param toml - TOML string to parse
+ * @returns Parsed object
+ */
+export type TomlParser = (toml: string) => Record<string, any>;
 
 /**
  * Mikel frontmatter plugin
@@ -41,6 +48,7 @@ declare function mikelFrontmatter(options?: MikelFrontmatterOptions): {
  */
 declare namespace mikelFrontmatter {
     export const yamlParser: YamlParser;
+    export const tomlParser: TomlParser;
 }
 
 export default mikelFrontmatter;
