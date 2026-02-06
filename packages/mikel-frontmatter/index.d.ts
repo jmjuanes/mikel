@@ -7,7 +7,7 @@ export interface MikelFrontmatterOptions {
      * @param content - The raw frontmatter content string
      * @returns Parsed data object
      */
-    parser?: (content: string) => Record<string, any>;
+    parser?: (content: string, format: string) => Record<string, any>;
 }
 
 /**
