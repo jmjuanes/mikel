@@ -163,6 +163,12 @@ describe("yamlParser", () => {
             assert.deepEqual(parseYAML(`items: [apple, banana, cherry]`), {
                 items: ["apple", "banana", "cherry"],
             });
+            assert.deepEqual(parseYAML(`colors: [green, red, blue]`), {
+                colors: ["green", "red", "blue"],
+            });
+            assert.deepEqual(parseYAML(`colors: [ green ,  red ,  blue ]`), {
+                colors: ["green", "red", "blue"],
+            });
             assert.deepEqual(parseYAML(`colors: [red, green, blue]`), {
                 colors: ["red", "green", "blue"],
             });

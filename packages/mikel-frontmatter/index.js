@@ -1,3 +1,29 @@
+// @description split a string by separator, ignoring separators inside quotes
+const splitSafe = (str = "", separator = ",") => {
+    const result = [];
+    let current = "", inQuotes = false, quoteChar = null;
+    for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+        if ((char === '"' || char === "'")) {
+            if (!inQuotes) {
+                inQuotes = true;
+                quoteChar = char;
+            } else if (char === quoteChar) {
+                inQuotes = false;
+                quoteChar = null;
+            }
+        }
+        if (char === separator && !inQuotes) {
+            result.push(current);
+            current = "";
+        } else {
+            current += char;
+        }
+    }
+    result.push(current);
+    return result;
+};
+
 // @description parse a single value from YAML
 const parseValue = (str = "") => {
     // 1. quoted strings
@@ -6,11 +32,11 @@ const parseValue = (str = "") => {
     }
     // 2. inline array
     if (str.startsWith("[") && str.endsWith("]")) {
-        return str.slice(1, -1).split(",").map(item => parseValue(item.trim()));
+        return splitSafe(str.slice(1, -1), ",").map(item => parseValue(item.trim()));
     }
     // 3. inline object
     if (str.startsWith("{") && str.endsWith("}")) {
-        return str.slice(1, -1).split(",").reduce((result, pair) => {
+        return splitSafe(str.slice(1, -1), ",").reduce((result, pair) => {
             const [key, value] = pair.split(":");
             if (key && value) {
                 result[key.trim()] = parseValue(value.trim());
