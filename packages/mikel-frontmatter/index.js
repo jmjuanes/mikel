@@ -17,7 +17,7 @@ const splitSafe = (str = "", separator = ",") => {
             result.push(current);
             current = "";
         } else {
-            current += char;
+            current = current + char;
         }
     }
     result.push(current);
@@ -79,30 +79,25 @@ const extractKeyValue = (line = "", separator = ":") => {
 
 // @description parse a simple YAML string into an object
 const parseYaml = (yaml = "") => {
-    const lines = yaml.split("\n");
+    const lines = yaml.split("\n").filter(line => {
+        return line.trim() !== "" && !line.trim().startsWith("#");
+    });
     let i = 0;
     const parse = (minIndent = 0, result = {}) => {
         while (i < lines.length) {
-            const line = lines[i];
-            const trimmed = line.trim();
-            const indent = getIndent(line);
-      
-            // skip empty and comments
-            if (!trimmed || trimmed[0] === "#") {
-                i++;
-                continue;
-            }
-            // return if dedented
+            const line = lines[i].trim();
+            const indent = getIndent(lines[i]);
+            // 1. return if dedented
             if (indent < minIndent) {
                 return result;
             }
-            // array item
-            if (trimmed.startsWith("- ")) {
+            // 2. array item
+            else if (line.startsWith("- ")) {
                 // first array item - initialize array
                 if (!Array.isArray(result)) {
                     result = [];
                 }
-                const content = trimmed.slice(2).trim();
+                const content = line.slice(2).trim();
                 i++;
                 // check for nested content on next lines
                 if (!content) {
@@ -124,26 +119,21 @@ const parseYaml = (yaml = "") => {
                     result.push(parseValue(content));
                 }
             }
-            // Key-value pair
-            else if (trimmed.includes(":")) {
-                const [key, value] = extractKeyValue(trimmed, ":");
+            // 3. key-value pair
+            else if (line.includes(":")) {
+                const [key, value] = extractKeyValue(line, ":");
                 i++;
-                if (!value) {
-                    // Check if next line is an array or object
-                    if (i < lines.length && getIndent(lines[i]) > indent) {
-                        const nextLine = lines[i].trim();
-                        if (nextLine.startsWith("- ")) {
-                            result[key] = parse(indent + 2, []);
-                        } else {
-                            result[key] = parse(indent + 2, {});
-                        }
-                    } else {
-                        result[key] = null;
-                    }
-                } else {
+                result[key] = null;
+                // check for inline content with key: value (object)
+                if (value) {
                     result[key] = parseValue(value);
                 }
+                // check if the next line is an array or object
+                else if (!value && i < lines.length && getIndent(lines[i]) > indent) {
+                    result[key] = parse(indent + 2, lines[i].trim().startsWith("- ") ? [] : {});
+                }
             }
+            // 4. other case??
             else {
                 i++;
             }
