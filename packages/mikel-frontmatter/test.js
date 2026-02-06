@@ -231,6 +231,115 @@ describe("yamlParser", () => {
     });
 });
 
+describe("tomlParser", () => {
+    const parseTOML = mikelFrontmatter.tomlParser;
+    const joinLines = (lines = []) => lines.join("\n");
+
+    describe("basic types", () => {
+        it("should parse strings", () => {
+            const result = parseTOML("name = \"John Doe\"");
+            assert.deepEqual(result, { name: "John Doe" });
+        });
+
+        it("should parse integers", () => {
+            const result = parseTOML("age = 25");
+            assert.deepEqual(result, { age: 25 });
+        });
+
+        it("should parse floats", () => {
+            const result = parseTOML("price = 19.99");
+            assert.deepEqual(result, { price: 19.99 });
+        });
+
+        it("should parse booleans", () => {
+            const result = parseTOML("active = true\nvisible = false");
+            assert.deepEqual(result, { active: true, visible: false });
+        });
+
+        it("should parse null", () => {
+            const result = parseTOML("value = null");
+            assert.deepEqual(result, { value: null });
+        });
+    });
+
+    describe("tables", () => {
+        it("should parse simple tables", () => {
+            const toml = joinLines([
+                "[author]",
+                "name = \"John Doe\"",
+                "email = \"john@example.com\"",
+            ]);
+            const result = parseTOML(toml);
+            assert.deepEqual(result, {
+                author: {
+                    name: "John Doe",
+                    email: "john@example.com",
+                },
+            });
+        });
+
+        it("should parse nested tables", () => {
+            const toml = joinLines([
+                "[user.profile]",
+                "name = \"Alice\"",
+                "[user.settings]",
+                "theme = \"dark\"",
+            ]);
+            const result = parseTOML(toml);
+            assert.deepEqual(result, {
+                user: {
+                    profile: { name: "Alice" },
+                    settings: { theme: "dark" },
+                },
+            });
+        });
+    });
+
+    describe("complex structures", () => {
+        it("should parse inline arrays", () => {
+            const result = parseTOML("tags = [\"js\", \"node\", \"toml\"]");
+            assert.deepEqual(result, {
+                tags: ["js", "node", "toml"],
+            });
+        });
+
+        it("should parse inline objects", () => {
+            const result = parseTOML("user = { name: \"John\", age: 30 }");
+            assert.deepEqual(result, {
+                user: { name: "John", age: 30 },
+            });
+        });
+    });
+
+    describe("edge cases", () => {
+        it("should handle empty lines", () => {
+            const toml = joinLines([
+                "name = \"John\"",
+                "",
+                "age = 30",
+            ]);
+            const result = parseTOML(toml);
+            assert.deepEqual(result, { name: "John", age: 30 });
+        });
+
+        it("should handle comments", () => {
+            const toml = joinLines([
+                "# This is a comment",
+                "name = \"John\"",
+                "# Another comment",
+                "age = 30",
+            ]);
+            const result = parseTOML(toml);
+            assert.deepEqual(result, { name: "John", age: 30 });
+        });
+
+        it("should handle key-value pairs with different spacing", () => {
+            const result = parseTOML("a=1\nb = 2\nc  =  3");
+            assert.deepEqual(result, { a: 1, b: 2, c: 3 });
+        });
+    });
+});
+
 describe("mikelFrontmatter plugin", () => {
     const joinLines = (lines = []) => lines.join("\n");
     let render;
@@ -496,6 +605,45 @@ describe("mikelFrontmatter plugin", () => {
 
                 assert.equal(result, "String: text\nNumber: 42\nFloat: 3.14");
             });
+        });
+    });
+
+    describe("TOML format", () => {
+        beforeEach(() => {
+            render = mikel.create();
+            render.use(mikelFrontmatter({
+                parser: mikelFrontmatter.tomlParser,
+            }));
+        });
+
+        it("should extract TOML frontmatter and store in @frontmatter", () => {
+            const template = joinLines([
+                "{{#frontmatter}}",
+                "title = \"Hello World\"",
+                "author = \"John Doe\"",
+                "{{/frontmatter}}",
+                "Title: {{@frontmatter.title}}",
+                "Author: {{@frontmatter.author}}",
+            ]);
+
+            const result = render(template, {}).trim();
+
+            assert.equal(result, "Title: Hello World\nAuthor: John Doe");
+        });
+
+        it("should handle tables in TOML frontmatter", () => {
+            const template = joinLines([
+                "{{#frontmatter}}",
+                "[meta]",
+                "title = \"My Post\"",
+                "description = \"A great post\"",
+                "{{/frontmatter}}",
+                "{{@frontmatter.meta.title}} - {{@frontmatter.meta.description}}",
+            ]);
+
+            const result = render(template, {}).trim();
+
+            assert.equal(result, "My Post - A great post");
         });
     });
 });
