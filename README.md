@@ -371,7 +371,7 @@ console.log(m(`{{#ne name "bob"}}Not bob{{/ne}}`, {name: "John"})); // --> 'Not 
 ```
 
 #### with
-
+`
 > Added in `v0.10.0`.
 
 The `with` helper allows to change the data context of the block.
@@ -406,6 +406,24 @@ The `raw` helper allows to render the content of the block without evaluating it
 ```javascript
 console.log(m("{{#raw}}Hello {{name}}!{{/raw}}", {name: "Bob"})); // --> 'Hello {{name}}!'
 ```
+
+#### slot
+
+> Added in `v0.33.0`.
+
+The `slot` helper allows you to capture a block of template content and store it under a named key. Captured slots become available through the special `@slot` variable.
+    
+```javascript
+const template = `
+{{#slot "name"}}Bob{{/slot}}
+
+Hello {{@slot.name}}!
+`;
+
+console.log(m(template, {})); // --> 'Hello Bob!'
+```
+
+Slots are evaluated at render time, so they can contain variables, helpers, or any other template expressions. If the same slot name is defined more than once, **the last definition wins**.
 
 ### Custom Helpers
 

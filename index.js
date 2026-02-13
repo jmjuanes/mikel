@@ -146,6 +146,13 @@ const defaultHelpers = {
     "with": p => p.fn(p.args[0]),
     "escape": p => escape(p.fn(p.data)),
     "raw": p => untokenize(p.tokens),
+    "slot": params => {
+        if (typeof params.variables.slot === "undefined") {
+            params.variables.slot = {};
+        }
+        params.variables.slot[params.args[0].trim()] = params.fn(params.data);
+        return "";
+    },
 };
 
 // @description create a new instance of mikel

@@ -363,6 +363,16 @@ describe("templating", () => {
         });
     });
 
+    describe("{{#slot }}", () => {
+        it("should allow to register blocks of template contents", () => {
+            assert.equal(m(`{{#slot "name"}}Hello {{name}}!{{/slot}}{{@slot.name}}`, { name: "Bob"}), "Hello Bob!"); 
+        });
+
+        it("should overwrite existing blocks", () => {
+            assert.equal(m(`{{#slot "name"}}Bob{{/slot}}{{#slot "name"}}Susan{{/slot}}{{@slot.name}}`, {}), "Susan");
+        });
+    });
+
     describe("{{#customHelper }}", () => {
         it("should allow to execute a simple custom helper", () => {
             const options = {
