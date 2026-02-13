@@ -371,7 +371,7 @@ console.log(m(`{{#ne name "bob"}}Not bob{{/ne}}`, {name: "John"})); // --> 'Not 
 ```
 
 #### with
-`
+
 > Added in `v0.10.0`.
 
 The `with` helper allows to change the data context of the block.
