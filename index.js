@@ -153,6 +153,13 @@ const defaultHelpers = {
         params.variables.slot[params.args[0].trim()] = params.fn(params.data);
         return "";
     },
+    "macro": params => {
+        if (typeof params.variables.partials === "undefined") {
+            params.variables.partials = {};
+        }
+        params.variables.partials[params.args[0].trim()] = untokenize(params.tokens);
+        return "";
+    },
 };
 
 // @description create a new instance of mikel
