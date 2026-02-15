@@ -373,6 +373,14 @@ describe("templating", () => {
         });
     });
 
+    describe("{{#macro }}", () => {
+        const template = `{{#macro "foo"}}Hello {{name}}!{{/macro}}{{>foo name="Bob"}}`;
+
+        it("should allow to register partials", () => {
+            assert.equal(m(template, {}), "Hello Bob!");
+        });
+    });
+
     describe("{{#customHelper }}", () => {
         it("should allow to execute a simple custom helper", () => {
             const options = {

@@ -425,6 +425,20 @@ console.log(m(template, {})); // --> 'Hello Bob!'
 
 Slots are evaluated at render time, so they can contain variables, helpers, or any other template expressions. If the same slot name is defined more than once, **the last definition wins**.
 
+#### macro
+
+> Added in `v0.33.0`.
+
+The `macro` allows you to define partials directly in your template. Use `#macro` followed by the name to assign to the new partial to start the partial definition.
+
+Example:
+
+```javascript
+const template = `{{#macro "foo"}}Hello {{name}}!{{/macro}}{{>foo name="Bob"}}`;
+
+console.log(m(template, {})); // --> 'Hello Bob!'
+```
+
 ### Custom Helpers
 
 > Added in `v0.5.0`.
