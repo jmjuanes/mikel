@@ -205,40 +205,33 @@ const parser = (str = "", options = {}) => {
 
 // @description markdown plugin
 // @param options {object} options for this plugin
-const markdownPlugin = (options = {}) => {
-    return {
-        helpers: {
-            markdown: params => {
-                const tableOfContents = [];
-                const result = parser(params.fn(params.data) || "", {
-                    ...options,
-                    hooks: {
-                        beforeRender: (key, args) => {
-                            if (key === "heading") {
-                                tableOfContents.push({
-                                    level: args[1].length,
-                                    text: args[2],
-                                    slug: args[2].toLowerCase().replaceAll(" ", "-"),
-                                });
-                            }
-                        },
+const markdownPlugin = (options = {}) => ({
+    helpers: {
+        markdown: params => {
+            params.state.toc = []; // variable to save table of contents
+            return parser(params.fn(params.data) || "", {
+                ...options,
+                hooks: {
+                    beforeRender: (key, args) => {
+                        if (key === "heading") {
+                            params.state.toc.push({
+                                level: args[1].length,
+                                text: args[2],
+                                slug: args[2].toLowerCase().replaceAll(" ", "-"),
+                            });
+                        }
                     },
-                });
-                // create a new variable @toc with the generated table of contents
-                Object.assign(params.variables, {
-                    "toc": tableOfContents,
-                });
-                return result;
-            },
-            inlineMarkdown: params => {
-                return parser(params.fn(params.data) || "", {
-                    ...options,
-                    expressions: getInlineExpressions(options.expressions || allExpressions),
-                });
-            },
+                },
+            });
         },
-    };
-};
+        inlineMarkdown: params => {
+            return parser(params.fn(params.data) || "", {
+                ...options,
+                expressions: getInlineExpressions(options.expressions || allExpressions),
+            });
+        },
+    },
+});
 
 // assign additional options for this plugin
 markdownPlugin.parser = parser;
