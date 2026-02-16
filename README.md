@@ -237,19 +237,6 @@ Partial metadata can be accessed using the `@partial` variable inside the partia
 - `@partial.attributes`: the custom data provided to the partial (if any).
 - `@partial.context`: the current rendering context.
 
-### Inline partials
-
-> Added in `v0.28.0`.
-
-Inline partials allows you to define partials directly in your template. Use `>*` followed by the partial name to start the partial definition, and end the partial definition with a slash `/` followed by the partial name. For example, `{{>*foo}}` begins a partial definition called `foo`, and `{{/foo}}` ends it.
-
-Example:
-
-```javascript
-const result = m(`{{>*foo}}Hello {{name}}!{{/foo}}{{>foo name="Bob"}}`, {});
-// Output: 'Hello Bob!'
-```
-
 ### Helpers
 
 > Added in `v0.4.0`.
