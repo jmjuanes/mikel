@@ -561,8 +561,8 @@ describe("templating", () => {
             };
             const options = {
                 functions: {
-                    sayWelcome: ({ args, options }) => {
-                        return `Welcome, ${[args[0], options.surname || ""].filter(Boolean).join(" ")}`;
+                    sayWelcome: params => {
+                        return `Welcome, ${[params.args[0], params.options.surname || ""].filter(Boolean).join(" ")}`;
                     },
                 },
             };
