@@ -69,10 +69,10 @@ press.createContext = (config = {}) => {
     });
     // register helpers and funcions
     context.template.addFunction("getPageUrl", params => {
-        return getNodeFromSource(params?.variables?.root?.site?.pages || [], params.args[0])?.url || "";
+        return getNodeFromSource(params?.state?.root?.site?.pages || [], params.args[0])?.url || "";
     });
     context.template.addFunction("getAssetUrl", params => {
-        return getNodeFromSource(params?.variables?.root?.site?.assets || [], params.args[0])?.url || "";
+        return getNodeFromSource(params?.state?.root?.site?.assets || [], params.args[0])?.url || "";
     });
     context.template.addHelper("pages", params => {
         const draft = params?.options?.draft ?? params?.opt?.draft;

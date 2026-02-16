@@ -279,7 +279,7 @@ describe("templating", () => {
             assert.equal(m("_{{#if value}}Yes!{{/if}}_", {value: false}), "__");
         });
 
-        it("should read value from runtime variables", () => {
+        it("should read value from state variables", () => {
             assert.equal(m("{{#each items}}{{#if @first}}.{{/if}}{{.}}{{/each}}", {items: [0, 1, 2]}), ".012");
         });
     });
@@ -293,7 +293,7 @@ describe("templating", () => {
             assert.equal(m("_{{#unless value}}Yes!{{/unless}}_", {value: false}), "_Yes!_");
         });
 
-        it("should read value from runtime variables", () => {
+        it("should read value from state variables", () => {
             assert.equal(m("{{#each items}}{{.}}{{#unless @last}},{{/unless}}{{/each}}", {items: [0, 1, 2]}), "0,1,2");
         });
     });
@@ -468,13 +468,13 @@ describe("templating", () => {
             assert.equal(m("{{#concat ...values ...options}}{{/concat}}", data, options), "Hello,World");
         });
 
-        it("should support accessing to variables in helper params", () => {
+        it("should support accessing to state variables in helper params", () => {
             const data = {
                 name: "Bob",
             };
             const options = {
                 helpers: {
-                    greet: params => `Hello ${params.variables.root.name}!`,
+                    greet: params => `Hello ${params.state.root.name}!`,
                 },
             };
             assert.equal(m("{{#greet}}{{/greet}}", data, options), "Hello Bob!");
@@ -561,8 +561,8 @@ describe("templating", () => {
             };
             const options = {
                 functions: {
-                    sayWelcome: ({args, opt}) => {
-                        return `Welcome, ${[args[0], opt.surname || ""].filter(Boolean).join(" ")}`;
+                    sayWelcome: params => {
+                        return `Welcome, ${[params.args[0], params.options.surname || ""].filter(Boolean).join(" ")}`;
                     },
                 },
             };
@@ -575,8 +575,8 @@ describe("templating", () => {
             };
             const options = {
                 functions: {
-                    sum: ({args}) => {
-                        return args.reduce((a, b) => a + b, 0);
+                    sum: params => {
+                        return params.args.reduce((a, b) => a + b, 0);
                     },
                 },
             };
@@ -592,21 +592,21 @@ describe("templating", () => {
             };
             const options = {
                 functions: {
-                    concat: ({opt}) => {
-                        return (opt.values || []).join(opt.delimiter || " ");
+                    concat: params => {
+                        return (params.options.values || []).join(params.options.delimiter || " ");
                     },
                 },
             };
             assert.equal(m("result={{=concat ...functionArgs}}", data, options), "result=1,2,3");
         });
 
-        it("should support accessing to variables in function params", () => {
+        it("should support accessing to state variables in function params", () => {
             const data = {
                 name: "Bob",
             };
             const options = {
                 functions: {
-                    greet: params => `Hello ${params.variables.root.name}!`,
+                    greet: params => `Hello ${params.state.root.name}!`,
                 },
             };
             assert.equal(m("{{=greet}}", data, options), "Hello Bob!");

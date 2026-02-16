@@ -34,7 +34,7 @@ const m = mikel.create();
 m.use(mikelFrontmatter({ ... }));
 ```
 
-In your template, the `{{#frontmatter}}` helper allows you to define metadata at the beginning of your templates, similar to frontmatter in Markdown files. The parsed data is stored as a variable accessible via `@frontmatter` (or a custom variable name, see below).
+In your template, the `{{#frontmatter}}` helper allows you to define metadata at the beginning of your templates, similar to frontmatter in Markdown files. The parsed data is stored as a state variable accessible via `@frontmatter` (or a custom variable name, see below).
 
 Example:
 
@@ -64,7 +64,7 @@ The `{{#frontmatter}}` helper accepts the following arguments:
 
 #### as
 
-Custom variable name to save parsed metadata. If not provided, parsed metadata will be saved in `@frontmatter`. Example:
+Custom state variable name to save parsed metadata. If not provided, parsed metadata will be saved in `@frontmatter`. Example:
 
 ```html
 {{#frontmatter as="meta"}}

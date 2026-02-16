@@ -1,11 +1,10 @@
 export type MikelHelper = (params: {
     args: any[];
-    opt?: Record<string, any>;
     options: Record<string, any>;
     tokens: string[];
     data: Record<string, any>;
-    variables: Record<string, any>;
-    fn: (blockData?: Record<string, any>, blockVars?: Record<string, any>, blockOutput?: string[]) => string;
+    state: Record<string, any>;
+    fn: (blockData?: Record<string, any>, blockState?: Record<string, any>, blockOutput?: string[]) => string;
 }) => string;
 
 export type MikelPartial = {
@@ -15,24 +14,23 @@ export type MikelPartial = {
 
 export type MikelFunction = (params: {
     args: any[];
-    opt?: Record<string, any>;
     options: Record<string,any>;
     data: Record<string, any>;
-    variables: Record<string, any>;
+    state: Record<string, any>;
 }) => string | void;
 
 export type MikelContext = {
     helpers: Record<string, MikelHelper>;
     partials: Record<string, string | MikelPartial>;
     functions: Record<string, MikelFunction>;
-    variables: Record<string, any>;
+    state: Record<string, any>;
 };
 
 export type MikelOptions = {
     helpers?: Record<string, MikelHelper>;
     partials?: Record<string, string | MikelPartial>;
     functions?: Record<string, MikelFunction>;
-    variables?: Record<string, any>;
+    state?: Record<string, any>;
 };
 
 export type Mikel = {

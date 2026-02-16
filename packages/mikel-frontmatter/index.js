@@ -211,22 +211,20 @@ const parseFrontmatterBlock = (content = "", format = "yaml", parser = null) => 
 // @description plugin to register a #frontmatter helper
 // @param {Object} options - plugin options
 // @param {Function} options.parser - custom YAML parser function
-const mikelFrontmatter = (options = {}) => {
-    return {
-        helpers: {
-            frontmatter: params => {
-                const variableName = params.options.as || "frontmatter";
-                const format = params.options.format || "yaml";
-                // register the variable (overwrite if it already exists)
-                Object.assign(params.variables, {
-                    [variableName]: parseFrontmatterBlock(params.fn(params.data) || "", format, options.parser),
-                });
-                // don't render anything
-                return "";
-            },
+const mikelFrontmatter = (options = {}) => ({
+    helpers: {
+        frontmatter: params => {
+            const variableName = params.options.as || "frontmatter";
+            const format = params.options.format || "yaml";
+            // register the variable (overwrite if it already exists)
+            Object.assign(params.state, {
+                [variableName]: parseFrontmatterBlock(params.fn(params.data) || "", format, options.parser),
+            });
+            // don't render anything
+            return "";
         },
-    };
-};
+    },
+});
 
 // assign additional metadata to the plugin function
 mikelFrontmatter.yamlParser = parseYaml;
