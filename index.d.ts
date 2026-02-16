@@ -1,16 +1,17 @@
+export type MikelPartial = {
+    body: string;
+    data: Record<string, any>;
+};
+
 export type MikelHelper = (params: {
     args: any[];
     options: Record<string, any>;
     tokens: string[];
     data: Record<string, any>;
     state: Record<string, any>;
+    partials: Record<string, string | MikelPartial>;
     fn: (blockData?: Record<string, any>, blockState?: Record<string, any>, blockOutput?: string[]) => string;
 }) => string;
-
-export type MikelPartial = {
-    body: string;
-    data: Record<string, any>;
-};
 
 export type MikelFunction = (params: {
     args: any[];
