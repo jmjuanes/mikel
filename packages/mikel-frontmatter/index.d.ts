@@ -33,12 +33,11 @@ declare function mikelFrontmatter(options?: MikelFrontmatterOptions): {
     helpers: {
         frontmatter: (params: {
             args: any[];
-            opt?: Record<string, any>;
             options: Record<string, any>;
             tokens: string[];
             data: Record<string, any>;
-            variables: Record<string, any>;
-            fn: (blockData?: Record<string, any>, blockVars?: Record<string, any>, blockOutput?: string[]) => string;
+            state: Record<string, any>;
+            fn: (blockData?: Record<string, any>, blockState?: Record<string, any>, blockOutput?: string[]) => string;
         }) => string;
     };
 };
