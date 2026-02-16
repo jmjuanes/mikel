@@ -575,8 +575,8 @@ describe("templating", () => {
             };
             const options = {
                 functions: {
-                    sum: ({args}) => {
-                        return args.reduce((a, b) => a + b, 0);
+                    sum: params => {
+                        return params.args.reduce((a, b) => a + b, 0);
                     },
                 },
             };
@@ -592,8 +592,8 @@ describe("templating", () => {
             };
             const options = {
                 functions: {
-                    concat: ({opt}) => {
-                        return (opt.values || []).join(opt.delimiter || " ");
+                    concat: params => {
+                        return (params.options.values || []).join(params.options.delimiter || " ");
                     },
                 },
             };
