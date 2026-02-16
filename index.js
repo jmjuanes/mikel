@@ -157,7 +157,7 @@ const defaultHelpers = {
         if (typeof params.state.partials === "undefined") {
             params.state.partials = {};
         }
-        params.state.partials[params.args[0].trim()] = untokenize(params.tokens);
+        params.state.partials[params.args[0].trim()] = untokenize(params.tokens).trim();
         return "";
     },
 };
