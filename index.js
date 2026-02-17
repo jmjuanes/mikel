@@ -159,7 +159,7 @@ const create = (options = {}) => {
         state: {},
     });
     // internal method to compile the template
-    const compile = (tokens, output, data, state, index = 0, section = "") => {
+    const compile = (tokens, output, data = {}, state = {}, partials = {}, index = 0, section = "") => {
         let i = index;
         while (i < tokens.length) {
             if (i % 2 === 0) {
@@ -188,7 +188,7 @@ const create = (options = {}) => {
                             parent: data,
                             root: state.root,
                         };
-                        compile(tokens, blockOutput, blockData, blockState, j, t);
+                        compile(tokens, blockOutput, blockData, blockState, partials, j, t);
                         return blockOutput.join("");
                     },
                 }));
@@ -200,31 +200,29 @@ const create = (options = {}) => {
                 if (!negate && value && Array.isArray(value)) {
                     const j = i + 1;
                     (value.length > 0 ? value : [""]).forEach(item => {
-                        i = compile(tokens, value.length > 0 ? output : [], item, state, j, t);
+                        i = compile(tokens, value.length > 0 ? output : [], item, state, partials, j, t);
                     });
                 }
                 else {
                     const includeOutput = (!negate && !!value) || (negate && !!!value);
-                    i = compile(tokens, includeOutput ? output : [], data, state, i + 1, t);
+                    i = compile(tokens, includeOutput ? output : [], data, state, partials, i + 1, t);
                 }
             }
-            // DEPRECATED
             else if (tokens[i].startsWith(">*")) {
                 const t = tokens[i].slice(2).trim(), partialTokens = tokens.slice(i + 1);
                 const lastIndex = partialTokens.findIndex((token, j) => {
                     return j % 2 !== 0 && token.trim().startsWith("/") && token.trim().endsWith(t);
                 });
-                if (typeof ctx.partials[t] === "undefined") {
-                    ctx.partials[t] = untokenize(partialTokens.slice(0, lastIndex));
+                if (typeof partials[t] === "undefined") {
+                    partials[t] = untokenize(partialTokens.slice(0, lastIndex));
                 }
                 i = i + lastIndex + 1;
             }
             else if (tokens[i].startsWith(">")) {
                 const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), data, state);
                 const blockContent = []; // to store partial block content
-                const partials = Object.assign({}, ctx.partials, state.partials || {});
                 if (tokens[i].startsWith(">>")) {
-                    i = compile(tokens, blockContent, data, state, i + 1, t);
+                    i = compile(tokens, blockContent, data, state, partials, i + 1, t);
                 }
                 if (typeof partials[t] === "string" || typeof partials[t]?.body === "string") {
                     const partialBody = partials[t]?.body || partials[t];
@@ -240,7 +238,7 @@ const create = (options = {}) => {
                             context: partialData,
                         },
                     };
-                    compile(tokenize(partialBody), output, partialData, partialState, 0, "");
+                    compile(tokenize(partialBody), output, partialData, partialState, partials, 0, "");
                 }
             }
             else if (tokens[i].startsWith("=")) {
@@ -269,7 +267,7 @@ const create = (options = {}) => {
     };
     // entry method to compile the template with the provided data object
     const compileTemplate = (template, data = {}, output = []) => {
-        compile(tokenize(template), output, data, { root: data, ...ctx.state }, 0, "");
+        compile(tokenize(template), output, data, { root: data, ...ctx.state }, { ...ctx.partials }, 0, "");
         return output.join("");
     };
     // assign api methods and return method to compile the template
