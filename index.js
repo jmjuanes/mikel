@@ -210,9 +210,10 @@ const create = (options = {}) => {
             }
             else if (tokens[i].startsWith(">*")) {
                 const t = tokens[i].slice(2).trim(), partialTokens = tokens.slice(i + 1);
-                const lastIndex = partialTokens.findIndex((token, j) => {
-                    return j % 2 !== 0 && token.trim().startsWith("/") && token.trim().endsWith(t);
-                });
+                const lastIndex = findClosingToken(partialTokens, 0, t);
+                // const lastIndex = partialTokens.findIndex((token, j) => {
+                //     return j % 2 !== 0 && token.trim().startsWith("/") && token.trim().endsWith(t);
+                // });
                 if (typeof partials[t] === "undefined") {
                     partials[t] = untokenize(partialTokens.slice(0, lastIndex));
                 }
