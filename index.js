@@ -129,13 +129,8 @@ const defaultHelpers = {
         const limit = Math.min(items.length - (p.options?.skip || 0), p.options?.limit || items.length);
         return items.slice(p.options?.skip || 0, (p.options?.skip || 0) + limit)
             .map((item, index) => {
-                return p.fn(item[1], {
-                    index: index, 
-                    key: item[0],
-                    value: item[1],
-                    first: index === 0,
-                    last: index === items.length - 1,
-                });
+                const first = index === 0, last = index === items.length - 1;
+                return p.fn(item[1], { index: index, key: item[0], value: item[1], first, last });
             })
             .join("");
     },
@@ -151,13 +146,6 @@ const defaultHelpers = {
             params.state.slot = {};
         }
         params.state.slot[params.args[0].trim()] = params.fn(params.data);
-        return "";
-    },
-    "macro": params => {
-        if (typeof params.state.partials === "undefined") {
-            params.state.partials = {};
-        }
-        params.state.partials[params.args[0].trim()] = untokenize(params.tokens).trim();
         return "";
     },
 };
