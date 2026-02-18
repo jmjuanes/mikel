@@ -299,24 +299,20 @@ const evaluate = (str = "", options = {}) => {
 
 // @description evaluate plugin
 const evaluatePlugin = (options = {}) => {
-    return {
-        functions: {
-            eval: params => {
-                return evaluate(params.args[0], {
-                    values: params.data,
-                    functions: options.functions,
-                });
-            },
-        },
-        helpers: {
-            when: params => {
-                const condition = evaluate(params.args[0], {
-                    values: params.data,
-                    functions: options.functions,
-                });
-                return !!condition ? params.fn(params.data) : "";
-            },
-        },
+    return mikelInstance => {
+        mikelInstance.addFunction("eval", params => {
+            return evaluate(params.args[0], {
+                values: params.data,
+                functions: options?.functions || {},
+            });
+        });
+        mikelInstance.addHelper("when", params => {
+            const condition = evaluate(params.args[0], {
+                values: params.data,
+                functions: options?.functions || {},
+            });
+            return !!condition ? params.fn(params.data) : "";
+        });
     };
 };
 

@@ -5,6 +5,7 @@ import m from "../../index.js";
 
 describe("evaluate", () => {
     const e = evaluate.evaluate;
+    m.use(evaluate());
 
     describe("math operations", () => {
         it("should evaluate addition", () => {
@@ -124,32 +125,30 @@ describe("evaluate", () => {
 });
 
 describe("{{=eval}}", () => {
-    const options = evaluate();
     it("should evaluate expressions", () => {
-        assert.equal(m(`{{=eval "1 + 1"}}`, {}, options), "2");
-        assert.equal(m(`{{=eval "'Hello' + ' ' + 'World'"}}`, {}, options), "Hello World");
+        assert.equal(m(`{{=eval "1 + 1"}}`, {}), "2");
+        assert.equal(m(`{{=eval "'Hello' + ' ' + 'World'"}}`, {}), "Hello World");
     });
 
     it("should evaluate expressions with variables", () => {
-        assert.equal(m(`{{=eval "x + 1"}}`, {x: 1}, options), "2");
-        assert.equal(m(`{{=eval "x * y"}}`, {x: 2, y: 3}, options), "6");
-        assert.equal(m(`{{=eval "x + y"}}`, {x: 5, y: 10}, options), "15");
-        assert.equal(m(`{{=eval "'Hello ' + name"}}`, {name: "Bob"}, options), "Hello Bob");
-        assert.equal(m(`{{=eval "replace('Hello', 'Hello', name)"}}`, {name: "Alice"}, options), "Alice");
+        assert.equal(m(`{{=eval "x + 1"}}`, { x: 1 }), "2");
+        assert.equal(m(`{{=eval "x * y"}}`, { x: 2, y: 3 }), "6");
+        assert.equal(m(`{{=eval "x + y"}}`, { x: 5, y: 10 }), "15");
+        assert.equal(m(`{{=eval "'Hello ' + name"}}`, { name: "Bob" }), "Hello Bob");
+        assert.equal(m(`{{=eval "replace('Hello', 'Hello', name)"}}`, { name: "Alice" }), "Alice");
     });
 });
 
 describe("{{#when}}", () => {
-    const options = evaluate();
     it("should render content if expression is true", () => {
-        assert.equal(m(`{{#when "1 + 1"}}True{{/when}}`, {}, options), "True");
-        assert.equal(m(`{{#when "x > 1"}}Greater{{/when}}`, {x: 2}, options), "Greater");
-        assert.equal(m(`{{#when "'aa' == 'aa'"}}Equal{{/when}}`, {}, options), "Equal");
+        assert.equal(m(`{{#when "1 + 1"}}True{{/when}}`, {}), "True");
+        assert.equal(m(`{{#when "x > 1"}}Greater{{/when}}`, { x: 2 }), "Greater");
+        assert.equal(m(`{{#when "'aa' == 'aa'"}}Equal{{/when}}`, {}), "Equal");
     });
 
     it("should not render content if expression is false", () => {
-        assert.equal(m(`{{#when "(1 + 1) == 3"}}True{{/when}}`, {}, options), "");
-        assert.equal(m(`{{#when "x < 1"}}Less{{/when}}`, {x: 2}, options), "");
-        assert.equal(m(`{{#when "'aa' != 'aa'"}}Not Equal{{/when}}`, {}, options), "");
+        assert.equal(m(`{{#when "(1 + 1) == 3"}}True{{/when}}`, {}), "");
+        assert.equal(m(`{{#when "x < 1"}}Less{{/when}}`, { x: 2 }), "");
+        assert.equal(m(`{{#when "'aa' != 'aa'"}}Not Equal{{/when}}`, {}), "");
     });
 });
