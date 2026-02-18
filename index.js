@@ -279,11 +279,10 @@ const create = (options = {}) => {
         helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
         partials: Object.assign({}, options?.partials || {}),
         functions: options?.functions || {},
-        state: {},
     });
     // entry method to compile the template with the provided data object
     const compileTemplate = (template, data = {}, output = []) => {
-        compile(ctx, tokenize(template), output, data, { root: data, ...ctx.state }, 0, "");
+        compile(ctx, tokenize(template), output, data, { root: data }, 0, "");
         return output.join("");
     };
     // assign api methods and return method to compile the template
@@ -293,13 +292,9 @@ const create = (options = {}) => {
                 newOptions(ctx);
             }
             else if (!!newOptions && typeof newOptions === "object") {
-                ["helpers", "functions", "partials", "state"].forEach(field => {
+                ["helpers", "functions", "partials"].forEach(field => {
                     Object.assign(ctx[field], newOptions?.[field] || {});
                 });
-                // backward-compatibility with old variables field
-                if (typeof newOptions.variables === "object") {
-                    Object.assign(ctx.state, newOptions.variables || {});
-                }
             }
             return compileTemplate;
         },
