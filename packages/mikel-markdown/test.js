@@ -1,7 +1,7 @@
 import {describe, it} from "node:test";
 import assert from "node:assert";
 import markdown from "./index.js";
-import m from "../../index.js";
+import mikel from "../../index.js";
 
 describe("parser", () => {
     const mk = markdown.parser;
@@ -287,6 +287,7 @@ describe("hooks", () => {
 });
 
 describe("{{#markdown}}", () => {
+    const m = mikel.create();
     m.use(markdown());
 
     it("should parse markdown code", () => {
@@ -325,6 +326,7 @@ describe("{{#markdown}}", () => {
 });
 
 describe("{{#inlineMarkdown}}", () => {
+    const m = mikel.create();
     m.use(markdown());
 
     it("should parse inline markdown code", () => {
