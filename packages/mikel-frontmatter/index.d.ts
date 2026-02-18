@@ -29,18 +29,7 @@ export type TomlParser = (toml: string) => Record<string, any>;
  * @param options - Plugin configuration options
  * @returns Plugin object with helpers
  */
-declare function mikelFrontmatter(options?: MikelFrontmatterOptions): {
-    helpers: {
-        frontmatter: (params: {
-            args: any[];
-            options: Record<string, any>;
-            tokens: string[];
-            data: Record<string, any>;
-            state: Record<string, any>;
-            fn: (blockData?: Record<string, any>, blockState?: Record<string, any>, blockOutput?: string[]) => string;
-        }) => string;
-    };
-};
+declare function mikelFrontmatter(options?: MikelFrontmatterOptions): void;
 
 /**
  * YAML parser exposed for direct use
