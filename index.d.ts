@@ -19,23 +19,15 @@ export type MikelFunction = (params: {
     state: Record<string, any>;
 }) => string | void;
 
-export type MikelContext = {
-    helpers: Record<string, MikelHelper>;
-    partials: Record<string, string | MikelPartial>;
-    functions: Record<string, MikelFunction>;
-    state: Record<string, any>;
-};
-
 export type MikelOptions = {
     helpers?: Record<string, MikelHelper>;
     partials?: Record<string, string | MikelPartial>;
     functions?: Record<string, MikelFunction>;
-    state?: Record<string, any>;
 };
 
 export type Mikel = {
     (template: string, data?: any): string;
-    use(options: Partial<MikelOptions> | ((ctx: MikelContext) => void)): Mikel;
+    use(options: Partial<MikelOptions> | ((instance: Mikel) => void)): Mikel;
     addHelper(name: string, fn: MikelHelper): void;
     removeHelper(name: string): void;
     addFunction(name: string, fn: MikelFunction): void;

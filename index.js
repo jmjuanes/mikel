@@ -288,7 +288,7 @@ const create = (options = {}) => {
     return Object.assign(compileTemplate, {
         use: newOptions => {
             if (typeof newOptions === "function") {
-                newOptions(ctx);
+                newOptions(compileTemplate);
             }
             else if (!!newOptions && typeof newOptions === "object") {
                 ["helpers", "functions", "partials"].forEach(field => {
