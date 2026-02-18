@@ -205,9 +205,10 @@ const parser = (str = "", options = {}) => {
 
 // @description markdown plugin
 // @param options {object} options for this plugin
-const markdownPlugin = (options = {}) => ({
-    helpers: {
-        markdown: params => {
+const markdownPlugin = (options = {}) => {
+    return mikelInstance => {
+        // block markdown helper
+        mikelInstance.addHelper("markdown", params => {
             params.state.toc = []; // variable to save table of contents
             return parser(params.fn(params.data) || "", {
                 ...options,
@@ -223,15 +224,16 @@ const markdownPlugin = (options = {}) => ({
                     },
                 },
             });
-        },
-        inlineMarkdown: params => {
+        });
+        // inline markdown helper
+        mikelInstance.addHelper("inlineMarkdown", params => {
             return parser(params.fn(params.data) || "", {
                 ...options,
                 expressions: getInlineExpressions(options.expressions || allExpressions),
             });
-        },
-    },
-});
+        });
+    };
+};
 
 // assign additional options for this plugin
 markdownPlugin.parser = parser;

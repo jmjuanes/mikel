@@ -287,10 +287,10 @@ describe("hooks", () => {
 });
 
 describe("{{#markdown}}", () => {
-    const options = markdown();
+    m.use(markdown());
 
     it("should parse markdown code", () => {
-        assert.equal(m("{{#markdown}}This is `inline code`{{/markdown}}", {}, options), "<p>This is <code>inline code</code></p>");
+        assert.equal(m("{{#markdown}}This is `inline code`{{/markdown}}", {}), "<p>This is <code>inline code</code></p>");
     });
 
     it("should generate a toc", () => {
@@ -311,7 +311,7 @@ describe("{{#markdown}}", () => {
             {level: "3", text: "Heading-3", slug: "heading-3"},
         ];
 
-        m(code.join("\n"), {}, options)
+        m(code.join("\n"), {})
             .split("\n")
             .filter(line => line.trim().startsWith("::"))
             .forEach((line, index) => {
@@ -325,25 +325,25 @@ describe("{{#markdown}}", () => {
 });
 
 describe("{{#inlineMarkdown}}", () => {
-    const options = markdown();
+    m.use(markdown());
 
     it("should parse inline markdown code", () => {
-        assert.equal(m("{{#inlineMarkdown}}This is `inline code`{{/inlineMarkdown}}", {}, options), "This is <code>inline code</code>");
+        assert.equal(m("{{#inlineMarkdown}}This is `inline code`{{/inlineMarkdown}}", {}), "This is <code>inline code</code>");
     });
 
     it("should parse inline markdown code with HTML", () => {
-        assert.equal(m("{{#inlineMarkdown}}This is `<hr>`{{/inlineMarkdown}}", {}, options), "This is <code>&lt;hr&gt;</code>");
+        assert.equal(m("{{#inlineMarkdown}}This is `<hr>`{{/inlineMarkdown}}", {}), "This is <code>&lt;hr&gt;</code>");
     });
 
     it("should parse inline markdown with links", () => {
-        assert.equal(m("{{#inlineMarkdown}}[Home](home.html){{/inlineMarkdown}}", {}, options), `<a href="home.html">Home</a>`);
+        assert.equal(m("{{#inlineMarkdown}}[Home](home.html){{/inlineMarkdown}}", {}), `<a href="home.html">Home</a>`);
     });
 
     it("should parse inline markdown with strong", () => {
-        assert.equal(m("{{#inlineMarkdown}}This is **bold**{{/inlineMarkdown}}", {}, options), "This is <strong>bold</strong>");
+        assert.equal(m("{{#inlineMarkdown}}This is **bold**{{/inlineMarkdown}}", {}), "This is <strong>bold</strong>");
     });
 
     it("should parse inline markdown with italic", () => {
-        assert.equal(m("{{#inlineMarkdown}}This is *italic*{{/inlineMarkdown}}", {}, options), "This is <em>italic</em>");
+        assert.equal(m("{{#inlineMarkdown}}This is *italic*{{/inlineMarkdown}}", {}), "This is <em>italic</em>");
     });
 });
