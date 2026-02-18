@@ -1,3 +1,5 @@
+import type { Mikel } from "mikel";
+
 /**
  * Options for the mikel-frontmatter plugin
  */
@@ -29,7 +31,7 @@ export type TomlParser = (toml: string) => Record<string, any>;
  * @param options - Plugin configuration options
  * @returns Plugin object with helpers
  */
-declare function mikelFrontmatter(options?: MikelFrontmatterOptions): void;
+declare const mikelFrontmatter: (options?: MikelFrontmatterOptions) => ((mikelInstance: Mikel) => void);
 
 /**
  * YAML parser exposed for direct use
