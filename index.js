@@ -139,7 +139,6 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
                 tokens: tokens.slice(j, i),
                 data: data,
                 state: state,
-                context: ctx,
                 fn: (blockData = {}, customBlockState = {}, blockOutput = []) => {
                     const blockState = {
                         ...state,
