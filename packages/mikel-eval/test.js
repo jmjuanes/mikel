@@ -5,7 +5,6 @@ import m from "../../index.js";
 
 describe("evaluate", () => {
     const e = evaluate.evaluate;
-    m.use(evaluate());
 
     describe("math operations", () => {
         it("should evaluate addition", () => {
@@ -125,6 +124,8 @@ describe("evaluate", () => {
 });
 
 describe("{{=eval}}", () => {
+    m.use(evaluate());
+
     it("should evaluate expressions", () => {
         assert.equal(m(`{{=eval "1 + 1"}}`, {}), "2");
         assert.equal(m(`{{=eval "'Hello' + ' ' + 'World'"}}`, {}), "Hello World");
@@ -140,6 +141,8 @@ describe("{{=eval}}", () => {
 });
 
 describe("{{#when}}", () => {
+    m.use(evaluate());
+
     it("should render content if expression is true", () => {
         assert.equal(m(`{{#when "1 + 1"}}True{{/when}}`, {}), "True");
         assert.equal(m(`{{#when "x > 1"}}Greater{{/when}}`, { x: 2 }), "Greater");
