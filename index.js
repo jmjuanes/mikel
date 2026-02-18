@@ -122,6 +122,116 @@ const findClosingToken = (tokens, i, token) => {
     throw new Error(`Unmatched section end: {{${token}}}`);
 };
 
+// @description internal method to compile the template
+const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
+    let i = index;
+    while (i < tokens.length) {
+        if (i % 2 === 0) {
+            output.push(tokens[i]);
+        }
+        else if (tokens[i].startsWith("#") && typeof ctx.helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
+            const [t, args, opt] = parseArgs(tokens[i].slice(1), data, state);
+            const j = i + 1;
+            i = findClosingToken(tokens, j, t);
+            output.push(ctx.helpers[t]({
+                args: args,
+                options: opt,
+                tokens: tokens.slice(j, i),
+                data: data,
+                state: state,
+                fn: (blockData = {}, customBlockState = {}, blockOutput = []) => {
+                    const blockState = {
+                        ...state,
+                        ...customBlockState,
+                        helper: {
+                            name: t,
+                            options: opt || {},
+                            args: args || [],
+                            context: blockData,
+                        },
+                        parent: data,
+                        root: state.root,
+                    };
+                    compile(ctx, tokens, blockOutput, blockData, blockState, j, t);
+                    return blockOutput.join("");
+                },
+            }));
+        }
+        else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
+            const t = tokens[i].slice(1).trim();
+            const value = get(data, t);
+            const negate = tokens[i].startsWith("^");
+            if (!negate && value && Array.isArray(value)) {
+                const j = i + 1;
+                (value.length > 0 ? value : [""]).forEach(item => {
+                    i = compile(ctx, tokens, value.length > 0 ? output : [], item, state, j, t);
+                });
+            }
+            else {
+                const includeOutput = (!negate && !!value) || (negate && !!!value);
+                i = compile(ctx, tokens, includeOutput ? output : [], data, state, i + 1, t);
+            }
+        }
+        // DEPRECATED
+        else if (tokens[i].startsWith(">*")) {
+            const t = tokens[i].slice(2).trim(), partialTokens = tokens.slice(i + 1);
+            const lastIndex = partialTokens.findIndex((token, j) => {
+                return j % 2 !== 0 && token.trim().startsWith("/") && token.trim().endsWith(t);
+            });
+            if (typeof ctx.partials[t] === "undefined") {
+                ctx.partials[t] = untokenize(partialTokens.slice(0, lastIndex));
+            }
+            i = i + lastIndex + 1;
+        }
+        else if (tokens[i].startsWith(">")) {
+            const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), data, state);
+            const blockContent = []; // to store partial block content
+            const partials = Object.assign({}, ctx.partials, state.partials || {});
+            if (tokens[i].startsWith(">>")) {
+                i = compile(ctx, tokens, blockContent, data, state, i + 1, t);
+            }
+            if (typeof partials[t] === "string" || typeof partials[t]?.body === "string") {
+                const partialBody = partials[t]?.body || partials[t];
+                const partialData = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : data);
+                const partialState = {
+                    ...state,
+                    content: blockContent.join(""),
+                    partial: {
+                        name: t,
+                        attributes: partials[t]?.attributes || partials[t]?.data || {},
+                        args: args || [],
+                        options: opt || {},
+                        context: partialData,
+                    },
+                };
+                compile(ctx, tokenize(partialBody), output, partialData, partialState, 0, "");
+            }
+        }
+        else if (tokens[i].startsWith("=")) {
+            output.push(evaluateExpression(tokens[i].slice(1), data, state, ctx.functions) ?? "");
+        }
+        else if (tokens[i].startsWith("/")) {
+            if (tokens[i].slice(1).trim() !== section) {
+                throw new Error(`Unmatched section end: {{${tokens[i]}}}`);
+            }
+            break;
+        }
+        else {
+            const t = tokens[i].split("||").map(v => {
+                // check if the returned value should not be escaped
+                if (v.trim().startsWith("!")) {
+                    return parse(v.trim().slice(1).trim(), data, state);
+                }
+                // escape the returned value
+                return escape(parse(v.trim(), data, state));
+            });
+            output.push(t.find(v => !!v) ?? "");
+        }
+        i = i + 1;
+    }
+    return i;
+};
+
 // @description default helpers
 const defaultHelpers = {
     "each": p => {
@@ -168,120 +278,10 @@ const create = (options = {}) => {
         helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
         partials: Object.assign({}, options?.partials || {}),
         functions: options?.functions || {},
-        state: {},
     });
-    // internal method to compile the template
-    const compile = (tokens, output, data, state, index = 0, section = "") => {
-        let i = index;
-        while (i < tokens.length) {
-            if (i % 2 === 0) {
-                output.push(tokens[i]);
-            }
-            else if (tokens[i].startsWith("#") && typeof ctx.helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
-                const [t, args, opt] = parseArgs(tokens[i].slice(1), data, state);
-                const j = i + 1;
-                i = findClosingToken(tokens, j, t);
-                output.push(ctx.helpers[t]({
-                    args: args,
-                    options: opt,
-                    tokens: tokens.slice(j, i),
-                    data: data,
-                    state: state,
-                    fn: (blockData = {}, customBlockState = {}, blockOutput = []) => {
-                        const blockState = {
-                            ...state,
-                            ...customBlockState,
-                            helper: {
-                                name: t,
-                                options: opt || {},
-                                args: args || [],
-                                context: blockData,
-                            },
-                            parent: data,
-                            root: state.root,
-                        };
-                        compile(tokens, blockOutput, blockData, blockState, j, t);
-                        return blockOutput.join("");
-                    },
-                }));
-            }
-            else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
-                const t = tokens[i].slice(1).trim();
-                const value = get(data, t);
-                const negate = tokens[i].startsWith("^");
-                if (!negate && value && Array.isArray(value)) {
-                    const j = i + 1;
-                    (value.length > 0 ? value : [""]).forEach(item => {
-                        i = compile(tokens, value.length > 0 ? output : [], item, state, j, t);
-                    });
-                }
-                else {
-                    const includeOutput = (!negate && !!value) || (negate && !!!value);
-                    i = compile(tokens, includeOutput ? output : [], data, state, i + 1, t);
-                }
-            }
-            // DEPRECATED
-            else if (tokens[i].startsWith(">*")) {
-                const t = tokens[i].slice(2).trim(), partialTokens = tokens.slice(i + 1);
-                const lastIndex = partialTokens.findIndex((token, j) => {
-                    return j % 2 !== 0 && token.trim().startsWith("/") && token.trim().endsWith(t);
-                });
-                if (typeof ctx.partials[t] === "undefined") {
-                    ctx.partials[t] = untokenize(partialTokens.slice(0, lastIndex));
-                }
-                i = i + lastIndex + 1;
-            }
-            else if (tokens[i].startsWith(">")) {
-                const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), data, state);
-                const blockContent = []; // to store partial block content
-                const partials = Object.assign({}, ctx.partials, state.partials || {});
-                if (tokens[i].startsWith(">>")) {
-                    i = compile(tokens, blockContent, data, state, i + 1, t);
-                }
-                if (typeof partials[t] === "string" || typeof partials[t]?.body === "string") {
-                    const partialBody = partials[t]?.body || partials[t];
-                    const partialData = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : data);
-                    const partialState = {
-                        ...state,
-                        content: blockContent.join(""),
-                        partial: {
-                            name: t,
-                            attributes: partials[t]?.attributes || partials[t]?.data || {},
-                            args: args || [],
-                            options: opt || {},
-                            context: partialData,
-                        },
-                    };
-                    compile(tokenize(partialBody), output, partialData, partialState, 0, "");
-                }
-            }
-            else if (tokens[i].startsWith("=")) {
-                output.push(evaluateExpression(tokens[i].slice(1), data, state, ctx.functions) ?? "");
-            }
-            else if (tokens[i].startsWith("/")) {
-                if (tokens[i].slice(1).trim() !== section) {
-                    throw new Error(`Unmatched section end: {{${tokens[i]}}}`);
-                }
-                break;
-            }
-            else {
-                const t = tokens[i].split("||").map(v => {
-                    // check if the returned value should not be escaped
-                    if (v.trim().startsWith("!")) {
-                        return parse(v.trim().slice(1).trim(), data, state);
-                    }
-                    // escape the returned value
-                    return escape(parse(v.trim(), data, state));
-                });
-                output.push(t.find(v => !!v) ?? "");
-            }
-            i = i + 1;
-        }
-        return i;
-    };
     // entry method to compile the template with the provided data object
     const compileTemplate = (template, data = {}, output = []) => {
-        compile(tokenize(template), output, data, { root: data, ...ctx.state }, 0, "");
+        compile(ctx, tokenize(template), output, data, { root: data }, 0, "");
         return output.join("");
     };
     // assign api methods and return method to compile the template
@@ -291,13 +291,9 @@ const create = (options = {}) => {
                 newOptions(ctx);
             }
             else if (!!newOptions && typeof newOptions === "object") {
-                ["helpers", "functions", "partials", "state"].forEach(field => {
+                ["helpers", "functions", "partials"].forEach(field => {
                     Object.assign(ctx[field], newOptions?.[field] || {});
                 });
-                // backward-compatibility with old variables field
-                if (typeof newOptions.variables === "object") {
-                    Object.assign(ctx.state, newOptions.variables || {});
-                }
             }
             return compileTemplate;
         },
