@@ -286,16 +286,10 @@ const create = (options = {}) => {
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
-        use: newOptions => {
-            if (typeof newOptions === "function") {
-                newOptions(ctx);
-            }
-            else if (!!newOptions && typeof newOptions === "object") {
-                ["helpers", "functions", "partials"].forEach(field => {
-                    Object.assign(ctx[field], newOptions?.[field] || {});
-                });
-            }
-            return compileTemplate;
+        use: (newOptions = {}) => {
+            ["helpers", "functions", "partials"].forEach(field => {
+                Object.assign(ctx[field], newOptions?.[field] || {});
+            });
         },
         addHelper: (name, fn) => ctx.helpers[name] = fn,
         removeHelper: name => delete ctx.helpers[name],

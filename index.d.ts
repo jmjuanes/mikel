@@ -1,10 +1,15 @@
+export type MikelHelperCallback = (
+    data?: Record<string, any>,
+    state?: Record<string, any>,
+) => string;
+
 export type MikelHelper = (params: {
     args: any[];
     options: Record<string, any>;
     tokens: string[];
     data: Record<string, any>;
     state: Record<string, any>;
-    fn: (blockData?: Record<string, any>, blockState?: Record<string, any>, blockOutput?: string[]) => string;
+    fn: MikelHelperCallback;
 }) => string;
 
 export type MikelPartial = {
@@ -19,23 +24,15 @@ export type MikelFunction = (params: {
     state: Record<string, any>;
 }) => string | void;
 
-export type MikelContext = {
-    helpers: Record<string, MikelHelper>;
-    partials: Record<string, string | MikelPartial>;
-    functions: Record<string, MikelFunction>;
-    state: Record<string, any>;
-};
-
 export type MikelOptions = {
     helpers?: Record<string, MikelHelper>;
     partials?: Record<string, string | MikelPartial>;
     functions?: Record<string, MikelFunction>;
-    state?: Record<string, any>;
 };
 
 export type Mikel = {
     (template: string, data?: any): string;
-    use(options: Partial<MikelOptions> | ((ctx: MikelContext) => void)): Mikel;
+    use(options: Partial<MikelOptions>): void;
     addHelper(name: string, fn: MikelHelper): void;
     removeHelper(name: string): void;
     addFunction(name: string, fn: MikelFunction): void;
