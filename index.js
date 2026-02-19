@@ -277,17 +277,18 @@ const create = (options = {}) => {
     const ctx = Object.freeze({
         helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
         partials: Object.assign({}, options?.partials || {}),
-        functions: options?.functions || {},
+        functions: Object.assign({}, options?.functions || {}),
+        initialState: {}, // Object.assign({}, options?.initialState || {}),
     });
     // entry method to compile the template with the provided data object
     const compileTemplate = (template, data = {}, output = []) => {
-        compile(ctx, tokenize(template), output, data, { root: data }, 0, "");
+        compile(ctx, tokenize(template), output, data, { ...ctx.initialState, root: data }, 0, "");
         return output.join("");
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
         use: (newOptions = {}) => {
-            ["helpers", "functions", "partials"].forEach(field => {
+            ["helpers", "functions", "partials", "initialState"].forEach(field => {
                 Object.assign(ctx[field], newOptions?.[field] || {});
             });
         },
