@@ -789,6 +789,16 @@ describe("mikel.use", () => {
         });
         assert.equal(mk("Hello {{>foo}}", {}), "Hello bar");
     });
+
+    it("should allow to register initial state", () => {
+        const mk = mikel.create();
+        mk.use({
+            initialState: {
+                foo: "bar",
+            },
+        });
+        assert.equal(mk("Hello {{@foo}}", {}), "Hello bar");
+    });
 });
 
 describe("mikel.tokenize", () => {
