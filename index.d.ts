@@ -30,9 +30,13 @@ export type MikelOptions = {
     functions?: Record<string, MikelFunction>;
 };
 
+export type MikelUseOptions = MikelOptions & {
+    initialState?: Record<string, any>;
+};
+
 export type Mikel = {
     (template: string, data?: any): string;
-    use(options: Partial<MikelOptions>): void;
+    use(options: Partial<MikelUseOptions>): void;
     addHelper(name: string, fn: MikelHelper): void;
     removeHelper(name: string): void;
     addFunction(name: string, fn: MikelFunction): void;
