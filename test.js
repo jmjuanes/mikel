@@ -791,7 +791,7 @@ describe("mikel.use", () => {
     });
 
     it("should allow to register initial state", () => {
-        const mk = mikel.create();
+        const mk = m.create();
         mk.use({
             initialState: {
                 foo: "bar",
