@@ -388,7 +388,7 @@ describe("templating", () => {
 
         it("should allow to pass keyword attributes to a macro", () => {
             const template = `{{#macro "foo"}}{{this.key}}:{{this.value}}{{/macro}}{{#call "foo" key="foo" value="bar"}}{{/call}}`;
-            assert.equal(m(template, {}), "foo: bar");
+            assert.equal(m(template, {}), "foo:bar");
         });
 
         it("should allow to pass internal content as a @content state variable", () => {
