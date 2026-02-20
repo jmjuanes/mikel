@@ -264,10 +264,10 @@ const defaultHelpers = {
         return "";
     },
     "macro": params => {
-        if (typeof params.state.partials === "undefined") {
-            params.state.partials = {};
+        if (typeof params.state.macro === "undefined") {
+            params.state.macro = {};
         }
-        params.state.partials[params.args[0].trim()] = untokenize(params.tokens).trim();
+        params.state.macro[params.args[0].trim()] = untokenize(params.tokens).trim();
         return "";
     },
 };
