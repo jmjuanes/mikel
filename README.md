@@ -429,7 +429,7 @@ Slots are evaluated at render time, so they can contain variables, helpers, or a
 
 > Added in `v0.33.0`.
 
-The `macro` allows you to define partials directly in your template. Use `#macro` followed by the name to assign to the new partial to start the partial definition.
+The `macro` helper allows you to register reusable chunks of content. Use `#macro` followed by the name of the reusable chunk.
 
 Example:
 
@@ -439,10 +439,42 @@ const template = `
 Hello {{name}}!
 {{/macro}}
 
-{{>foo name="Bob"}}
+{{#call name="Bob"}}{{/call}}
 `;
 
 console.log(m(template, {})); // --> 'Hello Bob!'
+```
+
+Macros can be executed using the `#call` helper.
+
+#### call
+
+The `call` helper allows you to execute registered macros. Key-value arguments will be passed as a data to the content inside the macro:
+
+```javascript
+const template = `
+{{#macro "sayHello"}}
+Hello {{this.name}}!!
+{{/macro}}
+
+{{#call "sayHello" name="Bob"}}{{/call}}
+`;
+
+console.log(m(template, {})); // --> 'Hello Bob!!'
+```
+
+Content inside the `#call` tag will be passed to the macro content in a `@content` state variable, similar as block partials.
+
+```javascript
+const template = `
+{{#macro "foo"}}
+Hello {{@content}}!!
+{{/macro}}
+
+{{#call "foo"}}Bob{{/call}}
+`;
+
+console.log(m(template, {})); // --> 'Hello Bob!!'
 ```
 
 ### Custom Helpers
