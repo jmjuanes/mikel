@@ -374,10 +374,26 @@ describe("templating", () => {
     });
 
     describe("{{#macro }}", () => {
-        const template = `{{#macro "foo"}}Hello {{name}}!{{/macro}}{{>foo name="Bob"}}`;
-
-        it("should allow to register partials", () => {
+        it("should allow to register reusable chunks of content", () => {
+            const template = `{{#macro "foo"}}Hello {{this.name}}!{{/macro}}{{#call "foo" name="Bob"}}{{/call}}`;
             assert.equal(m(template, {}), "Hello Bob!");
+        });
+    });
+
+    describe("{{#call}}", () => {
+        it("should allow to call registered chunks of content", () => {
+            const template = `{{#macro "foo"}}{{this.name}}{{/macro}}{{#call "foo" name="Bob"}}{{/call}}`;
+            assert.equal(m(template, {}), "Bob");
+        });
+
+        it("should allow to pass keyword attributes to a macro", () => {
+            const template = `{{#macro "foo"}}{{this.key}}:{{this.value}}{{/macro}}{{#call "foo" key="foo" value="bar"}}{{/call}}`;
+            assert.equal(m(template, {}), "foo: bar");
+        });
+
+        it("should allow to pass internal content as a @content state variable", () => {
+            const template = `{{#macro "foo"}}Hello {{@content}}{{/macro}}{{#call "foo"}}Bob{{/call}}`;
+            assert.equal(m(template, {}), "Hello Bob");
         });
     });
 
