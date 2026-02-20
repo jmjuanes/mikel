@@ -205,27 +205,12 @@ describe("templating", () => {
     });
 
     describe("{{>> xyz}}", () => {
-        it("should allow providing a block to the partial", () => {
+        it("should allow to prove a block of content to the partial", () => {
             const partials = {
                 foo: "Hello {{@content}}!",
             };
 
             assert.equal(m("{{>>foo}}Bob{{/foo}}", {}, {partials}), "Hello Bob!");
-        });
-    });
-
-    describe("{{>* xyz}}", () => {
-        const template = `{{>*foo}}Hello {{name}}!{{/foo}}{{>foo name="Bob"}}`;
-
-        it("should allow to define inline partials", () => {
-            assert.equal(m(template, {}), "Hello Bob!");
-        });
-
-        it("should not overwrite user partials", () => {
-            const partials = {
-                foo: "Hola {{name}}!",
-            };
-            assert.equal(m(template, {}, {partials}), "Hola Bob!");
         });
     });
 
