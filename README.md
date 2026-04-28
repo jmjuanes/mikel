@@ -700,9 +700,6 @@ const result = m("Users: {{=fullName ...user1}} and {{=fullName ...user2}}", dat
 console.log(result); // --> "Users: John Doe and Alice Smith"
 ```
 
-Of course, Jose — here’s a version of the **Subexpressions** documentation written to perfectly match the tone, structure, and formatting conventions of the current README.  
-It follows the same patterns: short intro, version note, examples, concise explanations, no extra fluff.
-
 ### Subexpressions  
 
 > Added in `v0.30.0`.
