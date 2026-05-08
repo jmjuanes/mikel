@@ -32,6 +32,17 @@ describe("templating", () => {
             assert.equal(m(`Hello {{user.name}}`, data), "Hello Bob");
             assert.equal(m(`Hello {{this.user.name}}`, data), "Hello Bob");
         });
+
+        it("should support accessing items in an array", () => {
+            const data = {
+                users: [
+                    { name: "Bob" },
+                    { name: "Susan" },
+                ],
+            };
+            assert.equal(m(`Hello {{this.users.0.name}}`, data), "Hello Bob");
+            assert.equal(m(`Hello {{this.users.2.name}}`, data), "Hello ");
+        });
     });
 
     describe("{{! xyz }}", () => {
