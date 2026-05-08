@@ -25,11 +25,41 @@ Mikel supports the following syntax for rendering templates:
 
 Use double curly braces `{{ }}` to insert variables into your template. Variables will be replaced with the corresponding values from the data object.
 
+```javascript
+const result = m(`Hello {{name}}!`, { name: "World" });
+// Output: 'Hello World!'
+```
+
+#### Nested values
+
+You can access nested properties of an object using dot notation.
+
+```javascript
+const result = m(`Hello {{user.name}}!`, {
+    user: { name: "John" },
+});
+// Output: 'Hello John!'
+```
+
+#### Array values
+
+You can access a specific element of an array using its index in dot notation.
+
+```javascript
+const result = m(`Hello {{users.0.name}}!`, {
+    users: [
+        { name: "John" },
+        { name: "Alice" },
+    ],
+});
+// Output: 'Hello John!'
+```
+
 #### Fallback values
 
 > Added in `v0.14.0`.
 
-You can specify a value as a fallback, using the double OR `||` operator and followed by the fallback value.
+You can specify a fallback value using the `||` operator. This value will be used when the variable is not defined or is empty.
 
 ```javascript
 const result = m(`Hello {{name || "World"}}!`, {});
