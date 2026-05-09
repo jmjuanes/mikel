@@ -273,11 +273,20 @@ const defaultHelpers = {
 
 // @description create a new instance of mikel
 const create = (options = {}) => {
+    const hooks = new Map();
     const ctx = Object.freeze({
         helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
         partials: Object.assign({}, options?.partials || {}),
         functions: Object.assign({}, options?.functions || {}),
         initialState: {}, // Object.assign({}, options?.initialState || {}),
+        hooks: {
+            tap: (hookName, listener) => {
+                if (!hooks.has(hookName)) {
+                    hooks.set(hookName, []);
+                }
+                hooks.get(hookName).push(listener);
+            },
+        },
     });
     // entry method to compile the template with the provided data object
     const compileTemplate = (template, data = {}, output = []) => {
