@@ -122,6 +122,30 @@ const findClosingToken = (tokens, i, token) => {
     throw new Error(`Unmatched section end: {{${token}}}`);
 };
 
+// @description create a hook manager for the provided hooks map
+const createHookManager = (hooks = new Map()) => {
+    return {
+        add: (hookName, listener) => {
+            if (!hooks.has(hookName)) {
+                hooks.set(hookName, []);
+            }
+            hooks.get(hookName).push(listener);
+        },
+        call: (hookName, ...args) => {
+            hooks.get(hookName)?.forEach((listener) => listener(...args));
+        },
+        callWaterfall: (hookName, value) => {
+            return (hooks.get(hookName) || []).reduce((v, listener) => listener(v), value);
+        },
+        callBail: (hookName, ...args) => {
+            for (const listener of (hooks.get(hookName) || [])) {
+                const result = listener(...args);
+                if (typeof result !== "undefined") return result;
+            }
+        },
+    };
+};
+
 // @description internal method to compile the template
 const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
     let i = index;
@@ -273,32 +297,30 @@ const defaultHelpers = {
 
 // @description create a new instance of mikel
 const create = (options = {}) => {
-    const hooks = new Map();
     const ctx = Object.freeze({
         helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
         partials: Object.assign({}, options?.partials || {}),
         functions: Object.assign({}, options?.functions || {}),
         initialState: {}, // Object.assign({}, options?.initialState || {}),
-        hooks: {
-            tap: (hookName, listener) => {
-                if (!hooks.has(hookName)) {
-                    hooks.set(hookName, []);
-                }
-                hooks.get(hookName).push(listener);
-            },
-        },
+        hooks: createHookManager(new Map()),
     });
     // entry method to compile the template with the provided data object
     const compileTemplate = (template, data = {}, output = []) => {
+        template = ctx.hooks.callWaterfall("preRender", template);
         compile(ctx, tokenize(template), output, data, { ...ctx.initialState, root: data }, 0, "");
-        return output.join("");
+        return ctx.hooks.callWaterfall("postRender", output.join(""));
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
-        use: (newOptions = {}) => {
-            ["helpers", "functions", "partials", "initialState"].forEach(field => {
-                Object.assign(ctx[field], newOptions?.[field] || {});
-            });
+        use: (pluginValue) => {
+            if (typeof pluginValue === "function") {
+                pluginValue(ctx);
+            }
+            else if (typeof pluginValue === "object" && !!pluginValue) {
+                ["helpers", "functions", "partials", "initialState"].forEach(field => {
+                    Object.assign(ctx[field], pluginValue?.[field] || {});
+                });
+            }
         },
         addHelper: (name, fn) => ctx.helpers[name] = fn,
         removeHelper: name => delete ctx.helpers[name],
