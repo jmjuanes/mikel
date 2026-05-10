@@ -16,17 +16,18 @@
     "exports": {
         ".": "./index.js",
         "./index.js": "./index.js",
+        "./cli.js": "./cli.js",
         "./package.json": "./package.json"
     },
     "bin": {
-        "mikel": "index.js"
+        "mikel": "cli.js"
     },
     "peerDependencies": {
         "mikel": "*"
     },
     "files": [
         "README.md",
-        "index.js"
+        "cli.js"
     ],
     "keywords": [
         "mikel",
