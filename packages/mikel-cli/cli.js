@@ -245,7 +245,9 @@ const main = async (inputOption = "", options = {}) => {
     });
     // process input files
     for (let i = 0; i < inputs.length; i++) {
-        const inputPath = path.resolve(process.cwd(), inputs[i]);
+        // const inputPath = path.resolve(process.cwd(), inputs[i]);
+        const inputPath = inputs[i]; // inputs contains absolute paths already
+        const relativeInputPath = path.relative(process.cwd(), inputPath);
         if (!existsSync(inputPath)) {
             throw new Error(`Template file '${inputPath}' was not found.`);
         }
@@ -265,7 +267,7 @@ const main = async (inputOption = "", options = {}) => {
         // check if output argument has been provided to write the result to a file
         // this will also create any intermediary directory that does not exist
         if (options.output || config.output) {
-            const outputPath = resolveOutput(inputPath, options.output, config.output);
+            const outputPath = resolveOutput(relativeInputPath, options.output, config.output);
             const outputDirectory = path.dirname(outputPath);
             // make sure that any directory containing the output file exists
             if (!existsSync(outputDirectory)) {
@@ -281,17 +283,17 @@ const main = async (inputOption = "", options = {}) => {
             } catch (error) {
                 throw new Error(`Failed to write output file '${outputPath}': ${error.message}`);
             }
-            process.exit(0);
         }
         // if no output file has been provided, print the result to console
         else if (inputs.length === 1) {
             process.stdout.write(result);
-            process.exit(0);
         }
         else {
             throw new Error(`Unconsistent usage of input and output arguments.`);
         }
     }
+    // exit
+    process.exit(0);
 };
 
 // process arguments
