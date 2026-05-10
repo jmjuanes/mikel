@@ -21,31 +21,35 @@ describe("utility function", () => {
     });
 });
 
-// test("CLI - compila un template a stdout", () => {
-//     const dir = mkdtempSync(path.join("/tmp", "mikel-test-"));
-//     try {
-//         writeFileSync(path.join(dir, "template.html"), "Hello {{name}}!");
-//         writeFileSync(path.join(dir, "data.json"), JSON.stringify({ name: "World" }));
-//         const result = execSync(
-//             `node cli.js ${path.join(dir, "template.html")} --data ${path.join(dir, "data.json")}`
-//         ).toString();
-//         assert.strictEqual(result, "Hello World!");
-//     } finally {
-//         rmSync(dir, { recursive: true });
-//     }
-// });
-// 
-// test("CLI - compila a archivo de output", () => {
-//     const dir = mkdtempSync(path.join("/tmp", "mikel-test-"));
-//     try {
-//         writeFileSync(path.join(dir, "template.html"), "Hello {{name}}!");
-//         writeFileSync(path.join(dir, "data.json"), JSON.stringify({ name: "World" }));
-//         const outputFile = path.join(dir, "output.html");
-//         execSync(
-//             `node cli.js ${path.join(dir, "template.html")} --data ${path.join(dir, "data.json")} --output ${outputFile}`
-//         );
-//         assert.strictEqual(readFileSync(outputFile, "utf8"), "Hello World!");
-//     } finally {
-//         rmSync(dir, { recursive: true });
-//     }
-// });
+describe("cli", () => {
+    const execute = (args) => {
+        return execSync(`node --import=./loader.js ./cli.js ${args}`);
+    };
+
+    it("should compile a template to stdout", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "template.html"), "Hello {{name}}!");
+            fs.writeFileSync(path.join(dir, "data.json"), JSON.stringify({ name: "World" }));
+
+            const result = execute(`${path.join(dir, "template.html")} --data ${path.join(dir, "data.json")}`).toString();
+            assert.strictEqual(result, "Hello World!");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
+
+    it("should compile a template to a file", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "template.html"), "Hello {{name}}!");
+            fs.writeFileSync(path.join(dir, "data.json"), JSON.stringify({ name: "World" }));
+            const outputFile = path.join(dir, "output.html");
+
+            execute(`${path.join(dir, "template.html")} --data ${path.join(dir, "data.json")} --output ${outputFile}`);
+            assert.strictEqual(fs.readFileSync(outputFile, "utf8"), "Hello World!");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
+});

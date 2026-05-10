@@ -17,7 +17,7 @@
         "node": ">=24.0.0"
     },
     "scripts": {
-        "test": "node --import ./loader.js --test ./test.js"
+        "test": "node test.js"
     },
     "exports": {
         ".": "./index.js",
