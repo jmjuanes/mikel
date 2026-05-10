@@ -33,17 +33,86 @@ const expandGlobPatterns = async (patterns = []) => {
     });
 };
 
-// @description load JSON data from the provided path
-const loadData = async (file = null) => {
-    if (!file) {
+// @description apply a rename to the provided file path based on a rename configuration
+// object
+const applyRename = (filePath, rename = {}) => {
+    const patterns = Object.keys(rename);
+    for (let i = 0; i < patterns.length; i++) {
+        const regex = new RegExp(patterns[i]);
+        if (regex.test(filePath)) {
+            return filePath.replace(regex, rename[patterns[i]]);
+        }
+    }
+    // fallback: only returns the basename of the file
+    return path.basename(filePath);
+};
+
+// load configuration file
+const loadConfiguration = async (configurationFile) => {
+    if (!configurationFile) {
         return {};
     }
-    // build the full data file path and check if exists
-    const dataPath = path.resolve(process.cwd(), file);
+    const configurationPath = path.resolve(process.cwd(), configurationFile);
+    if (!existsSync(configurationPath)) {
+        throw new Error(`Configuration file '${configurationPath}' was not found.`);
+    }
+    // check the extension of the file
+    const configurationExtension = path.extname(configurationFile);
+    if (configurationExtension === ".js") {
+        return await import(configurationPath);
+    }
+    else if (configurationExtension === ".json") {
+        const content = await fs.readFile(configurationPath, "utf8");
+        return JSON.parse(content);
+    }
+    else {
+        throw new Error(`Unknown extension for configuration file '${configurationFile}'`);
+    }
+};
+
+// @description loading input files
+const loadInput = async (inputFiles) => {
+    if (!inputFiles || inputFiles?.length === 0) {
+        throw new Error(`No input templates provided.`);
+    }
+    // expand glob patterns
+    return expandGlobPatterns([inputFiles].flat());
+};
+
+// @description resolve output
+const resolveOutput = (inputFile, outputFile, outputConfig) => {
+    // 1. output file is provided via cli arguments
+    if (outputFile) {
+        return path.resolve(process.cwd(), outputFile);
+    }
+    // 2. output configuration is provided and it is a string
+    else if (outputConfig && typeof outputConfig === "string") {
+        return path.resolve(process.cwd(), path.join(outputConfig, inputFile));
+    }
+    // 3. output configuration is provided and it is an object
+    else if (outputConfig && typeof outputConfig === "object") {
+        const renamedOutputFile = applyRename(inputFile, outputConfig?.rename || {});
+        return path.resolve(process.cwd(), path.join(outputConfig?.dir || ".", renamedOutputFile));
+    }
+    // 4. other case???
+    throw new Error(`Unknown error resolving output for template '${inputFile}'`);
+};
+
+// @description load JSON data from the provided path
+const loadData = async (fileOrObject = null) => {
+    if (!fileOrObject) {
+        return {};
+    }
+    // 1. check for object containing data (from config.data)
+    if (typeof fileOrObject === "object") {
+        return fileOrObject;
+    }
+    // 2. build the full data file path and check if exists
+    const dataPath = path.resolve(process.cwd(), fileOrObject);
     if (!existsSync(dataPath)) {
         throw new Error(`Data file '${dataPath}' was not found.`);
     }
-    // read the file and parse it as JSON
+    // 3. read the file and parse it as JSON
     try {
         const content = await fs.readFile(dataPath, "utf8");
         return JSON.parse(content);
@@ -106,35 +175,27 @@ const printHelp = () => {
 };
 
 // @description main function
-const main = async (input = "", options = {}) => {
+const main = async (inputOption = "", options = {}) => {
     // check to print help
     if (options.help) {
         return printHelp();
     }
 
-    // make sure that input file exists
-    if (!input) {
-        throw new Error(`No input template file provided.`);
-    }
-    const inputPath = path.resolve(process.cwd(), input);
-    if (!existsSync(inputPath)) {
-        throw new Error(`Template file '${inputPath}' was not found.`);
-    }
-    
-    let template;
-    try {
-        template = await fs.readFile(inputPath, "utf8");
-    } catch (error) {
-        throw new Error(`Failed to read template file '${inputPath}': ${error.message}`);
-    }
-
-    // initialize the template engine
+    // load configuration file and inputs
+    const config = await loadConfiguration(options.config);
+    const inputs = await loadInput(inputOption || config.input || null);
+    const data = await loadData(options.data || config.data || null);
     const mikelInstance = mikel.create({});
-    const data = await loadData(options.data);
 
+    // if no input files were provided, throw an error and stop processing
+    if (!inputs || inputs?.length === 0) {
+        throw new Error(`No input templates found`);
+    }
     // load plugins
-    for (let i = 0; i < (options.plugin || []).length; i++) {
-        const pluginName = options.plugin[i];
+    const plugins = options.plugin || config.plugins || [];
+    for (let i = 0; i < plugins.length; i++) {
+        const pluginName = Array.isArray(plugins[i]) ? plugins[i][0] : plugins[i];
+        const pluginOptions = Array.isArray(plugins[i]) && plugins[i].length === 2 ? plugins[i][1] : null;
         let pluginModule;
         try {
             // try to import the plugin from node_modules
@@ -142,7 +203,7 @@ const main = async (input = "", options = {}) => {
             if (typeof pluginModule !== "function") {
                 throw new Error(`Plugin '${pluginName}' does not export a valid plugin function.`);
             }
-            mikelInstance.use(pluginModule());
+            mikelInstance.use(pluginModule(pluginOptions));
         } catch (error) {
             throw new Error(`Failed to load plugin '${pluginName}': ${error.message}`);
         }
@@ -182,46 +243,64 @@ const main = async (input = "", options = {}) => {
             });
         }
     });
-
-    // compile the template
-    let result;
-    try {
-        result = mikelInstance(template, data || {});
-    } catch (error) {
-        throw new Error(`Template compilation failed: ${error.message}`);
-    }
-
-    // check if output argument has been provided to write the result to a file
-    // this will also create any intermediary directory that does not exist
-    if (options.output) {
-        const outputPath = path.resolve(process.cwd(), options.output);
-        const outputDirectory = path.dirname(outputPath);
-        // make sure that any directory containing the output file exists
-        if (!existsSync(outputDirectory)) {
-            try {
-                await fs.mkdir(outputDirectory, { recursive: true });
-            } catch (error) {
-                throw new Error(`Failed to create output directory '${outputDirectory}': ${error.message}`);
-            }
+    // process input files
+    for (let i = 0; i < inputs.length; i++) {
+        const inputPath = path.resolve(process.cwd(), inputs[i]);
+        if (!existsSync(inputPath)) {
+            throw new Error(`Template file '${inputPath}' was not found.`);
         }
+        let template;
         try {
-            await fs.writeFile(outputPath, result, "utf8");
-            console.error(`✓ Template rendered successfully to '${outputPath}'`);
+            template = await fs.readFile(inputPath, "utf8");
         } catch (error) {
-            throw new Error(`Failed to write output file '${outputPath}': ${error.message}`);
+            throw new Error(`Failed to read template file '${inputPath}': ${error.message}`);
         }
-        process.exit(0);
-    }
-    // if no output file has been provided, print the result to console
-    else {
-        process.stdout.write(result);
-        process.exit(0);
+        // compile the template
+        let result;
+        try {
+            result = mikelInstance(template, data);
+        } catch (error) {
+            throw new Error(`Template compilation failed: ${error.message}`);
+        }
+        // check if output argument has been provided to write the result to a file
+        // this will also create any intermediary directory that does not exist
+        if (options.output || config.output) {
+            const outputPath = resolveOutput(inputPath, options.output, config.output);
+            const outputDirectory = path.dirname(outputPath);
+            // make sure that any directory containing the output file exists
+            if (!existsSync(outputDirectory)) {
+                try {
+                    await fs.mkdir(outputDirectory, { recursive: true });
+                } catch (error) {
+                    throw new Error(`Failed to create output directory '${outputDirectory}': ${error.message}`);
+                }
+            }
+            try {
+                await fs.writeFile(outputPath, result, "utf8");
+                console.error(`✓ Saving '${inputPath}' -> '${outputPath}'`);
+            } catch (error) {
+                throw new Error(`Failed to write output file '${outputPath}': ${error.message}`);
+            }
+            process.exit(0);
+        }
+        // if no output file has been provided, print the result to console
+        else if (inputs.length === 1) {
+            process.stdout.write(result);
+            process.exit(0);
+        }
+        else {
+            throw new Error(`Unconsistent usage of input and output arguments.`);
+        }
     }
 };
 
 // process arguments
 const { positionals, values } = parseArgs({
     options: {
+        config: {
+            type: "string",
+            short: "c",
+        },
         data: {
             type: "string",
             short: "D",
