@@ -18,6 +18,21 @@ describe("utility function", () => {
         it("should fallback to basename if no matches", () => {
             assert.strictEqual(applyRename("src/index.mustache", {}), "index.mustache");
         });
+
+        it("should apply the first match", () => {
+            const newFileName = applyRename("src/index.mustache", {
+                "^src/(.+)\\.mustache$": "$1.html",
+                "^src/(.+)$": "$1.txt",
+            });
+            assert.strictEqual(newFileName, "index.html");
+        });
+        
+        it("should work with subdirectories", () => {
+            const newFileName = applyRename("src/docs/guide/index.mustache", {
+                "^src/(.+)\\.mustache$": "$1.html",
+            });
+            assert.strictEqual(newFileName, "docs/guide/index.html");
+        });
     });
 });
 
@@ -52,4 +67,39 @@ describe("cli", () => {
             fs.rmSync(dir, { recursive: true });
         }
     });
+
+    it("should process multiple inputs with a configuration file", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "a.html"), "Hello {{name}}!");
+            fs.writeFileSync(path.join(dir, "b.html"), "Bye {{name}}!");
+            fs.writeFileSync(path.join(dir, "data.json"), JSON.stringify({ name: "World" }));
+            fs.writeFileSync(path.join(dir, "mikel.config.json"), JSON.stringify({
+                input: [path.join(dir, "a.html"), path.join(dir, "b.html")],
+                output: { dir: path.join(dir, "dist/") },
+                data: path.join(dir, "data.json"),
+            }));
+            execute(`--config ${path.join(dir, "mikel.config.json")}`);
+            assert.strictEqual(fs.readFileSync(path.join(dir, "dist/a.html"), "utf8"), "Hello World!");
+            assert.strictEqual(fs.readFileSync(path.join(dir, "dist/b.html"), "utf8"), "Bye World!");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
+
+    it("should compile with partials", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "template.html"), "{{> greeting.html}}");
+            fs.writeFileSync(path.join(dir, "greeting.html"), "Hello {{name}}!");
+            fs.writeFileSync(path.join(dir, "data.json"), JSON.stringify({ name: "World" }));
+            const result = execute(
+                `${path.join(dir, "template.html")} --data ${path.join(dir, "data.json")} --partial ${path.join(dir, "greeting.html")}`
+            );
+            assert.strictEqual(result.toString(), "Hello World!");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
+
 });
