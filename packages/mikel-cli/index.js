@@ -1,3 +1,6 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+
 // @description get the files that matches the provided patterns
 // this is a utility function to expand glob patterns to actual file paths.
 // it uses Node.js 24+ built-in fs.glob to handle glob patterns.
