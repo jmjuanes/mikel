@@ -137,12 +137,6 @@ const createHookManager = (hooks = new Map()) => {
         callWaterfall: (hookName, value) => {
             return (hooks.get(hookName) || []).reduce((v, listener) => listener(v), value);
         },
-        callBail: (hookName, ...args) => {
-            for (const listener of (hooks.get(hookName) || [])) {
-                const result = listener(...args);
-                if (typeof result !== "undefined") return result;
-            }
-        },
     };
 };
 
@@ -305,20 +299,22 @@ const create = (options = {}) => {
         hooks: createHookManager(new Map()),
     });
     // entry method to compile the template with the provided data object
-    const compileTemplate = (template, data = {}, output = []) => {
-        template = ctx.hooks.callWaterfall("preRender", template);
-        compile(ctx, tokenize(template), output, data, { ...ctx.initialState, root: data }, 0, "");
-        return ctx.hooks.callWaterfall("postRender", output.join(""));
+    const compileTemplate = (originalTemplate, data = {}) => {
+        const output = [];
+        const template = ctx.hooks.callWaterfall("prerender", originalTemplate || "");
+        const tokens = ctx.hooks.callWaterfall("tokenize", tokenize(template));
+        compile(ctx, tokens, output, data, { ...ctx.initialState, root: data }, 0, "");
+        return ctx.hooks.callWaterfall("postrender", output.join(""));
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
-        use: (pluginValue) => {
-            if (typeof pluginValue === "function") {
-                pluginValue(ctx);
+        use: (plugin) => {
+            if (typeof plugin === "function") {
+                plugin(ctx);
             }
-            else if (typeof pluginValue === "object" && !!pluginValue) {
+            else if (typeof plugin === "object" && !!plugin) {
                 ["helpers", "functions", "partials", "initialState"].forEach(field => {
-                    Object.assign(ctx[field], pluginValue?.[field] || {});
+                    Object.assign(ctx[field], plugin?.[field] || {});
                 });
             }
         },
