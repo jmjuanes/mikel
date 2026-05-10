@@ -3,7 +3,7 @@
 ![npm version](https://badgen.net/npm/v/mikel-cli?labelColor=1d2734&color=21bf81)
 ![license](https://badgen.net/github/license/jmjuanes/mikel?labelColor=1d2734&color=21bf81)
 
-A command-line interface for the [Mikel](https://github.com/jmjuanes/mikel) templating engine. This CLI tool allows you to render Mikel templates from the command line with support for data files, partials, helpers, and functions.
+A command-line interface for the [Mikel](https://github.com/jmjuanes/mikel) templating engine. This CLI tool allows you to render Mikel templates from the command line with support for data files, partials, helpers, functions, and plugins.
 
 ## Installation
 
@@ -31,6 +31,7 @@ $ mikel <template> [options]
 
 | Option | Short | Description |
 |--------|-------|-------------|
+| `--config <file>` | `-c` | Path to configuration file |
 | `--help` | `-h` | Display help information |
 | `--data <file>` | `-D` | Path to JSON data file |
 | `--output <file>` | `-o` | Output file path |
@@ -99,20 +100,6 @@ mikel template.html --partial 'components/**/*.html' --output dist/index.html
 mikel template.html --partial header.html --partial 'components/*.html' --output dist/index.html
 ```
 
-#### Complex Example
-
-A complete example combining all features:
-
-```bash
-mikel src/template.html \
-  --data src/data.json \
-  --partial 'src/partials/*.html' \
-  --partial 'src/components/**/*.html' \
-  --helper 'src/helpers/*.js' \
-  --function 'src/utils/*.js' \
-  --output dist/index.html
-```
-
 ### Glob Pattern Support
 
 The `--partial`, `--helper`, and `--function` options support glob patterns for loading multiple files at once:
@@ -125,6 +112,121 @@ The `--partial`, `--helper`, and `--function` options support glob patterns for 
 | `?` | Single character wildcard | `file?.html` |
 
 **Note:** Glob patterns should be quoted to prevent shell expansion.
+
+## Configuration File
+
+For more complex use cases — multiple input files, output renaming, or plugins — you can use a configuration file instead of CLI arguments. Create a `mikel.config.js` file in your project root:
+
+```js
+export default {
+    input: "src/**/*.mustache",
+    output: {
+        dir: "dist/",
+        rename: {
+            "^src/(.+)\\.mustache$": "$1.html",
+        },
+    },
+    data: "./data/site.json",
+    plugins: [],
+};
+```
+
+Then run mikel pointing to the config file:
+
+```bash
+mikel --config mikel.config.js
+```
+
+CLI arguments take precedence over the configuration file when both are provided. However, when using a configuration file, `input` can be a glob or an array of globs — something not possible via CLI arguments alone.
+
+### Configuration Fields
+
+#### `input`
+
+The template file(s) to process. Accepts a string (file path or glob) or an array of strings:
+
+```js
+// single file
+input: "src/index.mustache"
+
+// array of files and globs
+input: ["src/index.mustache", "src/pages/**/*.mustache"]
+```
+
+#### `output`
+
+Where to write the rendered files. Accepts a string (directory path) or an object:
+
+```js
+// simple directory
+output: "dist/"
+
+// with rename rules
+output: {
+    dir: "dist/",
+    rename: {
+        "^src/(.+)\\.mustache$": "$1.html",
+    },
+}
+```
+
+The `rename` field works like Jest's `moduleNameMapper` — keys are regular expressions and values are replacement strings. The first matching pattern wins. If no pattern matches, the basename of the input file is used as the output filename.
+
+```js
+// src/docs/guide/index.mustache → dist/docs/guide/index.html
+rename: {
+    "^src/(.+)\\.mustache$": "$1.html",
+}
+```
+
+#### `data`
+
+Data to pass to the templates. Accepts a path to a JSON file or a plain object:
+
+```js
+// path to JSON file
+data: "./data/site.json"
+
+// inline object
+data: {
+    site: {
+        title: "My Site",
+    },
+}
+```
+
+#### `plugins`
+
+An array of Mikel plugins to load. See the [Plugins](#plugins) section for details.
+
+## Plugins
+
+Plugins extend Mikel's functionality by registering additional helpers, functions, or partials. They can be loaded both via the `--plugin` CLI flag and the `plugins` configuration field.
+
+### Loading Plugins via CLI
+
+Use the `--plugin` flag to load a plugin from a JavaScript module:
+
+```bash
+mikel template.html --plugin mikel-markdown --output dist/index.html
+```
+
+### Loading Plugins via Configuration
+
+Use the `plugins` field in your configuration file. Each entry can be a module name (string) or a tuple of `[moduleName, options]` when the plugin requires configuration:
+
+```js
+export default {
+    plugins: [
+        // plugin without options
+        "mikel-frontmatter",
+        // plugin with options
+        ["mikel-markdown", {
+            classNames: { ... },
+        }],
+    ],
+};
+```
 
 ## License
 

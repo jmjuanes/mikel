@@ -8,24 +8,32 @@
         "name": "Josemi Juanes",
         "email": "hello@josemi.xyz"
     },
-    "repository": "https://github.com/jmjuanes/mikel",
+    "repository": {
+        "url": "https://github.com/jmjuanes/mikel",
+        "directory": "packages/mikel-cli"
+    },
     "bugs": "https://github.com/jmjuanes/mikel/issues",
     "engines": {
         "node": ">=24.0.0"
     },
+    "scripts": {
+        "test": "node test.js"
+    },
     "exports": {
         ".": "./index.js",
         "./index.js": "./index.js",
+        "./cli.js": "./cli.js",
         "./package.json": "./package.json"
     },
     "bin": {
-        "mikel": "index.js"
+        "mikel": "cli.js"
     },
     "peerDependencies": {
         "mikel": "*"
     },
     "files": [
         "README.md",
+        "cli.js",
         "index.js"
     ],
     "keywords": [
