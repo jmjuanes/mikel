@@ -126,16 +126,16 @@ const findClosingToken = (tokens, i, token) => {
 const createHookManager = (hooks = new Map()) => {
     return {
         add: (hookName, listener) => {
-            if (!hooks.has(hookName)) {
-                hooks.set(hookName, []);
+            if (!hooks.has(hookName.toLowerCase())) {
+                hooks.set(hookName.toLowerCase(), []);
             }
-            hooks.get(hookName).push(listener);
+            hooks.get(hookName.toLowerCase()).push(listener);
         },
         call: (hookName, ...args) => {
-            hooks.get(hookName)?.forEach((listener) => listener(...args));
+            hooks.get(hookName.toLowerCase())?.forEach((listener) => listener(...args));
         },
         callWaterfall: (hookName, value) => {
-            return (hooks.get(hookName) || []).reduce((v, listener) => listener(v), value);
+            return (hooks.get(hookName.toLowerCase()) || []).reduce((v, listener) => listener(v), value);
         },
     };
 };
@@ -302,8 +302,7 @@ const create = (options = {}) => {
     const compileTemplate = (originalTemplate, data = {}) => {
         const output = [];
         const template = ctx.hooks.callWaterfall("prerender", originalTemplate || "");
-        const tokens = ctx.hooks.callWaterfall("tokenize", tokenize(template));
-        compile(ctx, tokens, output, data, { ...ctx.initialState, root: data }, 0, "");
+        compile(ctx, tokenize(template), output, data, { ...ctx.initialState, root: data }, 0, "");
         return ctx.hooks.callWaterfall("postrender", output.join(""));
     };
     // assign api methods and return method to compile the template
