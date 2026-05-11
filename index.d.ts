@@ -61,6 +61,8 @@ export type Mikel = {
     removePartial(name: string): void;
 };
 
+export type MikelWrapperPlugin = (options: { header?: string, footer?: string, mode?: string}) => MikelPlugin;
+
 declare const mikel: {
     (template: string, data?: any, options?: Partial<MikelOptions>): string;
     create(options?: Partial<MikelOptions>): Mikel;
@@ -69,6 +71,7 @@ declare const mikel: {
     parse(value: string, context?: any, vars?: any): any;
     tokenize(str: string): string[];
     untokenize(tokens: string[], start?: string, end?: string): string;
+    WrapperPlugin: MikelWrapperPlugin;
 };
 
 export default mikel;

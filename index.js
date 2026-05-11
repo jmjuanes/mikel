@@ -331,6 +331,15 @@ const mikel = (template = "", data = {}, options = {}) => {
     return create(options)(template, data);
 };
 
+// @description wrapper plugin to wrap template with custom text
+mikel.WrapperPlugin = (options = {}) => {
+    return (context) => {
+        context.hooks.add(options.mode === "post" ? "postrender" : "prerender", template => {
+            return [options.header || "", template, options.footer || ""].join("");
+        });
+    };
+};
+
 // @description assign utilities
 mikel.create = create;
 mikel.escape = escape;
