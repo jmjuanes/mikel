@@ -925,6 +925,34 @@ This function returns the value in `object` following the provided `path` string
 
 ## Advanced
 
+### Built‑in Plugins
+
+> Added in `v0.34.0`.
+
+Mikel includes a small set of built‑in plugins that provide common functionality without requiring additional packages. These plugins integrate directly into the compilation lifecycle and use the same hook system available to any external plugin.
+
+#### `mikel.WrapperPlugin(options)`
+
+Wraps the original template by inserting custom text before and/or after it. The wrapper is applied before rendering, which means it can contain mikel expressions (`{{variables}}`, helpers, etc.).
+
+```javascript
+mk.use(mikel.WrapperPlugin({
+    header: "<!-- START -->\n",
+    footer: "\n<!-- END -->",
+}));
+```
+
+#### `mikel.StatePlugin(state)`
+
+Defines static state variables that become available inside templates through the `@variable` syntax. These values are merged into the initial state before rendering.
+
+```javascript
+mk.use(mikel.StatePlugin({
+    version: "1.0.0",
+    environment: "development",
+}));
+```
+
 ### Hooks
  
 > Added in `v0.34.0`.

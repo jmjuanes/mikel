@@ -947,3 +947,26 @@ describe("mikel.get", () => {
         assert.equal(m.get(obj, "x.y.z"), "");
     });
 });
+
+describe("plugins", () => {
+    describe("WrapperPlugin", () => {
+        it("should wrap template before processing", () => {
+            const mk = m.create({});
+            mk.use(m.WrapperPlugin({
+                header: "{{greeting}} ",
+                footer: "!",
+            }));
+            assert.equal(mk("{{name}}", { name: "Bob", greeting: "Hello" }), "Hello Bob!");
+        });
+    });
+
+    describe("StatePlugin", () => {
+        it("should allow to define state variables", () => {
+            const mk = m.create({});
+            mk.use(m.StatePlugin({
+                foo: "bar",
+            }));
+            assert.equal(mk("Result is: {{@foo}}", {}), "Result is: bar");
+        });
+    });
+});

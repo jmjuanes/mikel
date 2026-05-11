@@ -331,6 +331,22 @@ const mikel = (template = "", data = {}, options = {}) => {
     return create(options)(template, data);
 };
 
+// @description plugin to wrap template with custom text
+mikel.WrapperPlugin = (options = {}) => {
+    return (context) => {
+        context.hooks.add("prerender", template => {
+            return [options.header || "", template, options.footer || ""].join("");
+        });
+    };
+};
+
+// @description plugin to define state variables
+mikel.StatePlugin = (state = {}) => {
+    return (context) => {
+        Object.assign(context.initialState, state || {});
+    };
+};
+
 // @description assign utilities
 mikel.create = create;
 mikel.escape = escape;
