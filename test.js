@@ -811,6 +811,34 @@ describe("mikel.use", () => {
         });
         assert.equal(mk("Hello {{@foo}}", {}), "Hello bar");
     });
+
+    it("should accept a function to extend mikel", () => {
+        const mk = m.create();
+        mk.use((ctx) => {
+            ctx.functions["foo"] = () => "bar";
+        });
+        assert.equal(mk("{{=foo}}", {}), "bar");
+    });
+});
+
+describe("hooks", () => {
+    it("should allow to transform the template before rendering", () => {
+        const mk = m.create();
+        mk.use((ctx) => {
+            ctx.hooks.add("prerender", template => "Hello " + template);
+        });
+
+        assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob");
+    });
+
+    it("should allow to transform the template after rendering", () => {
+        const mk = m.create();
+        mk.use((ctx) => {
+            ctx.hooks.add("postrender", result => "Hello " + result);
+        });
+
+        assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob");
+    });
 });
 
 describe("mikel.tokenize", () => {

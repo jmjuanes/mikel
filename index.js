@@ -122,6 +122,24 @@ const findClosingToken = (tokens, i, token) => {
     throw new Error(`Unmatched section end: {{${token}}}`);
 };
 
+// @description create a hook manager for the provided hooks map
+const createHookManager = (hooks = new Map()) => {
+    return {
+        add: (hookName, listener) => {
+            if (!hooks.has(hookName.toLowerCase())) {
+                hooks.set(hookName.toLowerCase(), []);
+            }
+            hooks.get(hookName.toLowerCase()).push(listener);
+        },
+        call: (hookName, ...args) => {
+            hooks.get(hookName.toLowerCase())?.forEach((listener) => listener(...args));
+        },
+        callWaterfall: (hookName, value) => {
+            return (hooks.get(hookName.toLowerCase()) || []).reduce((v, listener) => listener(v), value);
+        },
+    };
+};
+
 // @description internal method to compile the template
 const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
     let i = index;
@@ -278,18 +296,26 @@ const create = (options = {}) => {
         partials: Object.assign({}, options?.partials || {}),
         functions: Object.assign({}, options?.functions || {}),
         initialState: {}, // Object.assign({}, options?.initialState || {}),
+        hooks: createHookManager(new Map()),
     });
     // entry method to compile the template with the provided data object
-    const compileTemplate = (template, data = {}, output = []) => {
+    const compileTemplate = (originalTemplate, data = {}) => {
+        const output = [];
+        const template = ctx.hooks.callWaterfall("prerender", originalTemplate || "");
         compile(ctx, tokenize(template), output, data, { ...ctx.initialState, root: data }, 0, "");
-        return output.join("");
+        return ctx.hooks.callWaterfall("postrender", output.join(""));
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
-        use: (newOptions = {}) => {
-            ["helpers", "functions", "partials", "initialState"].forEach(field => {
-                Object.assign(ctx[field], newOptions?.[field] || {});
-            });
+        use: (plugin) => {
+            if (typeof plugin === "function") {
+                plugin(ctx);
+            }
+            else if (typeof plugin === "object" && !!plugin) {
+                ["helpers", "functions", "partials", "initialState"].forEach(field => {
+                    Object.assign(ctx[field], plugin?.[field] || {});
+                });
+            }
         },
         addHelper: (name, fn) => ctx.helpers[name] = fn,
         removeHelper: name => delete ctx.helpers[name],

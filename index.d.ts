@@ -24,26 +24,42 @@ export type MikelFunction = (params: {
     state: Record<string, any>;
 }) => string | void;
 
+export type MikelState = Record<string, string>;
+
 export type MikelOptions = {
     helpers?: Record<string, MikelHelper>;
     partials?: Record<string, string | MikelPartial>;
     functions?: Record<string, MikelFunction>;
 };
 
-export type MikelUseOptions = MikelOptions & {
-    initialState?: Record<string, any>;
+export type MikelPluginOptions = MikelOptions & {
+    initialState?: MikelState;
 };
+
+export type MikelContext = {
+    helpers: Record<string, MikelFunction>;
+    functions: Record<string, MikelFunction>;
+    partials: Record<string, MikelPartial>;
+    hooks: {
+        add: (hookName: string, listener: Function) => void;
+        call: (hookName: string, ...args: any[]) => void;
+        callWaterfall: (hookName: string, value: any) => any;
+    };
+    initialState: MikelState;
+};
+
+export type MikelPlugin = (ctx: MikelContext) => void;
 
 export type Mikel = {
     (template: string, data?: any): string;
-    use(options: Partial<MikelUseOptions>): void;
+    use(plugin: Partial<MikelPluginOptions> | MikelPlugin): void;
     addHelper(name: string, fn: MikelHelper): void;
     removeHelper(name: string): void;
     addFunction(name: string, fn: MikelFunction): void;
     removeFunction(name: string): void;
     addPartial(name: string, partial: string | MikelPartial): void;
     removePartial(name: string): void;
-}
+};
 
 declare const mikel: {
     (template: string, data?: any, options?: Partial<MikelOptions>): string;

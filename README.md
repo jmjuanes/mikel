@@ -841,14 +841,30 @@ It also exposes the following additional methods:
 
 > Added in `v0.19.0`.
 
-Allows to extend the templating with custom **helpers**, **functions**, and **partials**.
-
+Extends the instance with additional helpers, functions, partials, or hooks. Accepts either an options object or a plugin function.
+ 
+When called with an **object**, it registers the provided helpers, functions, and partials directly:
+ 
 ```javascript
 mk.use({
+    helpers: {
+        uppercase: ({ fn, data }) => fn(data).toUpperCase(),
+    },
     partials: {
-        foo: "bar",
+        foo: "Hello {{name}}!",
     },
 });
+```
+ 
+When called with a **function**, the function receives the internal context of the instance, giving full access to the hooks system and all registered helpers, functions, and partials. This is the recommended approach for writing reusable plugins:
+ 
+```javascript
+const myPlugin = (ctx) => {
+    ctx.hooks.add("preRender", template => template.trim());
+    ctx.hooks.add("postRender", output => output.trim());
+};
+ 
+mk.use(myPlugin);
 ```
 
 #### `mk.addHelper(helperName, helperFn)`
@@ -906,6 +922,44 @@ This function converts special HTML characters `&`, `<`, `>`, `"`, and `'` to th
 ### `mikel.get(object, path)`
 
 This function returns the value in `object` following the provided `path` string.
+
+## Advanced
+
+### Hooks
+ 
+> Added in `v0.34.0`.
+ 
+Hooks allows plugins to tap into different stages of the rendering pipeline. Hooks are registered using the `hooks.add` method inside a plugin function passed to `mk.use()`.
+
+```javascript
+mk.use((context) => {
+    context.hooks.add("someHook", (params) => {
+        // ...
+    });
+});
+```
+
+Available hooks:
+ 
+| Hook |  Type | Receives | Must return | Description |
+|------|-------|----------|-------------|-------------|
+| `preRender` | Waterfall | `template` (string) | `template` (string) | Called before rendering. The returned value is used as the template. |
+| `postRender` | Waterfall | `output` (string) | `output` (string) | Called after rendering. The returned value is used as the final output. |
+ 
+Example:
+ 
+```javascript
+const myPlugin = (context) => {
+    // trim the template before rendering
+    context.hooks.add("preRender", template => template.trim());
+    // minify the output after rendering
+    context.hooks.add("postRender", output => output.replace(/\s+/g, " ").trim());
+};
+ 
+mk.use(myPlugin);
+ 
+console.log(mk("  Hello {{name}}!  ", { name: "World" })); // --> "Hello World!"
+```
 
 ## License
 
