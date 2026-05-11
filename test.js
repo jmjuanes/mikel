@@ -959,16 +959,5 @@ describe("plugins", () => {
 
             assert.equal(mk("{{name}}", { name: "Bob", greeting: "Hello" }), "Hello Bob!");
         });
-
-        it("should wrap template after processing", () => {
-            const mk = m.create({});
-            mk.use(m.WrapperPlugin({
-                header: "Hello ",
-                footer: "!",
-                mode: "post",
-            }));
-
-            assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob!");
-        });
     });
 });

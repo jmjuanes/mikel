@@ -61,7 +61,7 @@ export type Mikel = {
     removePartial(name: string): void;
 };
 
-export type MikelWrapperPlugin = (options: { header?: string, footer?: string, mode?: string}) => MikelPlugin;
+export type MikelWrapperPlugin = (options: { header?: string, footer?: string }) => MikelPlugin;
 
 declare const mikel: {
     (template: string, data?: any, options?: Partial<MikelOptions>): string;
