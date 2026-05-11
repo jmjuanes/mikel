@@ -956,8 +956,17 @@ describe("plugins", () => {
                 header: "{{greeting}} ",
                 footer: "!",
             }));
-
             assert.equal(mk("{{name}}", { name: "Bob", greeting: "Hello" }), "Hello Bob!");
+        });
+    });
+
+    describe("StatePlugin", () => {
+        it("should allow to define state variables", () => {
+            const mk = m.create({});
+            mk.use(m.StatePlugin({
+                foo: "bar",
+            }));
+            assert.equal(mk("Result is: {{@foo}}", {}), "Result is: bar");
         });
     });
 });
