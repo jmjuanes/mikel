@@ -947,3 +947,28 @@ describe("mikel.get", () => {
         assert.equal(m.get(obj, "x.y.z"), "");
     });
 });
+
+describe("plugins", () => {
+    describe("WrapperPlugin", () => {
+        it("should wrap template before processing", () => {
+            const mk = m.create({});
+            mk.use(m.WrapperPlugin({
+                header: "{{greeting}} ",
+                footer: "!",
+            }));
+
+            assert.equal(mk("{{name}}", { name: "Bob", greeting: "Hello" }), "Hello Bob!");
+        });
+
+        it("should wrap template after processing", () => {
+            const mk = m.create({});
+            mk.use(m.WrapperPlugin({
+                header: "Hello ",
+                footer: "!",
+                mode: "post",
+            }));
+
+            assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob!");
+        });
+    });
+});
