@@ -62,6 +62,7 @@ export type Mikel = {
 };
 
 export type MikelWrapperPlugin = (options: { header?: string, footer?: string }) => MikelPlugin;
+export type MikelStatePlugin = (state: MikelState) => MikelPlugin;
 
 declare const mikel: {
     (template: string, data?: any, options?: Partial<MikelOptions>): string;
@@ -72,6 +73,7 @@ declare const mikel: {
     tokenize(str: string): string[];
     untokenize(tokens: string[], start?: string, end?: string): string;
     WrapperPlugin: MikelWrapperPlugin;
+    StatePlugin: MikelStatePlugin;
 };
 
 export default mikel;
