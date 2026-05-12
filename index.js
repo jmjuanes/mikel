@@ -325,6 +325,5 @@ mikel.get = get;
 mikel.parse = parse;
 mikel.tokenize = tokenize;
 mikel.untokenize = untokenize;
-mikel.createHooks = createHooks;
 
 export default mikel;
