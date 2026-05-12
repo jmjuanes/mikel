@@ -837,7 +837,7 @@ console.log(mk("{{>hello}}", {name: "Susan"})); // --> "Hello, Susan!"
 
 It also exposes the following additional methods:
 
-#### `mk.use(options)`
+#### `mk.use(options | function)`
 
 > Added in `v0.19.0`.
 
@@ -856,12 +856,13 @@ mk.use({
 });
 ```
  
-When called with a **function**, the function receives the internal context of the instance, giving full access to the hooks system and all registered helpers, functions, and partials. This is the recommended approach for writing reusable plugins:
+When called with a **function**, the function receives the internal context of the instance, giving full access to all registered helpers, functions, and partials. This is the recommended approach for writing reusable plugins:
  
 ```javascript
 const myPlugin = (ctx) => {
-    ctx.hooks.add("preRender", template => template.trim());
-    ctx.hooks.add("postRender", output => output.trim());
+    ctx.helpers.uppercase = ({ fn, data }) => {
+        return fn(data).toUpperCase();
+    };
 };
  
 mk.use(myPlugin);
@@ -927,68 +928,16 @@ This function returns the value in `object` following the provided `path` string
 
 ### Built‑in Plugins
 
-> Added in `v0.34.0`.
+> Added in `v0.35.0`.
 
-Mikel includes a small set of built‑in plugins that provide common functionality without requiring additional packages. These plugins integrate directly into the compilation lifecycle and use the same hook system available to any external plugin.
+Mikel includes a small set of built‑in plugins that provide common functionality without requiring additional packages.
 
-#### `mikel.WrapperPlugin(options)`
+#### `mikel.SetStatePlugin(name, value)`
 
-Wraps the original template by inserting custom text before and/or after it. The wrapper is applied before rendering, which means it can contain mikel expressions (`{{variables}}`, helpers, etc.).
-
-```javascript
-mk.use(mikel.WrapperPlugin({
-    header: "<!-- START -->\n",
-    footer: "\n<!-- END -->",
-}));
-```
-
-#### `mikel.StatePlugin(state)`
-
-Defines static state variables that become available inside templates through the `@variable` syntax. These values are merged into the initial state before rendering.
+Registers a static state variable that become available inside templates through the `@variable` syntax.
 
 ```javascript
-mk.use(mikel.StatePlugin({
-    version: "1.0.0",
-    environment: "development",
-}));
-```
-
-### Hooks
- 
-> Added in `v0.34.0`.
- 
-Hooks allows plugins to tap into different stages of the rendering pipeline. Hooks are registered using the `hooks.add` method inside a plugin function passed to `mk.use()`.
-
-```javascript
-mk.use((context) => {
-    context.hooks.add("someHook", (params) => {
-        // ...
-    });
-});
-```
-
-Available hooks:
- 
-| Hook |  Type | Receives | Must return | Description |
-|------|-------|----------|-------------|-------------|
-| `preRender` | Waterfall | `template` (string) | `template` (string) | Called before rendering. The returned value is used as the template. |
-| `processTokens` | Waterfall | `tokens` (array of strings) | `tokens` (array of strings) | Called after generating tokens for the provided template. |
-| `buildState` | Waterfall | `state` (object) | `state` (object) | Called after generating the initial state for the rendering. The returned object will be used as state of the rendering. | 
-| `postRender` | Waterfall | `output` (string) | `output` (string) | Called after rendering. The returned value is used as the final output. |
- 
-Example:
- 
-```javascript
-const myPlugin = (context) => {
-    // trim the template before rendering
-    context.hooks.add("preRender", template => template.trim());
-    // minify the output after rendering
-    context.hooks.add("postRender", output => output.replace(/\s+/g, " ").trim());
-};
- 
-mk.use(myPlugin);
- 
-console.log(mk("  Hello {{name}}!  ", { name: "World" })); // --> "Hello World!"
+mk.use(mikel.SetStatePlugin("version", "1.0.0"));
 ```
 
 ## License

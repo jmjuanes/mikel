@@ -122,25 +122,6 @@ const findClosingToken = (tokens, i, token) => {
     throw new Error(`Unmatched section end: {{${token}}}`);
 };
 
-// @description create a hook manager for the provided hooks map
-const createHooks = () => {
-    const hooks = new Map();
-    return {
-        add: (hookName, listener) => {
-            if (!hooks.has(hookName.toLowerCase())) {
-                hooks.set(hookName.toLowerCase(), []);
-            }
-            hooks.get(hookName.toLowerCase()).push(listener);
-        },
-        call: (hookName, ...args) => {
-            hooks.get(hookName.toLowerCase())?.forEach((listener) => listener(...args));
-        },
-        callWaterfall: (hookName, value) => {
-            return (hooks.get(hookName.toLowerCase()) || []).reduce((v, listener) => listener(v), value);
-        },
-    };
-};
-
 // @description internal method to compile the template
 const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
     let i = index;
@@ -297,16 +278,12 @@ const create = (options = {}) => {
         partials: Object.assign({}, options?.partials || {}),
         functions: Object.assign({}, options?.functions || {}),
         initialState: {}, // Object.assign({}, options?.initialState || {}),
-        hooks: options?.hooks || createHooks(),
     });
     // entry method to compile the template with the provided data object
-    const compileTemplate = (originalTemplate, data = {}) => {
+    const compileTemplate = (template, data = {}) => {
         const output = [];
-        const template = ctx.hooks.callWaterfall("prerender", originalTemplate || "");
-        const tokens = ctx.hooks.callWaterfall("processTokens", tokenize(template));
-        const initialState = ctx.hooks.callWaterfall("buildState", { ...ctx.initialState, root: data });
-        compile(ctx, tokens, output, data, initialState, 0, "");
-        return ctx.hooks.callWaterfall("postrender", output.join(""));
+        compile(ctx, tokenize(template), output, data, { ...ctx.initialState, root: data }, 0, "");
+        return output.join("");
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
@@ -334,19 +311,10 @@ const mikel = (template = "", data = {}, options = {}) => {
     return create(options)(template, data);
 };
 
-// @description plugin to wrap template with custom text
-mikel.WrapperPlugin = (options = {}) => {
+// @description plugin to define a new state variable
+mikel.SetStatePlugin = (name, value) => {
     return (context) => {
-        context.hooks.add("prerender", template => {
-            return [options.header || "", template, options.footer || ""].join("");
-        });
-    };
-};
-
-// @description plugin to define state variables
-mikel.StatePlugin = (state = {}) => {
-    return (context) => {
-        Object.assign(context.initialState, state || {});
+        context.initialState[name] = value;
     };
 };
 
@@ -357,6 +325,5 @@ mikel.get = get;
 mikel.parse = parse;
 mikel.tokenize = tokenize;
 mikel.untokenize = untokenize;
-mikel.createHooks = createHooks;
 
 export default mikel;
