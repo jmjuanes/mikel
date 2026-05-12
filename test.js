@@ -821,48 +821,6 @@ describe("mikel.use", () => {
     });
 });
 
-describe("hooks", () => {
-    it("should allow to transform the template before rendering", () => {
-        const mk = m.create();
-        mk.use((ctx) => {
-            ctx.hooks.add("prerender", template => "Hello " + template);
-        });
-
-        assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob");
-    });
-
-    it("should allow to transform the template after rendering", () => {
-        const mk = m.create();
-        mk.use((ctx) => {
-            ctx.hooks.add("postrender", result => "Hello " + result);
-        });
-
-        assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob");
-    });
-
-    it("should allow to customize the initial state", () => {
-        const mk = m.create();
-        mk.use((ctx) => {
-            ctx.hooks.add("buildstate", initialState => {
-                return Object.assign(initialState, { foo: "bar" });
-            });
-        });
-
-        assert.equal(mk("{{@foo}}", {}), "bar");
-    });
-
-    it("should allow to manipulate the tokens generated", () => {
-        const mk = m.create();
-        mk.use((ctx) => {
-            ctx.hooks.add("processTokens", tokens => {
-                return [tokens[0], "foo", tokens[2]];
-            });
-        });
-
-        assert.equal(mk("{{bar}}", { foo: "a", bar: "b" }), "a");
-    });
-});
-
 describe("mikel.tokenize", () => {
     it("should tokenize a simple template", () => {
         const template = "Hello {{ name }}!";
@@ -971,24 +929,18 @@ describe("mikel.get", () => {
 });
 
 describe("plugins", () => {
-    describe("WrapperPlugin", () => {
-        it("should wrap template before processing", () => {
-            const mk = m.create({});
-            mk.use(m.WrapperPlugin({
-                header: "{{greeting}} ",
-                footer: "!",
-            }));
-            assert.equal(mk("{{name}}", { name: "Bob", greeting: "Hello" }), "Hello Bob!");
-        });
-    });
-
-    describe("StatePlugin", () => {
+    describe("SetStatePlugin", () => {
         it("should allow to define state variables", () => {
             const mk = m.create({});
-            mk.use(m.StatePlugin({
-                foo: "bar",
-            }));
+            mk.use(m.SetStatePlugin("foo", "bar"));
             assert.equal(mk("Result is: {{@foo}}", {}), "Result is: bar");
+        });
+
+        it("should override existing state variables", () => {
+            const mk = m.create({});
+            mk.use(m.SetStatePlugin("foo", "bar"));
+            mk.use(m.SetStatePlugin("foo", "bar2"));
+            assert.equal(mk("Result is: {{@foo}}", {}), "Result is: bar2");
         });
     });
 });

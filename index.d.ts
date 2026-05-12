@@ -36,17 +36,10 @@ export type MikelPluginOptions = MikelOptions & {
     initialState?: MikelState;
 };
 
-export type MikelHooks = {
-    add: (hookName: string, listener: Function) => void;
-    call: (hookName: string, ...args: any[]) => void;
-    callWaterfall: (hookName: string, value: any) => any;
-};
-
 export type MikelContext = {
     helpers: Record<string, MikelFunction>;
     functions: Record<string, MikelFunction>;
     partials: Record<string, MikelPartial>;
-    hooks: MikelHooks;
     initialState: MikelState;
 };
 
@@ -63,8 +56,7 @@ export type Mikel = {
     removePartial(name: string): void;
 };
 
-export type MikelWrapperPlugin = (options: { header?: string, footer?: string }) => MikelPlugin;
-export type MikelStatePlugin = (state: MikelState) => MikelPlugin;
+export type MikelSetStatePlugin = (name: string, value: any) => MikelPlugin;
 
 declare const mikel: {
     (template: string, data?: any, options?: Partial<MikelOptions>): string;
@@ -74,9 +66,7 @@ declare const mikel: {
     parse(value: string, context?: any, vars?: any): any;
     tokenize(str: string): string[];
     untokenize(tokens: string[], start?: string, end?: string): string;
-    createHooks: () => MikelHooks;
-    WrapperPlugin: MikelWrapperPlugin;
-    StatePlugin: MikelStatePlugin;
+    SetStatePlugin: MikelSetStatePlugin;
 };
 
 export default mikel;
