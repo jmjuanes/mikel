@@ -972,6 +972,8 @@ Available hooks:
 | Hook |  Type | Receives | Must return | Description |
 |------|-------|----------|-------------|-------------|
 | `preRender` | Waterfall | `template` (string) | `template` (string) | Called before rendering. The returned value is used as the template. |
+| `processTokens` | Waterfall | `tokens` (array of strings) | `tokens` (array of strings) | Called after generating tokens for the provided template. |
+| `buildState` | Waterfall | `state` (object) | `state` (object) | Called after generating the initial state for the rendering. The returned object will be used as state of the rendering. | 
 | `postRender` | Waterfall | `output` (string) | `output` (string) | Called after rendering. The returned value is used as the final output. |
  
 Example:

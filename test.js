@@ -839,6 +839,28 @@ describe("hooks", () => {
 
         assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob");
     });
+
+    it("should allow to customize the initial state", () => {
+        const mk = m.create();
+        mk.use((ctx) => {
+            ctx.hooks.add("buildstate", initialState => {
+                return Object.assign(initialState, { foo: "bar" });
+            });
+        });
+
+        assert.equal(mk("{{@foo}}", {}), "bar");
+    });
+
+    it("should allow to manipulate the tokens generated", () => {
+        const mk = m.create();
+        mk.use((ctx) => {
+            ctx.hooks.add("processTokens", tokens => {
+                return [tokens[0], "foo", tokens[2]];
+            });
+        });
+
+        assert.equal(mk("{{bar}}", { foo: "a", bar: "b" }), "a");
+    });
 });
 
 describe("mikel.tokenize", () => {
