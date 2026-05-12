@@ -303,7 +303,9 @@ const create = (options = {}) => {
     const compileTemplate = (originalTemplate, data = {}) => {
         const output = [];
         const template = ctx.hooks.callWaterfall("prerender", originalTemplate || "");
-        compile(ctx, tokenize(template), output, data, { ...ctx.initialState, root: data }, 0, "");
+        const tokens = ctx.tooks.callWaterfall("processTokens", tokenize(template));
+        const initialState = ctx.hooks.callWaterfall("buildState", { ...ctx.initialState, root: data });
+        compile(ctx, tokens, output, data, initialState, 0, "");
         return ctx.hooks.callWaterfall("postrender", output.join(""));
     };
     // assign api methods and return method to compile the template
