@@ -303,7 +303,7 @@ const create = (options = {}) => {
     const compileTemplate = (originalTemplate, data = {}) => {
         const output = [];
         const template = ctx.hooks.callWaterfall("prerender", originalTemplate || "");
-        const tokens = ctx.tooks.callWaterfall("processTokens", tokenize(template));
+        const tokens = ctx.hooks.callWaterfall("processTokens", tokenize(template));
         const initialState = ctx.hooks.callWaterfall("buildState", { ...ctx.initialState, root: data });
         compile(ctx, tokens, output, data, initialState, 0, "");
         return ctx.hooks.callWaterfall("postrender", output.join(""));
