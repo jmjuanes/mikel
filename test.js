@@ -850,6 +850,17 @@ describe("hooks", () => {
 
         assert.equal(mk("{{@foo}}", {}), "bar");
     });
+
+    it("should allow to manipulate the tokens generated", () => {
+        const mk = m.create();
+        mk.use((ctx) => {
+            ctx.hooks.add("processTokens", tokens => {
+                return [tokens[0], "foo", tokens[2]];
+            });
+        });
+
+        assert.equal(mk("{{bar}}", { foo: "a", bar: "b" }), "a");
+    });
 });
 
 describe("mikel.tokenize", () => {
