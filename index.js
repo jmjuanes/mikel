@@ -123,7 +123,8 @@ const findClosingToken = (tokens, i, token) => {
 };
 
 // @description create a hook manager for the provided hooks map
-const createHookManager = (hooks = new Map()) => {
+const createHooks = () => {
+    const hooks = new Map();
     return {
         add: (hookName, listener) => {
             if (!hooks.has(hookName.toLowerCase())) {
@@ -296,7 +297,7 @@ const create = (options = {}) => {
         partials: Object.assign({}, options?.partials || {}),
         functions: Object.assign({}, options?.functions || {}),
         initialState: {}, // Object.assign({}, options?.initialState || {}),
-        hooks: createHookManager(new Map()),
+        hooks: options?.hooks || createHooks(),
     });
     // entry method to compile the template with the provided data object
     const compileTemplate = (originalTemplate, data = {}) => {
@@ -354,5 +355,6 @@ mikel.get = get;
 mikel.parse = parse;
 mikel.tokenize = tokenize;
 mikel.untokenize = untokenize;
+mikel.createHooks = createHooks;
 
 export default mikel;
