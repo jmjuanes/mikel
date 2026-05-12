@@ -839,6 +839,17 @@ describe("hooks", () => {
 
         assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob");
     });
+
+    it("should allow to customize the initial state", () => {
+        const mk = m.create();
+        mk.use((ctx) => {
+            ctx.hooks.add("buildstate", initialState => {
+                return Object.assign(initialState, { foo: "bar" });
+            });
+        });
+
+        assert.equal(mk("{{@foo}}", {}), "bar");
+    });
 });
 
 describe("mikel.tokenize", () => {
