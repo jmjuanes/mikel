@@ -4,23 +4,23 @@ import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
 
-import { applyRename } from "./index.js";
+import { applyNameMapping } from "./index.js";
 
-describe("utility function", () => {
-    describe("applyRename", () => {
+describe("utility functions", () => {
+    describe("applyNameMapping", () => {
         it("should apply the rename", () => {
-            const newFileName = applyRename("src/index.mustache", {
+            const newFileName = applyNameMapping("src/index.mustache", {
                 "^src/(.+)\\.mustache$": "$1.html",
             });
             assert.strictEqual(newFileName, "index.html");
         });
 
         it("should fallback to basename if no matches", () => {
-            assert.strictEqual(applyRename("src/index.mustache", {}), "index.mustache");
+            assert.strictEqual(applyNameMapping("src/index.mustache", {}), "index.mustache");
         });
 
         it("should apply the first match", () => {
-            const newFileName = applyRename("src/index.mustache", {
+            const newFileName = applyNameMapping("src/index.mustache", {
                 "^src/(.+)\\.mustache$": "$1.html",
                 "^src/(.+)$": "$1.txt",
             });
@@ -28,7 +28,7 @@ describe("utility function", () => {
         });
         
         it("should work with subdirectories", () => {
-            const newFileName = applyRename("src/docs/guide/index.mustache", {
+            const newFileName = applyNameMapping("src/docs/guide/index.mustache", {
                 "^src/(.+)\\.mustache$": "$1.html",
             });
             assert.strictEqual(newFileName, "docs/guide/index.html");

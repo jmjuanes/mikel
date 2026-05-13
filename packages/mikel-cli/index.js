@@ -25,11 +25,11 @@ export const expandGlobPatterns = async (root, patterns = []) => {
 
 // @description apply a rename to the provided file path based on a rename configuration
 // object
-export const applyRename = (file, renameObject = {}) => {
-    for (const pattern of Object.keys(renameObject)) {
+export const applyNameMapping = (file, mapping = {}) => {
+    for (const pattern of Object.keys(mapping)) {
         const regex = new RegExp(pattern);
         if (regex.test(file)) {
-            return file.replace(regex, renameObject[pattern]);
+            return file.replace(regex, mapping[pattern]);
         }
     }
     // fallback: only returns the basename of the file
@@ -74,7 +74,7 @@ export const resolveOutput = (root, file, output) => {
     }
     // 2. output configuration is provided as an object
     else if (!!output && typeof output === "object") {
-        const renamedOutputFile = applyRename(file, output?.rename || {});
+        const renamedOutputFile = applyNameMapping(file, output?.nameMapping || {});
         return path.resolve(root, path.join(output?.dir || ".", renamedOutputFile));
     }
     // 3. other case???
