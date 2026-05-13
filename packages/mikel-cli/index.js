@@ -58,7 +58,6 @@ export const loadConfiguration = async (configurationFile) => {
 };
 
 // @description get the files that matches the provided input files patterns
-// it uses Node.js 24+ built-in fs.glob to handle glob patterns.
 export const loadInputFiles = async (root, inputFiles) => {
     if (!inputFiles || inputFiles?.length === 0) {
         throw new Error(`No input templates provided.`);
@@ -83,7 +82,7 @@ export const resolveOutput = (root, file, output) => {
 };
 
 // @description load JSON data from the provided path
-export const loadData = async (fileOrObject = null) => {
+export const loadData = async (root, fileOrObject = null) => {
     if (!fileOrObject) {
         return {};
     }
@@ -92,7 +91,7 @@ export const loadData = async (fileOrObject = null) => {
         return fileOrObject;
     }
     // 2. build the full data file path and check if exists
-    const dataPath = path.resolve(process.cwd(), fileOrObject);
+    const dataPath = path.resolve(root, fileOrObject);
     if (!existsSync(dataPath)) {
         throw new Error(`Data file '${dataPath}' was not found.`);
     }
@@ -107,30 +106,76 @@ export const loadData = async (fileOrObject = null) => {
     }
 };
 
-// @description main build script
-export const build = async (root = process.cwd(), input = "", buildOptions = {}) => {
-    const config = await loadConfiguration(buildOptions?.config);
-    const inputFiles = await loadInputFiles(root, input || config.input || null);
-    const data = await loadData(buildOptions?.data || config.data || null);
-    const mikelInstance = mikel.create({});
+// @description load partials
+const loadPartials = async (root, patterns = []) => {
+    const files = await expandGlobPatterns(root, [patterns].flat());
+    const partials = {};
+    for (const file of files) {
+        try {
+            partials[path.basename(file)] = await fs.readFile(path.resolve(root, file), "utf8");
+        } catch (error) {
+            throw new Error(`Failed to read partial file '${file}': ${error.message}`);
+        }
+    }
+    return partials;
+};
 
-    // load partials from buildOptions
-    if (buildOptions?.partial) {
-        const partialFiles = await expandGlobPatterns(root, [buildOptions.partial].flat());
-        for (let i = 0; i < partialFiles.length; i++) {
-            const partialPath = path.resolve(root, partialFiles[i]); // path.resolve(process.cwd(), uniqueFiles[i]);
-            try {
-                mikelInstance.addPartial(path.basename(partialPath), await fs.readFile(partialPath, "utf8"));
-            } catch (error) {
-                throw new Error(`Failed to read partial file '${partialFiles[i]}': ${error.message}`);
+// @description load javascript modules from the specified patterns
+const loadModules = async (root, patterns = []) => {
+    const files = await expandGlobPatterns(root, [patterns].flat());
+    const loadedModules = {};
+    for (const file of files) {
+        const filePath = path.resolve(root, file);
+        //only javascript modules are supported, so we have to check the extension of the file
+        const extension = path.extname(filePath);
+        if (extension !== ".js" && extension !== ".mjs") {
+            throw new Error(`Module '${filePath}' is not supported. Only ESM JavaScript (.js or .mjs) files are supported.`);
+        }
+        // import the module and call the register method
+        const module = await import(filePath);
+        for (const [name, fn] of Object.entries(module)) {
+            if (typeof fn === "function") {
+                loadedModules[name] = fn;
             }
         }
     }
+    return loadedModules;
+};
+
+// @description build a configuration object from CLI arguments
+export const resolveConfigurationFromArgs = async (root = process.cwd(), args = {}) => {
+    const config = await loadConfiguration(args?.values?.config);
+
+    // resolve partials, helpers and functions from cli arguments
+    const partials = await loadPartials(root, args?.values?.partial || []);
+    const helpers = await loadModules(root, args?.values?.helper || []);
+    const functions = await loadModules(root, args?.values?.function || []);
+
+    // return parsed configuration object
+    return {
+        context: config.context || root,
+        input: (!!args?.positionals && Array.isArray(args?.positionals) && args.positionals.length > 0) ? args.positionals : config.input,
+        output: args?.values?.output || config.output,
+        data: args?.values?.data || config.data,
+        partials: Object.assign(config.partials || {}, partials),
+        helpers: Object.assign(config.helpers || {}, helpers),
+        functions: Object.assign(config.functions || {}, functions),
+        plugins: args?.values?.plugin || config.plugins || [],
+    };
+};
+
+// @description main build script
+export const build = async (config = {}) => {
+    const inputFiles = await loadInputFiles(config.context, config.input);
+    const data = await loadData(config.context, config.data);
+    const mikelInstance = mikel.create({
+        helpers: config.helpers,
+        functions: config.functions,
+        partials: config.partials,
+    });
 
     // load plugins
-    const plugins = buildOptions?.plugin || config.plugins || [];
-    for (let i = 0; i < plugins.length; i++) {
-        const plugin = plugins[i];
+    for (const plugin of config.plugins) {
         // check if the provided plugin is a function or an object
         if (typeof plugin === "function" || (typeof plugin === "object" && !Array.isArray(plugin) && !!plugin)) {
             mikelInstance.use(plugin);
@@ -152,8 +197,8 @@ export const build = async (root = process.cwd(), input = "", buildOptions = {})
     }
 
     // process input files
-    for (let i = 0; i < inputFiles.length; i++) {
-        const inputPath = path.resolve(root, inputFiles[i]);
+    for (const inputFile of inputFiles) {
+        const inputPath = path.resolve(config.context, inputFile);
         if (!existsSync(inputPath)) {
             throw new Error(`Template file '${inputPath}' was not found.`);
         }
@@ -172,8 +217,8 @@ export const build = async (root = process.cwd(), input = "", buildOptions = {})
         }
         // check if output argument has been provided to write the result to a file
         // this will also create any intermediary directory that does not exist
-        if (buildOptions.output || config.output) {
-            const outputPath = resolveOutput(root, inputFiles[i], buildOptions.output || config.output);
+        if (config.output) {
+            const outputPath = resolveOutput(config.context, inputFile, config.output);
             const outputDirectory = path.dirname(outputPath);
             // make sure that any directory containing the output file exists
             if (!existsSync(outputDirectory)) {

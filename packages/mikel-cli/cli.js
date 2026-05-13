@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { parseArgs } from "node:util";
-import { build } from "./index.js";
+import { build, resolveConfigurationFromArgs } from "./index.js";
 
 // print the help of the tool
 const printHelp = () => {
@@ -15,6 +15,8 @@ const printHelp = () => {
     console.log("  -c, --config <file>     Configuration file to use");
     console.log("  -o, --output <path>     Output file or directory to save compiled templates");
     console.log("  -P, --partial <file>    Register a partial (supports glob patterns, can be used multiple times)");
+    console.log("  -H, --helper <file>     Register a helper (supports glob patterns, can be used multiple times)");
+    console.log("  -F, --function <file>   Register a function (supports glob patterns, can be used multiple times)");
     console.log("  -L, --plugin <file>     Load a plugin from node_modules (can be used multiple times)");
     console.log("  -D, --data <file>       Path to the data file to use (JSON)");
     console.log("");
@@ -22,6 +24,7 @@ const printHelp = () => {
     console.log("  mikel template.html --data data.json --output www/index.html");
     console.log("  mikel template.html --data data.json --partial header.html --partial footer.html --output www/index.html");
     console.log("  mikel template.html --partial 'components/**/*.html' --output dist/index.html");
+    console.log("  mikel template.html --helper helpers.js --function utils.js --output dist/index.html");
     console.log("  mikel template.html --plugin mikel-markdown --output dist/index.html");
     console.log("");
     process.exit(0);
@@ -54,6 +57,16 @@ const main = async () => {
                 short: "L",
                 multiple: true,
             },
+            helper: {
+                type: "string",
+                short: "H",
+                multiple: true,
+            },
+            function: {
+                type: "string",
+                short: "F",
+                multiple: true,
+            },
             help: {
                 type: "boolean",
                 short: "h",
@@ -69,7 +82,8 @@ const main = async () => {
 
     // build with the provided configuration
     try {
-        await build(process.cwd(), positionals[0], values);
+        const config = await resolveConfigurationFromArgs(process.cwd(), { positionals, values });
+        await build(config);
     }
     catch (error) {
         console.error(`\n❌ ${error.message}\n`);
