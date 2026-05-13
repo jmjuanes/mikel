@@ -244,3 +244,6 @@ export const build = async (config = {}) => {
         }
     }
 };
+
+// @description utility method to provide a typed configuration
+export const defineConfig = (config = {}) => config;

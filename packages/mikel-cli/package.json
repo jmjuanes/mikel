@@ -16,13 +16,19 @@
     "engines": {
         "node": ">=24.0.0"
     },
+    "types": "index.d.ts",
     "scripts": {
         "test": "node --import=./loader.js test.js"
     },
     "exports": {
-        ".": "./index.js",
-        "./index.js": "./index.js",
-        "./cli.js": "./cli.js",
+        ".": {
+            "import": "./index.js",
+            "types": "./index.d.ts"
+        },
+        "./index.js": {
+            "import": "./index.js",
+            "types": "./index.d.ts"
+        },
         "./package.json": "./package.json"
     },
     "bin": {
@@ -34,7 +40,8 @@
     "files": [
         "README.md",
         "cli.js",
-        "index.js"
+        "index.js",
+        "index.d.ts"
     ],
     "keywords": [
         "mikel",
