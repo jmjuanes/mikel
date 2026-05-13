@@ -195,6 +195,44 @@ data: {
 }
 ```
 
+#### `helpers`
+
+An object containing helpers that will be registered in the mikel engine:
+
+```js
+export default {
+    helpers: {
+        uppercase: ({ fn, data }) => {
+            return fn(data).toUpperCase();
+        },
+    },
+};
+```
+
+#### `functions`
+
+An object containing functions that will be registered in the mikel engine:
+
+```js
+export default {
+    functions: {
+        sayHello: () => "Hello!",
+    },
+};
+```
+
+#### `partials`
+
+An object containing partials that will be registered in the mikel engine:
+
+```js
+export default {
+    partials: {
+        "foo": "Hello {{this.bar}}",
+    },
+};
+```
+
 #### `plugins`
 
 An array of Mikel plugins to load. See the [Plugins](#plugins) section for details.
