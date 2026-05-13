@@ -37,6 +37,8 @@ $ mikel <template> [options]
 | `--data <file>` | `-D` | Path to JSON data file |
 | `--plugin <module>` | `-L` | Load a Mikel plugin from a JavaScript module (can be used multiple times) |
 | `--partial <file>` | `-P` | Register a partial template (supports glob patterns, can be used multiple times) |
+| `--helper <file>` | `-H` | Register helper functions from a JavaScript module (supports glob patterns, can be used multiple times) |
+| `--function <file>` | `-F` | Register functions from a JavaScript module (supports glob patterns, can be used multiple times) |
 
 ### Examples
 
@@ -72,7 +74,15 @@ Register partial templates for reusable components:
 mikel template.html --data data.json --partial header.html --partial footer.html --output dist/index.html
 ```
 
-### Using Glob Patterns
+#### Using Helpers and Functions
+
+Register custom helpers and functions from JavaScript modules:
+
+```bash
+mikel template.html --data data.json --helper helpers.js --function utils.js --output dist/index.html
+```
+
+#### Using Glob Patterns
 
 Load multiple files using glob patterns:
 
@@ -92,7 +102,7 @@ mikel template.html --partial header.html --partial 'components/*.html' --output
 
 ### Glob Pattern Support
 
-The `--partial` option supports glob patterns for loading multiple files at once:
+The `--partial`, `--helper`, and `--function` options support glob patterns for loading multiple files at once:
 
 | Pattern | Description | Example |
 |---------|-------------|---------|
