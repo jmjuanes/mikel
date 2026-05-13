@@ -188,7 +188,7 @@ export default {
 
 #### `data`
 
-Data to pass to the templates. Accepts a path to a JSON file: or a plain object:
+Data to pass to the templates. Accepts a path to a JSON file:
 
 ```js
 export default {
