@@ -122,7 +122,7 @@ export default {
     input: "src/**/*.mustache",
     output: {
         dir: "dist/",
-        rename: {
+        nameMapper: {
             "^src/(.+)\\.mustache$": "$1.html",
         },
     },
@@ -155,28 +155,35 @@ input: ["src/index.mustache", "src/pages/**/*.mustache"]
 
 #### `output`
 
-Where to write the rendered files. Accepts a string (directory path) or an object:
+An object containing the options to instruct mikel where and how to save rendered templates.
+
+##### `output.dir`
+
+Output directory to save the rendered templates. If not provided, rendered templates will be saved in the current working directory.
 
 ```js
-// simple directory
-output: "dist/"
-
-// with rename rules
-output: {
-    dir: "dist/",
-    rename: {
-        "^src/(.+)\\.mustache$": "$1.html",
+export default {
+    output: {
+        dir: "dist/",
     },
-}
+    // ...
+};
 ```
 
-The `rename` field works like Jest's `moduleNameMapper` — keys are regular expressions and values are replacement strings. The first matching pattern wins. If no pattern matches, the basename of the input file is used as the output filename.
+##### `output.nameMapper`
+
+An object to map the input file names to the output file names. It works like Jest's `moduleNameMapper` — keys are regular expressions and values are replacement strings. The first matching pattern wins. If no pattern matches, the basename of the input file is used as the output filename.
 
 ```js
-// src/docs/guide/index.mustache → dist/docs/guide/index.html
-rename: {
-    "^src/(.+)\\.mustache$": "$1.html",
-}
+// src/docs/guide/index.mustache -> dist/docs/guide/index.html
+export default {
+    output: {
+        nameMapper: {
+            "^src/(.+)\\.mustache$": "$1.html",
+        },
+    },
+    // ...
+};
 ```
 
 #### `data`
