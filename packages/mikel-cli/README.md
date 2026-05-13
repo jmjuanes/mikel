@@ -188,18 +188,26 @@ export default {
 
 #### `data`
 
-Data to pass to the templates. Accepts a path to a JSON file or a plain object:
+Data to pass to the templates. Accepts a path to a JSON file: or a plain object:
 
 ```js
-// path to JSON file
-data: "./data/site.json"
+export default {
+    data: "./data/site.json",
+    // ...
+};
+```
 
-// inline object
-data: {
-    site: {
-        title: "My Site",
+Or a plain object:
+
+```js
+export default {
+    data: {
+        site: {
+            title: "My Site",
+        },
     },
-}
+    // ...
+};
 ```
 
 #### `helpers`
