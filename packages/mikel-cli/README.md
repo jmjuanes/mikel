@@ -31,10 +31,10 @@ $ mikel <template> [options]
 
 | Option | Short | Description |
 |--------|-------|-------------|
-| `--config <file>` | `-c` | Path to configuration file |
 | `--help` | `-h` | Display help information |
-| `--data <file>` | `-D` | Path to JSON data file |
+| `--config <file>` | `-c` | Path to configuration file |
 | `--output <file>` | `-o` | Output file path |
+| `--data <file>` | `-D` | Path to JSON data file |
 | `--plugin <module>` | `-L` | Load a Mikel plugin from a JavaScript module (can be used multiple times) |
 | `--partial <file>` | `-P` | Register a partial template (supports glob patterns, can be used multiple times) |
 | `--helper <file>` | `-H` | Register helper functions from a JavaScript module (supports glob patterns, can be used multiple times) |
@@ -106,7 +106,7 @@ The `--partial`, `--helper`, and `--function` options support glob patterns for 
 
 | Pattern | Description | Example |
 |---------|-------------|---------|
-| `*.ext` | All files with extension in current directory | `*.html`, `*.js` |
+| `*.ext` | All files with extension in current directory | `*.html` |
 | `dir/*.ext` | All files with extension in specific directory | `partials/*.html` |
 | `dir/**/*.ext` | All files with extension in directory and subdirectories | `components/**/*.html` |
 | `?` | Single character wildcard | `file?.html` |
@@ -193,6 +193,44 @@ data: {
         title: "My Site",
     },
 }
+```
+
+#### `helpers`
+
+An object containing helpers that will be registered in the mikel engine:
+
+```js
+export default {
+    helpers: {
+        uppercase: ({ fn, data }) => {
+            return fn(data).toUpperCase();
+        },
+    },
+};
+```
+
+#### `functions`
+
+An object containing functions that will be registered in the mikel engine:
+
+```js
+export default {
+    functions: {
+        sayHello: () => "Hello!",
+    },
+};
+```
+
+#### `partials`
+
+An object containing partials that will be registered in the mikel engine:
+
+```js
+export default {
+    partials: {
+        "foo": "Hello {{this.bar}}",
+    },
+};
 ```
 
 #### `plugins`
