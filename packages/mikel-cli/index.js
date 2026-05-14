@@ -48,7 +48,7 @@ export const loadConfiguration = async (configurationFile) => {
     // check the extension of the file
     const configurationExtension = path.extname(configurationFile);
     if (configurationExtension === ".js" || configurationExtension === ".mjs") {
-        return await import(configurationPath);
+        return (await import(configurationPath)).default;
     }
     else if (configurationExtension === ".json") {
         return JSON.parse(await fs.readFile(configurationPath, "utf8"));
