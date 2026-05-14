@@ -68,7 +68,26 @@ describe("cli", () => {
         }
     });
 
-    it("should process multiple inputs with a configuration file", () => {
+    it("should process multiple inputs with a JS configuration", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "a.html"), "Hello {{name}}!");
+            fs.writeFileSync(path.join(dir, "b.html"), "Bye {{name}}!");
+            fs.writeFileSync(path.join(dir, "data.json"), JSON.stringify({ name: "World" }));
+            fs.writeFileSync(path.join(dir, "mikel.config.js"), `export default {
+                input: ["${path.join(dir, "a.html")}", "${path.join(dir, "b.html")}"],
+                output: { dir: "${path.join(dir, "dist/")}" },
+                data: "${path.join(dir, "data.json")}",
+            };`);
+            execute(`--config ${path.join(dir, "mikel.config.js")}`);
+            assert.strictEqual(fs.readFileSync(path.join(dir, "dist/a.html"), "utf8"), "Hello World!");
+            assert.strictEqual(fs.readFileSync(path.join(dir, "dist/b.html"), "utf8"), "Bye World!");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
+
+    it("should process multiple inputs with a JSON configuration", () => {
         const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
         try {
             fs.writeFileSync(path.join(dir, "a.html"), "Hello {{name}}!");
