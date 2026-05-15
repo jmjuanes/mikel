@@ -148,7 +148,6 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
                             options: opt || {},
                             args: args || [],
                             context: blockData,
-                            rawContent: untokenize(tokens.slice(j, i)),
                         },
                         parent: data,
                         root: state.root,
