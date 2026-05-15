@@ -148,6 +148,7 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
                             options: opt || {},
                             args: args || [],
                             context: blockData,
+                            rawContent: untokenize(tokens.slice(j, i)),
                         },
                         parent: data,
                         root: state.root,
@@ -174,7 +175,7 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
         }
         else if (tokens[i].startsWith(">")) {
             const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), data, state);
-            const blockContent = []; // to store partial block content
+            const j = i + 1, blockContent = []; // to store partial block content
             if (tokens[i].startsWith(">>")) {
                 i = compile(ctx, tokens, blockContent, data, state, i + 1, t);
             }
@@ -190,6 +191,7 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
                         args: args || [],
                         options: opt || {},
                         context: partialData,
+                        rawContent: i > j ? untokenize(tokens.slice(j, i)) : "",
                     },
                 };
                 compile(ctx, tokenize(partialBody), output, partialData, partialState, 0, "");
