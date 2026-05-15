@@ -106,6 +106,31 @@ describe("cli", () => {
         }
     });
 
+    it("should apply the output.nameMapper option", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "a.mustache"), "Hello {{name}}!");
+            fs.writeFileSync(path.join(dir, "data.json"), JSON.stringify({ name: "World" }));
+            fs.writeFileSync(path.join(dir, "mikel.config.json"), JSON.stringify({
+                context: dir,
+                input: [
+                    "a.mustache",
+                ],
+                output: {
+                    dir: path.join(dir, "dist/"),
+                    nameMapper: {
+                        "([\\w]+)\\.mustache$": "$1.html",
+                    },
+                },
+                data: path.join(dir, "data.json"),
+            }));
+            execute(`--config ${path.join(dir, "mikel.config.json")}`);
+            assert.strictEqual(fs.readFileSync(path.join(dir, "dist/a.html"), "utf8"), "Hello World!");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
+
     it("should compile with partials", () => {
         const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
         try {
