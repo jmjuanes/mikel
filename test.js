@@ -528,6 +528,26 @@ describe("templating", () => {
         });
     });
 
+    describe("{{@partial}}", () => {
+        it("should allow accessing to rawContent passed to the partial", () => {
+            const options = {
+                partials: {
+                    foo: `{{!@partial.rawContent}}`,
+                },
+            };
+            assert.equal(m("{{>>foo}}{{bar}}{{/foo}}", {}, options), "{{bar}}");
+        });
+
+        it("should pass an empty rawContent for non block partials", () => {
+            const options = {
+                partials: {
+                    foo: "{{!@partial.rawContent}}",
+                },
+            };
+            assert.equal(m("{{>foo}}", {}, options), "");
+        });
+    });
+
     describe("{{=function }}", () => {
         const options = {
             functions: {
