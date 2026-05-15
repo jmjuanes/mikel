@@ -528,6 +528,18 @@ describe("templating", () => {
         });
     });
 
+    describe("{{@partial}}", () => {
+        it("should allow accessing to rawContent passed to the partial", () => {
+            const options = {
+                partials: {
+                    foo: `{{!@partial.rawContent}}`,
+                },
+            };
+
+            assert.equal(m("{{>>foo}}{{bar}}{{/foo}}", {}, options), "{{bar}}");
+        });
+    });
+
     describe("{{=function }}", () => {
         const options = {
             functions: {
