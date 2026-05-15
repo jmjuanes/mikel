@@ -74,7 +74,7 @@ export const resolveOutput = (root, file, output) => {
     }
     // 2. output configuration is provided as an object
     else if (!!output && typeof output === "object") {
-        const renamedOutputFile = applyNameMapping(file, output?.nameMapping || {});
+        const renamedOutputFile = applyNameMapping(file, output?.nameMapper || {});
         return path.resolve(root, path.join(output?.dir || ".", renamedOutputFile));
     }
     // 3. other case???
