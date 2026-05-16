@@ -235,6 +235,57 @@ describe("parser", () => {
         });
     });
 
+    describe("tables", () => {
+        it("should parse a basic table", () => {
+            const table = [
+                "| Name | Age |",
+                "| --- | --- |",
+                "| Alice | 30 |",
+                "",
+            ].join("\n") + "\n";
+            const result = mk(table);
+            assert.ok(result.includes("<table>"));
+            assert.ok(result.includes("<thead>"));
+            assert.ok(result.includes("<tbody>"));
+            assert.ok(result.includes("Alice"));
+            assert.ok(result.includes("30"));
+        });
+
+        it("should parse a table with an empty cell", () => {
+            const table = [
+                "| Name | Age |",
+                "| --- | --- |",
+                "| Alice |  |",
+                "",
+            ].join("\n") + "\n";
+            const result = mk(table);
+            assert.ok(result.includes("<table>"));
+            assert.ok(result.includes("Alice"));
+        });
+
+        it("should parse a table with all empty cells in a row", () => {
+            const table = [
+                "| Name | Age |",
+                "| --- | --- |",
+                "|  |  |",
+                "",
+            ].join("\n") + "\n";
+            const result = mk(table);
+            assert.ok(result.includes("<table>"));
+        });
+
+        it("should not hang on a table with empty cells", () => {
+            const table = [
+                "| A | B | C |",
+                "| --- | --- | --- |",
+                "| 1 |  | 3 |",
+                "|  |  |  |",
+                "",
+            ].join("\n") + "\n";
+            assert.doesNotThrow(() => mk(table));
+        });
+    });
+
     describe("embedded html blocks", () => {
         it("should support embedding html code", () => {
             assert.equal(mk("<div>hello</div>"), "<div>hello</div>");
