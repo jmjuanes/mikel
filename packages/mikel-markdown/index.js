@@ -65,7 +65,7 @@ const allExpressions = {
         },
     },
     table: {
-        regex: /^\|((?: +[^\n|]+ +\|?)+)\| *\n\|((?: *[:]?[-]+[:]? *\|?)+)\| *\n((?:^\|(?: +[^\n|]+ +\|?)+\| *\n)+)\n/gm,
+        regex: /^\|((?: *[^\n|]* *\|?)+)\| *\n\|((?: *[:]?[-]+[:]? *\|?)+)\| *\n((?:^\|(?: *[^\n|]* *\|?)+\| *\n)+)\n/gm,
         replace: (args, opt) => {
             const cn = opt.classNames || {};
             // args[1] --> table header
