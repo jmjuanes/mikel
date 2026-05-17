@@ -228,7 +228,7 @@ export const build = async (config = {}) => {
         }
         let template;
         try {
-            template = template.content ? template.content : (await fs.readFile(inputPath, "utf8"));
+            template = inputFile.content ? inputFile.content : (await fs.readFile(inputPath, "utf8"));
         } catch (error) {
             throw new Error(`Failed to read template file '${inputPath}': ${error.message}`);
         }
