@@ -155,4 +155,24 @@ describe("cli", () => {
         }
     });
 
+    it("should compile dynamic inputs", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "mikel.config.js"), `
+            import { createInput } from "mikel-cli";
+            export default {
+                context: "${dir}",
+                input: [
+                    createInput("index.html", "<b>Hello World!</b>"),
+                ],
+                output: {
+                    dir: "${path.join(dir, "dist/")}",
+                },
+            };`);
+            execute(`--config ${path.join(dir, "mikel.config.js")}`);
+            assert.strictEqual(fs.readFileSync(path.join(dir, "dist/index.html"), "utf8"), "<b>Hello World!</b>");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
 });
