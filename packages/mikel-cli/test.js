@@ -4,7 +4,7 @@ import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
 
-import { applyNameMapping } from "./index.js";
+import { applyNameMapping, createInput } from "./index.js";
 
 describe("utility functions", () => {
     describe("applyNameMapping", () => {
@@ -32,6 +32,15 @@ describe("utility functions", () => {
                 "^src/(.+)\\.mustache$": "$1.html",
             });
             assert.strictEqual(newFileName, "docs/guide/index.html");
+        });
+    });
+
+    describe("createInput", () => {
+        it("should return a string wuth the file content", () => {
+            const content = "Content of the file.";
+            const base64Content = Buffer.from(content, "utf-8").toString("base64");
+            const filename = "index.txt";
+            assert.strictEqual(createInput(filename, content), `data:${filename};base64,${base64Content}`);
         });
     });
 });
@@ -146,4 +155,24 @@ describe("cli", () => {
         }
     });
 
+    it("should compile dynamic inputs", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "mikel.config.js"), `
+            import { createInput } from "mikel-cli";
+            export default {
+                context: "${dir}",
+                input: [
+                    createInput("index.html", "<b>Hello World!</b>"),
+                ],
+                output: {
+                    dir: "${path.join(dir, "dist/")}",
+                },
+            };`);
+            execute(`--config ${path.join(dir, "mikel.config.js")}`);
+            assert.strictEqual(fs.readFileSync(path.join(dir, "dist/index.html"), "utf8"), "<b>Hello World!</b>");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
 });
