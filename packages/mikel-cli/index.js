@@ -66,7 +66,7 @@ export const loadInputFiles = async (root, inputFiles) => {
     const files = [], patterns = [];
     (Array.isArray(inputFiles) ? inputFiles : [inputFiles]).forEach(file => {
         // 1.1. check if file starts with 'data:' --> load as virtual file
-        if (file && file.startsWith("data:")) {
+        if (!!file && file.startsWith("data:")) {
             const rest = file.slice(5);
             const sep = rest.indexOf(";base64,");
             files.push({
@@ -75,7 +75,7 @@ export const loadInputFiles = async (root, inputFiles) => {
             });
         }
         // 1.2. other case, treat as patter/glob
-        else {
+        else if (!!file) {
             patterns.push(file);
         }
     });
@@ -223,9 +223,9 @@ export const build = async (config = {}) => {
     // process input files
     for (const inputFile of inputFiles) {
         const inputPath = path.resolve(config.context, inputFile.path);
-        if (!existsSync(inputPath)) {
-            throw new Error(`Template file '${inputPath}' was not found.`);
-        }
+        // if (!existsSync(inputPath)) {
+        //     throw new Error(`Template file '${inputPath}' was not found.`);
+        // }
         let template;
         try {
             template = inputFile.content ? inputFile.content : (await fs.readFile(inputPath, "utf8"));
