@@ -16,4 +16,5 @@ export type MikelCliConfig = {
 };
 
 export declare const defineConfig: (config: MikelCliConfig) => MikelCliConfig;
+export declare const createInput: (name: string, content: string) => string;
 export declare const build: (config: MikelCliConfig) => Promise<void>;
