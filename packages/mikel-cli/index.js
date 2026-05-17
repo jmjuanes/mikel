@@ -62,7 +62,31 @@ export const loadInputFiles = async (root, inputFiles) => {
     if (!inputFiles || inputFiles?.length === 0) {
         throw new Error(`No input templates provided.`);
     }
-    return expandGlobPatterns(root, Array.isArray(inputFiles) ? inputFiles : [inputFiles]);
+    // 1. iterate inputFiles and extract virtual files and glob/relative files paths
+    const files = [], patterns = [];
+    (Array.isArray(inputFiles) ? inputFiles : [inputFiles]).forEach(file => {
+        // 1.1. check if file starts with 'data:' --> load as virtual file
+        if (file && file.startsWith("data:")) {
+            const rest = file.slice(5);
+            const sep = rest.indexOf(";base64,");
+            files.push({
+                path: rest.slice(0, sep),
+                content: Buffer.from(rest.slice(sep + 8), "base64").toString("utf-8"),
+            });
+        }
+        // 1.2. other case, treat as patter/glob
+        else {
+            patterns.push(file);
+        }
+    });
+    // 2. expand glob patterns and append them into files array
+    (await expandGlobPatterns(root, patterns)).forEach(filePath => {
+        files.push({
+            path: filePath,
+        });
+    });
+    // 3. return processed files
+    return files;
 };
 
 // @description resolve output
@@ -198,13 +222,13 @@ export const build = async (config = {}) => {
 
     // process input files
     for (const inputFile of inputFiles) {
-        const inputPath = path.resolve(config.context, inputFile);
+        const inputPath = path.resolve(config.context, inputFile.path);
         if (!existsSync(inputPath)) {
             throw new Error(`Template file '${inputPath}' was not found.`);
         }
         let template;
         try {
-            template = await fs.readFile(inputPath, "utf8");
+            template = template.content ? template.content : (await fs.readFile(inputPath, "utf8"));
         } catch (error) {
             throw new Error(`Failed to read template file '${inputPath}': ${error.message}`);
         }
@@ -218,7 +242,7 @@ export const build = async (config = {}) => {
         // check if output argument has been provided to write the result to a file
         // this will also create any intermediary directory that does not exist
         if (config.output) {
-            const outputPath = resolveOutput(config.context, inputFile, config.output);
+            const outputPath = resolveOutput(config.context, inputFile.path, config.output);
             const outputDirectory = path.dirname(outputPath);
             // make sure that any directory containing the output file exists
             if (!existsSync(outputDirectory)) {
@@ -247,3 +271,8 @@ export const build = async (config = {}) => {
 
 // @description utility method to provide a typed configuration
 export const defineConfig = (config = {}) => config;
+
+// @description utility method to create dinamic input entries
+export const createInput = (name, content) => {
+    return `data:${name};base64,${Buffer.from(content, "utf-8").toString("base64")}`;
+};
