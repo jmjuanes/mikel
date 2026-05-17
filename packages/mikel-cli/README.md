@@ -281,6 +281,26 @@ export default {
 };
 ```
 
+## Utils
+
+### `createInput(name, content)`
+
+Utility function to create dynamic input entries for the `input` field in `mikel.config.js`, without needing to deal with the underlying format.
+
+Example:
+
+```js
+import { createInput } from "mikel-cli";
+
+export default {
+    input: [
+        "src/templates/*.html",
+        createInput("generated/index.html", "{{> header}} ..."),
+    ],
+    // ...
+};
+```
+
 ## License
 
 Licensed under the [MIT License](../../LICENSE).
