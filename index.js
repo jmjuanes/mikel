@@ -130,7 +130,7 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
             output.push(tokens[i]);
         }
         else if (tokens[i].startsWith("#") && typeof ctx.helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
-            const [t, args, opt] = parseArgs(tokens[i].slice(1), data, state);
+            const [t, args, opt] = parseArgs(tokens[i].slice(1), data, state, ctx.functions);
             const j = i + 1;
             i = findClosingToken(tokens, j, t);
             output.push(ctx.helpers[t]({
