@@ -85,7 +85,8 @@ const allExpressions = {
             });
             const thead = render("thead", {class: cn.tableHead}, "<tr>" + head.join("") + "</tr>");
             const tbody = render("tbody", {class: cn.tableBody}, body.join(""));
-            return render("table", {class: cn.table}, thead + tbody);
+            const table = render("table", {class: cn.table}, thead + tbody);
+            return render("div", { class: cn.tableContainer }, table);
         },
     },
     link: {
