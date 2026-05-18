@@ -284,6 +284,18 @@ describe("parser", () => {
             ].join("\n") + "\n";
             assert.doesNotThrow(() => mk(table));
         });
+
+        it("should return table inside a <div> container", () => {
+            const table = [
+                "| Name | Age |",
+                "| ---- | --- |",
+                "| Alice | 30 |",
+                "",
+            ].join("\n") + "\n";
+            const result = mk(table, { classNames: { tableContainer: "table-container" } });
+            assert.ok(result.startsWith(`<div class="table-container">`));
+            assert.ok(result.endsWith("</div>"));
+        });
     });
 
     describe("embedded html blocks", () => {
