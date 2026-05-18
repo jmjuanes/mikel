@@ -502,6 +502,30 @@ describe("templating", () => {
             assert.equal(m("{{#foo value=2}}Helper option: {{@helper.options.value}}{{/foo}}", {}, options), "Helper option: 2");
             assert.equal(m("{{#foo}}Helper context: {{@helper.context.value}}{{/foo}}", {}, options), "Helper context: bar");
         });
+
+        it("should support subexpressions as argument values", () => {
+            const options = {
+                helpers: {
+                    foo: params => "Result is: " + params.args[0],
+                },
+                functions: {
+                    concat: params => params.args.join(","),
+                },
+            };
+            assert.equal(m(`{{#foo (concat "Hello" "World")}}{{/foo}}`, {}, options), "Result is: Hello,World");
+        });
+
+        it("should support subexpressions as options", () => {
+            const options = {
+                helpers: {
+                    foo: params => "Result is: " + params.options.value,
+                },
+                functions: {
+                    concat: params => params.args.join(","),
+                },
+            };
+            assert.equal(m(`{{#foo value=(concat "Hello" "World")}}{{/foo}}`, {}, options), "Result is: Hello,World");
+        });
     });
 
     describe("{{@root}}", () => {
