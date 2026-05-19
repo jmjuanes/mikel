@@ -213,6 +213,30 @@ describe("templating", () => {
             };
             assert.equal(m(`{{>foo "tag1" "tag2" "tag3"}}`, {}, {partials}), "Tags: tag1,tag2,tag3,");
         });
+
+        it("should support subexpressions in positional arguments", () => {
+            const options = {
+                functions: {
+                    concat: params => params.args.join(" "),
+                },
+                partials: {
+                    foo: "Hello {{this}}!",
+                },
+            };
+            assert.equal(m(`{{>foo (concat "John" "Doe")}}`, {}, options), "Hello John Doe!");
+        });
+
+        it("should support subexpressions in key-value arguments", () => {
+            const options = {
+                functions: {
+                    concat: params => params.args.join(" "),
+                },
+                partials: {
+                    foo: "Hello {{this.name}}!",
+                },
+            };
+            assert.equal(m(`{{>foo name=(concat "John" "Doe")}}`, {}, options), "Hello John Doe!");
+        });
     });
 
     describe("{{>> xyz}}", () => {
@@ -492,7 +516,7 @@ describe("templating", () => {
             assert.equal(m("{{#greet}}{{/greet}}", data, options), "Hello Bob!");
         });
 
-        it("shoudl support accessing helper content using the @helper variable", () => {
+        it("should support accessing helper content using the @helper variable", () => {
             const options = {
                 helpers: {
                     foo: params => params.fn({value: "bar"}),

@@ -732,9 +732,9 @@ console.log(result); // --> "Users: John Doe and Alice Smith"
 
 ### Subexpressions  
 
-> Added in `v0.30.0`. Supported in helpers in `v0.37.0`.
+> Added in `v0.30.0`. Supported in helpers and partials in `v0.37.0`.
 
-Subexpressions allow you to evaluate a function call inside another function call or helper. They are written using parentheses, and can be used anywhere a normal function argument is allowed. Example:
+Subexpressions allow you to evaluate a function call inside another function call, helpers, or partials. They are written using parentheses, and can be used anywhere a normal function argument is allowed. Example:
 
 ```hbs
 {{=sum (sum 3 4) 3}}
@@ -756,6 +756,12 @@ Subexpressions can be used in helpers also:
 ```hbs
 {{#sayHello name=(concat "John" "Doe")}}{{/sayHello}}
 ```
+
+And in partials:
+
+```hbs
+{{>heading text=(concat "Hello" "World")}}
+``` 
 
 #### Nested subexpressions
 
@@ -789,7 +795,7 @@ You can reference variables or paths normally:
 
 #### Limitations
 
-- Subexpressions are currently supported in **functions** (`{{=...}}`) and **helpers** (`{{# ...}}`).
+- Subexpressions are currently supported in **functions** (`{{=...}}`), **helpers** (`{{# ...}}`), and **partials** (`{{> ...}}`).
 - Parentheses must be balanced; malformed expressions will throw an error.
 
 
