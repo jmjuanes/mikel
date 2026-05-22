@@ -29,8 +29,8 @@ const untokenize = (ts = [], s = "{{", e = "}}") => {
 // @description tokenize args
 const tokenizeArgs = (str = "", tokens = [], strings = []) => {
     let current = "", depth = 0;
-    // 1. replace strings
-    str = str.replace(/"([^"\\]|\\.)*"/g, (match) => {
+    // 1. replace strings in single/double quotes
+    str = str.replace(/("([^"\\]|\\.)*"|'([^'\\]|\\.)*')/g, (match) => {
         const id = `__STR${strings.length}__`;
         strings.push(match);
         return id;
@@ -100,8 +100,9 @@ const parse = (v, data = {}, state = {}, fns = {}) => {
     if (v.startsWith("(") && v.endsWith(")")) {
         return evaluateExpression(v.slice(1, -1).trim(), data, state, fns);
     }
-    if ((v.startsWith(`"`) && v.endsWith(`"`)) || /^-?\d+\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
-        return JSON.parse(v);
+    if ((v.startsWith(`"`) && v.endsWith(`"`)) || (v.startsWith(`'`) && v.endsWith(`'`)) || /^-?\d+\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
+        const normalized = (v.startsWith(`'`) && v.endsWith(`'`)) ? `"${v.slice(1, -1).replace(/"/g, '\\"')}"` : v;
+        return JSON.parse(normalized);
     }
     return (v || "").startsWith("@") ? get(state, v.slice(1)) : get(data, v || ".");
 };
