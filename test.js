@@ -702,6 +702,17 @@ describe("templating", () => {
         });
     });
 
+    describe("argument values", () => {
+        const options = {
+            functions: {
+                concat: params => params.args.join(params.options.delimiter || " "),
+            },
+        };
+        it("should support single quotes in arguments", () => {
+            assert.equal(m(`{{=concat 'Hello' 'World'}}`, {}, options), "Hello World");
+        });
+    });
+
     describe("subexpressions", () => {
         const options = {
             functions: {
