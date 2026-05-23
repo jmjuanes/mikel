@@ -12,7 +12,7 @@ export type MikelHelper = (params: {
     fn: MikelHelperCallback;
 }) => string;
 
-export type MikelPartial = {
+export type MikelPartial = string | {
     body: string;
     data: Record<string, any>;
 };
@@ -28,7 +28,7 @@ export type MikelState = Record<string, string>;
 
 export type MikelOptions = {
     helpers?: Record<string, MikelHelper>;
-    partials?: Record<string, string | MikelPartial>;
+    partials?: Record<string, MikelPartial>;
     functions?: Record<string, MikelFunction>;
 };
 
@@ -52,7 +52,7 @@ export type Mikel = {
     removeHelper(name: string): void;
     addFunction(name: string, fn: MikelFunction): void;
     removeFunction(name: string): void;
-    addPartial(name: string, partial: string | MikelPartial): void;
+    addPartial(name: string, partial: MikelPartial): void;
     removePartial(name: string): void;
 };
 
