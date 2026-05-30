@@ -280,12 +280,14 @@ const create = (options = {}) => {
         partials: Object.assign({}, options?.partials || {}),
         functions: Object.assign({}, options?.functions || {}),
         initialState: {}, // Object.assign({}, options?.initialState || {}),
+        preTransforms: [], // list of pre-transform to apply to the template
+        postTransforms: [], // list of post-transforms to apply to the result
     });
     // entry method to compile the template with the provided data object
     const compileTemplate = (template, data = {}) => {
-        const output = [];
-        compile(ctx, tokenize(template), output, data, { ...ctx.initialState, root: data }, 0, "");
-        return output.join("");
+        const output = [], input = ctx.preTransforms.reduce((content, fn) => fn(content), template);
+        compile(ctx, tokenize(input), output, data, { ...ctx.initialState, root: data }, 0, "");
+        return ctx.postTransforms.reduce((result, fn) => fn(result), output.join(""));
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
