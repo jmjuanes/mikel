@@ -26,6 +26,8 @@ export type MikelFunction = (params: {
 
 export type MikelState = Record<string, string>;
 
+export type MikelTransform = (content: string) => string;
+
 export type MikelOptions = {
     helpers?: Record<string, MikelHelper>;
     partials?: Record<string, MikelPartial>;
@@ -41,6 +43,8 @@ export type MikelContext = {
     functions: Record<string, MikelFunction>;
     partials: Record<string, MikelPartial>;
     initialState: MikelState;
+    preTransforms: MikelTransform[];
+    postTransforms: MikelTransform[];
 };
 
 export type MikelPlugin = (ctx: MikelContext) => void;
