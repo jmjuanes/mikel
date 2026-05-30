@@ -898,6 +898,26 @@ describe("mikel.use", () => {
         });
         assert.equal(mk("{{=foo}}", {}), "bar");
     });
+
+    it("should allow to register pre-transforms to the template", () => {
+        const mk = m.create();
+        mk.use((ctx) => {
+            ctx.preTransforms.push(template => {
+                return "Hello " + template + "!";
+            });
+        });
+        assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob!");
+    });
+
+    it("should allow to register post-transforms to the template", () => {
+        const mk = m.create();
+        mk.use((ctx) => {
+            ctx.postTransforms.push(result => {
+                return result.replace("Bob", "Susan");
+            });
+        });
+        assert.equal(mk("Hello {{name}}!", { name: "Bob" }), "Hello Susan!");
+    });
 });
 
 describe("mikel.tokenize", () => {
