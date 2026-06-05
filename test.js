@@ -415,6 +415,16 @@ describe("templating", () => {
             const template = `{{#macro "foo"}}Hello {{@content}}{{/macro}}{{#call "foo"}}Bob{{/call}}`;
             assert.equal(m(template, {}), "Hello Bob");
         });
+
+        it("should allow to access to helpers/partials from parent execution", () => {
+            const template = `{{#macro "foo"}}{{#bar}}{{/bar}}{{/macro}}{{#call "foo"}}{{/call}}`;
+            const options = {
+                helpers: {
+                    bar: () => "Hello world!",
+                }
+            };
+            assert.equal(m(template, {}, options), "Hello world!");
+        });
     });
 
     describe("{{#customHelper }}", () => {
