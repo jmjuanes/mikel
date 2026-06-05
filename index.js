@@ -135,6 +135,7 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
             const j = i + 1;
             i = findClosingToken(tokens, j, t);
             output.push(ctx.helpers[t]({
+                context: ctx,
                 args: args,
                 options: opt,
                 tokens: tokens.slice(j, i),
