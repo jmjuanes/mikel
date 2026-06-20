@@ -131,9 +131,13 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
             output.push(tokens[i]);
         }
         else if (tokens[i].startsWith("#") && typeof ctx.helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
-            const [t, args, opt] = parseArgs(tokens[i].slice(1), data, state, ctx.functions);
+            const value = tokens[i].slice(1).replace(/\s*\/$/, ""); // removes self-closing helper character
+            const isSelfClosing = tokens[i].trim().endsWith("/");
+            const [t, args, opt] = parseArgs(value, data, state, ctx.functions);
             const j = i + 1;
-            i = findClosingToken(tokens, j, t);
+            if (!isSelfClosing) {
+                i = findClosingToken(tokens, j, t);
+            }
             output.push(ctx.helpers[t]({
                 context: ctx,
                 args: args,
@@ -142,19 +146,21 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
                 data: data,
                 state: state,
                 fn: (blockData = {}, customBlockState = {}, blockOutput = []) => {
-                    const blockState = {
-                        ...state,
-                        ...customBlockState,
-                        helper: {
-                            name: t,
-                            options: opt || {},
-                            args: args || [],
-                            context: blockData,
-                        },
-                        parent: data,
-                        root: state.root,
-                    };
-                    compile(ctx, tokens, blockOutput, blockData, blockState, j, t);
+                    if (!isSelfClosing) {
+                        const blockState = {
+                            ...state,
+                            ...customBlockState,
+                            helper: {
+                                name: t,
+                                options: opt || {},
+                                args: args || [],
+                                context: blockData,
+                            },
+                            parent: data,
+                            root: state.root,
+                        };
+                        compile(ctx, tokens, blockOutput, blockData, blockState, j, t);
+                    }
                     return blockOutput.join("");
                 },
             }));
