@@ -560,6 +560,17 @@ describe("templating", () => {
             };
             assert.equal(m(`{{#foo value=(concat "Hello" "World")}}{{/foo}}`, {}, options), "Result is: Hello,World");
         });
+
+        it("should support self-closing helpers", () => {
+            const options = {
+                helpers: {
+                    touppercase: params => {
+                        return params.options.value.toUpperCase();
+                    },
+                },
+            };
+            assert.equal(m(`{{#touppercase value="foo" /}}`, {}, options), "FOO");
+        });
     });
 
     describe("{{@root}}", () => {
