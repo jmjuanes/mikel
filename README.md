@@ -456,7 +456,7 @@ const template = `
 Hello {{name}}!
 {{/macro}}
 
-{{#call name="Bob"}}{{/call}}
+{{#call name="Bob" /}}
 `;
 
 console.log(m(template, {})); // --> 'Hello Bob!'
@@ -476,7 +476,7 @@ const template = `
 Hello {{this.name}}!!
 {{/macro}}
 
-{{#call "sayHello" name="Bob"}}{{/call}}
+{{#call "sayHello" name="Bob" /}}
 `;
 
 console.log(m(template, {})); // --> 'Hello Bob!!'
@@ -551,6 +551,28 @@ const options = {
 const result = m("{{#customEach items}}{{index}}: {{name}}, {{/customEach}}", data, options);
 console.log(result); // --> "0: John, 1: Alice, 2: Bob,"
 ```
+
+#### Self-closing helpers
+
+> Added in `v0.39.0`.
+
+Helpers that don't need to render a block of content can be self-closed by adding a forward slash `/` right before the closing `}}`. This removes the need to write a matching closing tag.
+
+Example using the `call` helper:
+
+```javascript
+const template = `
+{{#macro "sayHello"}}
+Hello {{this.name}}!!
+{{/macro}}
+
+{{#call "sayHello" name="Bob" /}}
+`;
+
+console.log(m(template, {})); // --> 'Hello Bob!!'
+```
+
+A self-closing helper is equivalent to providing an empty block, so `{{#name args /}}` behaves the same as `{{#name args}}{{/name}}`. This means any helper can be self-closed — built-in or custom — though for helpers that depend on their block content (such as `each`, `if`, `with`, or `escape`) this simply results in an empty output.
 
 #### Expand helper arguments using the spread operator
 

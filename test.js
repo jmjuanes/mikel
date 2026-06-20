@@ -402,12 +402,12 @@ describe("templating", () => {
 
     describe("{{#call}}", () => {
         it("should allow to call registered chunks of content", () => {
-            const template = `{{#macro "foo"}}{{this.name}}{{/macro}}{{#call "foo" name="Bob"}}{{/call}}`;
+            const template = `{{#macro "foo"}}{{this.name}}{{/macro}}{{#call "foo" name="Bob" /}}`;
             assert.equal(m(template, {}), "Bob");
         });
 
         it("should allow to pass keyword attributes to a macro", () => {
-            const template = `{{#macro "foo"}}{{this.key}}:{{this.value}}{{/macro}}{{#call "foo" key="foo" value="bar"}}{{/call}}`;
+            const template = `{{#macro "foo"}}{{this.key}}:{{this.value}}{{/macro}}{{#call "foo" key="foo" value="bar" /}}`;
             assert.equal(m(template, {}), "foo:bar");
         });
 
@@ -417,7 +417,7 @@ describe("templating", () => {
         });
 
         it("should allow to access to helpers/partials from parent execution", () => {
-            const template = `{{#macro "foo"}}{{#bar}}{{/bar}}{{/macro}}{{#call "foo"}}{{/call}}`;
+            const template = `{{#macro "foo"}}{{#bar}}{{/bar}}{{/macro}}{{#call "foo" /}}`;
             const options = {
                 helpers: {
                     bar: () => "Hello world!",
@@ -559,6 +559,17 @@ describe("templating", () => {
                 },
             };
             assert.equal(m(`{{#foo value=(concat "Hello" "World")}}{{/foo}}`, {}, options), "Result is: Hello,World");
+        });
+
+        it("should support self-closing helpers", () => {
+            const options = {
+                helpers: {
+                    touppercase: params => {
+                        return params.options.value.toUpperCase();
+                    },
+                },
+            };
+            assert.equal(m(`{{#touppercase value="foo" /}}`, {}, options), "FOO");
         });
     });
 
