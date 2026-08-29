@@ -16,7 +16,7 @@ const createInstance = () => {
             fullName: ({ args }) => `${args[0]} ${args[1]}`,
         },
     });
-    mk.use(jsxTagsPlugin);
+    mk.use(jsxPlugin);
     return mk;
 };
 
@@ -139,7 +139,7 @@ describe("attribute type detection", () => {
 
     test("quoted true/false are unwrapped as booleans (as a keyword arg, checked via a custom helper)", () => {
         const mk = mikel.create({ helpers: { isTrue: ({ options }) => options.flag === true ? "yes" : "no" } });
-        mk.use(jsxTagsPlugin);
+        mk.use(jsxPlugin);
         assert.equal(mk(`<x-isTrue flag="true" />`, {}), `yes`);
         assert.equal(mk(`<x-isTrue flag="false" />`, {}), `no`);
     });
