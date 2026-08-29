@@ -1,0 +1,42 @@
+{
+    "name": "mikel-jsx",
+    "description": "JSX/XML style tags for mikel templating.",
+    "version": "0.0.0",
+    "type": "module",
+    "license": "MIT",
+    "author": {
+        "name": "Josemi Juanes",
+        "email": "hello@josemi.xyz"
+    },
+    "repository": {
+        "url": "https://github.com/jmjuanes/mikel",
+        "directory": "packages/mikel-jsx"
+    },
+    "bugs": "https://github.com/jmjuanes/mikel/issues",
+    "types": "index.d.ts",
+    "scripts": {
+        "test": "node test.js"
+    },
+    "exports": {
+        ".": {
+            "import": "./index.js",
+            "types": "./index.d.ts"
+        },
+        "./index.js": {
+            "import": "./index.js",
+            "types": "./index.d.ts"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "README.md",
+        "index.js",
+        "index.d.ts"
+    ],
+    "keywords": [
+        "mikel",
+        "jsx",
+        "xml",
+        "templating"
+    ]
+}
