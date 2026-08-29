@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert";
 import mikel from "../../index.js";
-import xmlPlugin from "./index.js";
+import jsxPlugin from "./index.js";
 
 // @description builds a fresh mikel instance with the plugin installed and
 // a small set of partials/helpers/functions used across the tests below
@@ -16,7 +16,7 @@ const createInstance = () => {
             fullName: ({ args }) => `${args[0]} ${args[1]}`,
         },
     });
-    mk.use(xmlTagsPlugin);
+    mk.use(jsxTagsPlugin);
     return mk;
 };
 
@@ -139,7 +139,7 @@ describe("attribute type detection", () => {
 
     test("quoted true/false are unwrapped as booleans (as a keyword arg, checked via a custom helper)", () => {
         const mk = mikel.create({ helpers: { isTrue: ({ options }) => options.flag === true ? "yes" : "no" } });
-        mk.use(xmlTagsPlugin);
+        mk.use(jsxTagsPlugin);
         assert.equal(mk(`<x-isTrue flag="true" />`, {}), `yes`);
         assert.equal(mk(`<x-isTrue flag="false" />`, {}), `no`);
     });
