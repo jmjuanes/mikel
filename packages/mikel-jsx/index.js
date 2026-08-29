@@ -1,4 +1,4 @@
-// mikel-xml plugin
+// mikel-jsx plugin
 //
 // Adds JSX/XML-style tags for calling mikel partials, helpers and functions
 // from HTML-ish templates. Other tags (<div>, <span>, your own custom
