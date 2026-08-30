@@ -271,6 +271,8 @@ Partial metadata can be accessed using the `@partial` variable inside the partia
 
 > Added in `v0.4.0`.
 
+> Starting in `v0.40.0`, several built-in helpers also accept their positional arguments as named keyword arguments — see each helper's section below for details. The positional form continues to work unchanged.
+
 Helpers allows you to execute special functions within blocks or sections of your template. Mikel currently supports the following built-in helpers:
 
 #### each
