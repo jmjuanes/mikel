@@ -28,7 +28,7 @@ describe("partials (m-)", () => {
 
     test("self-closing partial with a variable attribute", () => {
         const mk = createInstance();
-        assert.equal(mk(`<m-header title="{{title}}" />`, { title: "World" }), `<h1>World</h1>`);
+        assert.equal(mk(`<m-header title={title} />`, { title: "World" }), `<h1>World</h1>`);
     });
 
     test("block partial exposes its children as @content", () => {
@@ -63,21 +63,23 @@ describe("helpers (x-)", () => {
         assert.equal(mk(`<x-if isAdmin>Admin!</x-if>`, { isAdmin: false }), ``);
     });
 
-    test("block helper: each, mixing positional and keyword args", () => {
+    test("block helper: each, mixing positional and {expr} keyword args", () => {
         const mk = createInstance();
         assert.equal(
-            mk(`<x-each users skip="{{1}}" limit="{{2}}">{{this}}, </x-each>`, {
+            mk(`<x-each users skip={1} limit={2}>{{this}}, </x-each>`, {
                 users: ["John", "Alice", "Bob", "Carl"],
             }),
             `Alice, Bob, `,
         );
     });
 
-    test("unquoted key=value keyword argument", () => {
+    test("quoted {expr} escape hatch behaves exactly like the unquoted form", () => {
         const mk = createInstance();
         assert.equal(
-            mk(`<x-each users limit=limit>{{this}} </x-each>`, { users: ["a", "b", "c", "d"], limit: 2 }),
-            `a b `,
+            mk(`<x-each users skip="{1}" limit="{2}">{{this}}, </x-each>`, {
+                users: ["John", "Alice", "Bob", "Carl"],
+            }),
+            `Alice, Bob, `,
         );
     });
 });
@@ -96,7 +98,7 @@ describe("nesting", () => {
     test("helper wrapping a partial", () => {
         const mk = createInstance();
         assert.equal(
-            mk(`<x-if show><m-header title="{{title}}" /></x-if>`, { show: true, title: "Nested!" }),
+            mk(`<x-if show><m-header title={title} /></x-if>`, { show: true, title: "Nested!" }),
             `<h1>Nested!</h1>`,
         );
     });
@@ -128,30 +130,32 @@ describe("regular HTML is left untouched", () => {
     });
 });
 
-describe("attribute type detection", () => {
-    test("quoted canonical numbers are unwrapped as numbers", () => {
-        const mk = createInstance();
-        assert.equal(
-            mk(`<x-each users limit="2">{{this}} </x-each>`, { users: ["a", "b", "c"] }),
-            `a b `,
-        );
-    });
-
-    test("quoted true/false are unwrapped as booleans (as a keyword arg, checked via a custom helper)", () => {
-        const mk = mikel.create({ helpers: { isTrue: ({ options }) => options.flag === true ? "yes" : "no" } });
+describe("attribute values", () => {
+    test("quoted values are always plain strings — never auto-typed", () => {
+        const mk = mikel.create({ helpers: { echo: ({ options }) => JSON.stringify(options) } });
         mk.use(jsxPlugin);
-        assert.equal(mk(`<x-isTrue flag="true" />`, {}), `yes`);
-        assert.equal(mk(`<x-isTrue flag="false" />`, {}), `no`);
+        assert.equal(mk(`<x-echo n="5" flag="true" zip="007" />`, {}), `{"n":"5","flag":"true","zip":"007"}`);
     });
 
-    test("non-canonical numeric strings (leading zeros) are kept as strings", () => {
-        const mk = createInstance();
-        // "007" as a number would be 7 and lose the leading zeros: it must stay a string
-        assert.equal(mk(`<m-user name="007" email="e" />`, {}), `007 <e>`);
+    test("key={expr} passes a variable, string, number or boolean through to mikel's own parser", () => {
+        const mk = mikel.create({ helpers: { echo: ({ options }) => JSON.stringify(options) } });
+        mk.use(jsxPlugin);
+        assert.equal(mk(`<x-echo n={pageSize} />`, { pageSize: 3 }), `{"n":3}`);
+        assert.equal(mk(`<x-echo s={"hello"} />`, {}), `{"s":"hello"}`);
+        assert.equal(mk(`<x-echo num={5} />`, {}), `{"num":5}`);
+        assert.equal(mk(`<x-echo flag={true} />`, {}), `{"flag":true}`);
     });
 
-    test("plain string literals are unaffected", () => {
-        const mk = createInstance();
-        assert.equal(mk(`<m-header title="Hello" />`, {}), `<h1>Hello</h1>`);
+    test('quoted key="{expr}" escape hatch behaves like key={expr} (undocumented, for lint-sensitive HTML)', () => {
+        const mk = mikel.create({ helpers: { echo: ({ options }) => JSON.stringify(options) } });
+        mk.use(jsxPlugin);
+        assert.equal(mk(`<x-echo n="{pageSize}" />`, { pageSize: 7 }), `{"n":7}`);
+        assert.equal(mk(`<x-echo flag="{true}" />`, {}), `{"flag":true}`);
+    });
+
+    test("the old key=\"{{expr}}\" double-brace form is no longer special-cased: it becomes a literal string, which mikel's own tokenizer then rejects because of the embedded braces (pre-existing mikel limitation, not specific to this plugin)", () => {
+        const mk = mikel.create({ helpers: { echo: ({ options }) => JSON.stringify(options) } });
+        mk.use(jsxPlugin);
+        assert.throws(() => mk(`<x-echo n="{{pageSize}}" />`, { pageSize: 9 }));
     });
 });
