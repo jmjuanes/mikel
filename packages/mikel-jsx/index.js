@@ -95,6 +95,10 @@ const transform = content => {
 };
 
 // @description mikel plugin: registers the transform as a preTransform
-export default ctx => {
-    ctx.preTransforms.push(transform);
+export default () => {
+    return {
+        transform: {
+            jsx: transform,
+        },
+    };
 };
