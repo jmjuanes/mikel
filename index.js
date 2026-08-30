@@ -254,30 +254,12 @@ const defaultHelpers = {
     "with": p => p.fn(p.options?.context ?? p.args[0]),
     "escape": p => escape(p.fn(p.data)),
     "raw": p => untokenize(p.tokens),
-    "slot": params => {
-        if (typeof params.state.slot === "undefined") {
-            params.state.slot = {};
+    "slot": p => {
+        if (typeof p.state.slot === "undefined") {
+            p.state.slot = {};
         }
-        params.state.slot[params.args[0].trim()] = params.fn(params.data);
+        p.state.slot[(p.options?.name ?? p.args[0]).trim()] = p.fn(p.data);
         return "";
-    },
-    "macro": params => {
-        if (typeof params.state.macro === "undefined") {
-            params.state.macro = {};
-        }
-        params.state.macro[params.args[0].trim()] = untokenize(params.tokens).trim();
-        return "";
-    },
-    "call": params => {
-        const result = [];
-        const name = (params.args[0] || "").trim();
-        if (!!name && typeof params.state?.macro?.[name] === "string") {
-            compile(params.context, tokenize(params.state.macro[name]), result, params.options, {
-                ...params.state,
-                content: params.fn(params.data),
-            });
-        }
-        return result.join("");
     },
 };
 
