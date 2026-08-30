@@ -269,15 +269,14 @@ const create = (options = {}) => {
         helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
         partials: Object.assign({}, options?.partials || {}),
         functions: Object.assign({}, options?.functions || {}),
+        transforms: Object.assign({}, options?.transforms || {}),
         initialState: {}, // Object.assign({}, options?.initialState || {}),
-        preTransforms: [], // list of pre-transform to apply to the template
-        postTransforms: [], // list of post-transforms to apply to the result
     });
     // entry method to compile the template with the provided data object
-    const compileTemplate = (template, data = {}) => {
-        const output = [], input = ctx.preTransforms.reduce((content, fn) => fn(content), template);
+    const compileTemplate = (template, data = {}, output = []) => {
+        const input = Object.values(ctx.transforms).reduce((content, fn) => fn(content, ctx), template);
         compile(ctx, tokenize(input), output, data, { ...ctx.initialState, root: data }, 0, "");
-        return ctx.postTransforms.reduce((result, fn) => fn(result), output.join(""));
+        return output.join("");
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
@@ -286,7 +285,7 @@ const create = (options = {}) => {
                 plugin(ctx);
             }
             else if (typeof plugin === "object" && !!plugin) {
-                ["helpers", "functions", "partials", "initialState"].forEach(field => {
+                ["helpers", "functions", "partials", "initialState", "transforms"].forEach(field => {
                     Object.assign(ctx[field], plugin?.[field] || {});
                 });
             }
@@ -297,6 +296,8 @@ const create = (options = {}) => {
         removeFunction: name => delete ctx.functions[name],
         addPartial: (name, partial) => ctx.partials[name] = partial,
         removePartial: name => delete ctx.partials[name],
+        addTransform: (name, fn) => ctx.transforms[name] = fn,
+        removeTransform: (name) => delete ctx.transforms[name],
     });
 };
 
