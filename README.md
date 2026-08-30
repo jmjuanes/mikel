@@ -481,60 +481,6 @@ console.log(m(template, {})); // --> 'Hello Bob!'
 
 Slots are evaluated at render time, so they can contain variables, helpers, or any other template expressions. If the same slot name is defined more than once, **the last definition wins**.
 
-#### macro
-
-> Added in `v0.33.0`.
-
-The `macro` helper allows you to register reusable chunks of content. Use `#macro` followed by the name of the reusable chunk.
-
-Example:
-
-```javascript
-const template = `
-{{#macro "foo"}}
-Hello {{name}}!
-{{/macro}}
-
-{{#call name="Bob" /}}
-`;
-
-console.log(m(template, {})); // --> 'Hello Bob!'
-```
-
-Macros can be executed using the `#call` helper.
-
-#### call
-
-> Added in `v0.33.0`.
-
-The `call` helper allows you to execute registered macros. Key-value arguments will be passed as a data to the content inside the macro:
-
-```javascript
-const template = `
-{{#macro "sayHello"}}
-Hello {{this.name}}!!
-{{/macro}}
-
-{{#call "sayHello" name="Bob" /}}
-`;
-
-console.log(m(template, {})); // --> 'Hello Bob!!'
-```
-
-Content inside the `#call` tag will be passed to the macro content in a `@content` state variable, similar as block partials.
-
-```javascript
-const template = `
-{{#macro "foo"}}
-Hello {{@content}}!!
-{{/macro}}
-
-{{#call "foo"}}Bob{{/call}}
-`;
-
-console.log(m(template, {})); // --> 'Hello Bob!!'
-```
-
 ### Custom Helpers
 
 > Added in `v0.5.0`.
