@@ -376,6 +376,15 @@ describe("templating", () => {
             };
             assert.equal(m("result: {{#with subdata}}{{value}}{{/with}}", data), "result: yes");
         });
+
+        it("should support keyword arguments instead of positional arguments", () => {
+            const data = {
+                user: {
+                    name: "Bob",
+                },
+            };
+            assert.equal(m("{{#with context=user}}{{name}}{{/with}}", data), "Bob");
+        });
     });
 
     describe("{{#escape}}", () => {
