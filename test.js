@@ -288,6 +288,10 @@ describe("templating", () => {
         it("should allow to change the start index and limit the number of iterations", () => {
             assert.equal(m("{{#each values skip=1 limit=2}}{{.}}{{/each}}", {values: [0, 1, 2, 3]}), "12");
         });
+
+        it("should support keyword arguments instead of positional arguments", () => {
+            assert.equal(m("{{#each items=items}}{{.}}{{/each}}", { items: [1, 2, 3] }), "123");
+        });
     });
 
     describe("{{#if }}", () => {
@@ -301,6 +305,10 @@ describe("templating", () => {
 
         it("should read value from state variables", () => {
             assert.equal(m("{{#each items}}{{#if @first}}.{{/if}}{{.}}{{/each}}", {items: [0, 1, 2]}), ".012");
+        });
+
+        it("should support keyword arguments instead of positional arguments", () => {
+            assert.equal(m("{{#if condition=value}}Yes!{{/if}}", { value: true }), "Yes!");
         });
     });
 
@@ -316,6 +324,10 @@ describe("templating", () => {
         it("should read value from state variables", () => {
             assert.equal(m("{{#each items}}{{.}}{{#unless @last}},{{/unless}}{{/each}}", {items: [0, 1, 2]}), "0,1,2");
         });
+
+        it("should support keyword arguments instead of positional arguments", () => {
+            assert.equal(m("{{#unless condition=value}}Yes!{{/unless}}", { value: false }), "Yes!");
+        });
     });
 
     describe("{{#eq }}", () => {
@@ -330,6 +342,10 @@ describe("templating", () => {
             assert.equal(m(`{{#eq value true}}yes!{{/eq}}`, {value: false}), "");
             assert.equal(m(`{{#eq value 0}}yes!{{/eq}}`, {value: 1}), "");
         });
+
+        it("should support keyword arguments instead of positional arguments", () => {
+            assert.equal(m(`{{#eq left=value right="a"}}yes!{{/eq}}`, { value: "a" }), "yes!");
+        });
     });
 
     describe("{{#ne }}", () => {
@@ -343,6 +359,10 @@ describe("templating", () => {
             assert.equal(m(`{{#ne value "a"}}yes!{{/ne}}`, {value: "b"}), "yes!");
             assert.equal(m(`{{#ne value true}}yes!{{/ne}}`, {value: false}), "yes!");
             assert.equal(m(`{{#ne value 0}}yes!{{/ne}}`, {value: 1}), "yes!");
+        });
+
+        it("should support keyword arguments instead of positional arguments", () => {
+            assert.equal(m(`{{#ne left=value right="a"}}yes!{{/ne}}`, { value: "b" }), "yes!");
         });
     });
 
