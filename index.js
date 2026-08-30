@@ -232,7 +232,8 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
 // @description default helpers
 const defaultHelpers = {
     "each": p => {
-        const items = Object.entries(p.options?.items || p.args[0] || {}) || [];
+        const values = p.options?.items || p.args[0] || {};
+        const items = typeof values === "object" ? Object.entries(values) : [];
         const limit = Math.min(items.length - (p.options?.skip || 0), p.options?.limit || items.length);
         return items.slice(p.options?.skip || 0, (p.options?.skip || 0) + limit)
             .map((item, index) => {
