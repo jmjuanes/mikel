@@ -271,6 +271,8 @@ Partial metadata can be accessed using the `@partial` variable inside the partia
 
 > Added in `v0.4.0`.
 
+> Starting in `v0.40.0`, several built-in helpers also accept their positional arguments as named keyword arguments — see each helper's section below for details. The positional form continues to work unchanged.
+
 Helpers allows you to execute special functions within blocks or sections of your template. Mikel currently supports the following built-in helpers:
 
 #### each
@@ -334,6 +336,11 @@ Example:
 console.log(m("{{each values limit=2}}{{this}}{{/each}}", {values: [0, 1, 2, 3]})); // --> '01'
 ```
 
+The array or object to iterate can also be provided as a keyword argument, `items`, instead of positionally (added in `v0.40.0`):
+
+```javascript
+console.log(m("{{#each items=users}}{{this}}, {{/each}}", { users: ["John", "Alice", "Bob"] })); // --> 'John, Alice, Bob, '
+```
 
 #### if
 
@@ -349,6 +356,12 @@ const data = {
 };
 
 console.log(m("{{#if isAdmin}}Hello admin{{/if}}", data)); // --> 'Hello admin'
+```
+
+The condition can also be provided as a keyword argument, `condition`, instead of positionally (added in `v0.40.0`):
+
+```javascript
+console.log(m("{{#if condition=isAdmin}}Hello admin{{/if}}", { isAdmin: true })); // --> 'Hello admin'
 ```
 
 #### unless
@@ -367,6 +380,12 @@ const data = {
 console.log(m("{{#unless isAdmin}}Hello guest{{/unless}}", data)); // --> 'Hello guest'
 ```
 
+The condition can also be provided as a keyword argument, `condition`, instead of positionally (added in `v0.40.0`):
+
+```javascript
+console.log(m("{{#unless condition=isAdmin}}Hello guest{{/unless}}", { isAdmin: false })); // --> 'Hello guest'
+```
+
 #### eq
 
 > Added in `v0.9.0`.
@@ -377,6 +396,12 @@ The `eq` helper renders the blocks only if the two values provided as argument a
 console.log(m(`{{#eq name "bob"}}Hello bob{{/eq}}`, {name: "bob"})); // --> 'Hello bob'
 ```
 
+Both values can also be provided as keyword arguments, `left` and `right`, instead of positionally (added in `v0.40.0`):
+
+```javascript
+console.log(m(`{{#eq left=name right="bob"}}Hello bob{{/eq}}`, {name: "bob"})); // --> 'Hello bob'
+```
+
 #### ne
 
 > Added in `v0.9.0`.
@@ -385,6 +410,12 @@ The `ne` helper renders the block only if the two values provided as argument ar
 
 ```javascript
 console.log(m(`{{#ne name "bob"}}Not bob{{/ne}}`, {name: "John"})); // --> 'Not bob'
+```
+
+Both values can also be provided as keyword arguments, `left` and `right`, instead of positionally (added in `v0.40.0`):
+
+```javascript
+console.log(m(`{{#ne left=name right="bob"}}Not bob{{/ne}}`, {name: "John"})); // --> 'Not bob'
 ```
 
 #### with
@@ -402,6 +433,14 @@ const data = {
 };
 
 console.log(m("{{#with autor}}{{name}} <{{email}}>{{/with}}", data)); // --> 'Bob <bob@email.com>'
+```
+
+The value can also be provided as a keyword argument, `context`, instead of positionally (added in `v0.40.0`):
+
+```javascript
+console.log(m("{{#with context=autor}}{{name}} <{{email}}>{{/with}}", {
+    autor: { name: "Bob", email: "bob@email.com" },
+})); // --> 'Bob <bob@email.com>'
 ```
 
 #### escape

@@ -232,7 +232,8 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
 // @description default helpers
 const defaultHelpers = {
     "each": p => {
-        const items = typeof p.args[0] === "object" ? Object.entries(p.args[0] || {}) : [];
+        const values = p.options?.items || p.args[0] || {};
+        const items = typeof values === "object" ? Object.entries(values) : [];
         const limit = Math.min(items.length - (p.options?.skip || 0), p.options?.limit || items.length);
         return items.slice(p.options?.skip || 0, (p.options?.skip || 0) + limit)
             .map((item, index) => {
@@ -246,11 +247,11 @@ const defaultHelpers = {
             })
             .join("");
     },
-    "if": p => !!p.args[0] ? p.fn(p.data) : "",
-    "unless": p => !!!p.args[0] ? p.fn(p.data) : "",
-    "eq": p => p.args[0] === p.args[1] ? p.fn(p.data) : "",
-    "ne": p => p.args[0] !== p.args[1] ? p.fn(p.data) : "",
-    "with": p => p.fn(p.args[0]),
+    "if": p => !!(p.options?.condition ?? p.args[0]) ? p.fn(p.data) : "",
+    "unless": p => !!!(p.options?.condition ?? p.args[0]) ? p.fn(p.data) : "",
+    "eq": p => (p.options?.left ?? p.args[0]) === (p.options?.right ?? p.args[1]) ? p.fn(p.data) : "",
+    "ne": p => (p.options?.left ?? p.args[0]) !== (p.options?.right ?? p.args[1]) ? p.fn(p.data) : "",
+    "with": p => p.fn(p.options?.context ?? p.args[0]),
     "escape": p => escape(p.fn(p.data)),
     "raw": p => untokenize(p.tokens),
     "slot": params => {
