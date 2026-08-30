@@ -308,8 +308,10 @@ const mikel = (template = "", data = {}, options = {}) => {
 
 // @description plugin to define a new state variable
 mikel.SetStatePlugin = (name, value) => {
-    return (context) => {
-        context.initialState[name] = value;
+    return {
+        initialState: {
+            [name]: value,
+        },
     };
 };
 

@@ -97,7 +97,7 @@ const transform = content => {
 // @description mikel plugin: registers the transform as a preTransform
 export default () => {
     return {
-        transform: {
+        transforms: {
             jsx: transform,
         },
     };

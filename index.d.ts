@@ -32,6 +32,7 @@ export type MikelOptions = {
     helpers?: Record<string, MikelHelper>;
     partials?: Record<string, MikelPartial>;
     functions?: Record<string, MikelFunction>;
+    transforms?: Record<string, MikelTransform>;
 };
 
 export type MikelPluginOptions = MikelOptions & {
