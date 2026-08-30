@@ -58,8 +58,6 @@ export type Mikel = {
     removeFunction(name: string): void;
     addPartial(name: string, partial: MikelPartial): void;
     removePartial(name: string): void;
-    addTransform(name: string, fn: MikelTransform): void;
-    removeTransform(name: string): void;
 };
 
 export type MikelSetStatePlugin = (name: string, value: any) => MikelPlugin;

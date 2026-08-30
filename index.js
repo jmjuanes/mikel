@@ -296,8 +296,6 @@ const create = (options = {}) => {
         removeFunction: name => delete ctx.functions[name],
         addPartial: (name, partial) => ctx.partials[name] = partial,
         removePartial: name => delete ctx.partials[name],
-        addTransform: (name, fn) => ctx.transforms[name] = fn,
-        removeTransform: (name) => delete ctx.transforms[name],
     });
 };
 
