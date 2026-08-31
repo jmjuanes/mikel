@@ -918,10 +918,8 @@ describe("mikel.use", () => {
     it("should allow to register transforms to the template", () => {
         const mk = m.create();
         mk.use({
-            transforms: {
-                test: template => {
-                    return "Hello " + template + "!";
-                },
+            transform: template => {
+                return "Hello " + template + "!";
             },
         });
         assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob!");

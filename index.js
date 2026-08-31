@@ -269,12 +269,12 @@ const create = (options = {}) => {
         helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
         partials: Object.assign({}, options?.partials || {}),
         functions: Object.assign({}, options?.functions || {}),
-        transforms: Object.assign({}, options?.transforms || {}),
+        transforms: new Set(), // empty transforms list
         initialState: {}, // Object.assign({}, options?.initialState || {}),
     });
     // entry method to compile the template with the provided data object
     const compileTemplate = (template, data = {}, output = []) => {
-        const input = Object.values(ctx.transforms).reduce((content, fn) => fn(content, ctx), template);
+        const input = Array.from(ctx.transforms).reduce((content, fn) => fn(content), template);
         compile(ctx, tokenize(input), output, data, { ...ctx.initialState, root: data }, 0, "");
         return output.join("");
     };
@@ -285,9 +285,14 @@ const create = (options = {}) => {
                 plugin(ctx);
             }
             else if (typeof plugin === "object" && !!plugin) {
-                ["helpers", "functions", "partials", "initialState", "transforms"].forEach(field => {
+                // 1. merge helpers, functions, partials, and initial state
+                ["helpers", "functions", "partials", "initialState"].forEach(field => {
                     Object.assign(ctx[field], plugin?.[field] || {});
                 });
+                // 2. if a transform function is provided, include it
+                if (typeof plugin?.transform === "function") {
+                    ctx.transforms.add(plugin.transform);
+                }
             }
         },
         addHelper: (name, fn) => ctx.helpers[name] = fn,

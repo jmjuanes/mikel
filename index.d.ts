@@ -26,13 +26,12 @@ export type MikelFunction = (params: {
 
 export type MikelState = Record<string, string>;
 
-export type MikelTransform = (content: string, ctx: MikelContext) => string;
+export type MikelTransform = (content: string) => string;
 
 export type MikelOptions = {
     helpers?: Record<string, MikelHelper>;
     partials?: Record<string, MikelPartial>;
     functions?: Record<string, MikelFunction>;
-    transforms?: Record<string, MikelTransform>;
 };
 
 export type MikelPluginOptions = MikelOptions & {
@@ -43,7 +42,7 @@ export type MikelContext = {
     helpers: Record<string, MikelFunction>;
     functions: Record<string, MikelFunction>;
     partials: Record<string, MikelPartial>;
-    transforms: Record<string, MikelTransform>;
+    transforms: Set<MikelTransform>;
     initialState: MikelState;
 };
 
