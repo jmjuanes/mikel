@@ -1,8 +1,7 @@
-import type { MikelPlugin } from "mikel";
+import type { MikelTransform } from "mikel";
 
-// mikel-jsx registers a single preTransform on the mikel context and
-// exposes no other public API, so its type is exactly mikel's own
-// MikelPlugin signature: (ctx: MikelContext) => void.
-declare const mikelJsxPlugin: MikelPlugin;
+declare function mikelJsxPlugin(): {
+    transform: MikelTransform,
+};
 
 export default mikelJsxPlugin;

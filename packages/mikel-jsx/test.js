@@ -16,7 +16,7 @@ const createInstance = () => {
             fullName: ({ args }) => `${args[0]} ${args[1]}`,
         },
     });
-    mk.use(jsxPlugin);
+    mk.use(jsxPlugin());
     return mk;
 };
 
@@ -133,13 +133,13 @@ describe("regular HTML is left untouched", () => {
 describe("attribute values", () => {
     test("quoted values are always plain strings — never auto-typed", () => {
         const mk = mikel.create({ helpers: { echo: ({ options }) => JSON.stringify(options) } });
-        mk.use(jsxPlugin);
+        mk.use(jsxPlugin());
         assert.equal(mk(`<x-echo n="5" flag="true" zip="007" />`, {}), `{"n":"5","flag":"true","zip":"007"}`);
     });
 
     test("key={expr} passes a variable, string, number or boolean through to mikel's own parser", () => {
         const mk = mikel.create({ helpers: { echo: ({ options }) => JSON.stringify(options) } });
-        mk.use(jsxPlugin);
+        mk.use(jsxPlugin());
         assert.equal(mk(`<x-echo n={pageSize} />`, { pageSize: 3 }), `{"n":3}`);
         assert.equal(mk(`<x-echo s={"hello"} />`, {}), `{"s":"hello"}`);
         assert.equal(mk(`<x-echo num={5} />`, {}), `{"num":5}`);
@@ -148,14 +148,14 @@ describe("attribute values", () => {
 
     test('quoted key="{expr}" escape hatch behaves like key={expr} (undocumented, for lint-sensitive HTML)', () => {
         const mk = mikel.create({ helpers: { echo: ({ options }) => JSON.stringify(options) } });
-        mk.use(jsxPlugin);
+        mk.use(jsxPlugin());
         assert.equal(mk(`<x-echo n="{pageSize}" />`, { pageSize: 7 }), `{"n":7}`);
         assert.equal(mk(`<x-echo flag="{true}" />`, {}), `{"flag":true}`);
     });
 
     test("the old key=\"{{expr}}\" double-brace form is no longer special-cased: it becomes a literal string, which mikel's own tokenizer then rejects because of the embedded braces (pre-existing mikel limitation, not specific to this plugin)", () => {
         const mk = mikel.create({ helpers: { echo: ({ options }) => JSON.stringify(options) } });
-        mk.use(jsxPlugin);
+        mk.use(jsxPlugin());
         assert.throws(() => mk(`<x-echo n="{{pageSize}}" />`, { pageSize: 9 }));
     });
 });

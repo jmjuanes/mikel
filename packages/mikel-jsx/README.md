@@ -28,7 +28,7 @@ $ yarn add mikel-jsx mikel
 
 ```js
 import mikel from "mikel";
-import jsxPlugin from "mikel-jsx";
+import jsx from "mikel-jsx";
 
 const mk = mikel.create({
     partials: { /* ... */ },
@@ -36,7 +36,7 @@ const mk = mikel.create({
     functions: { /* ... */ },
 });
 
-mk.use(jsxPlugin);
+mk.use(jsx());
 ```
 
 ## Tag syntax

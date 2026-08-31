@@ -269,15 +269,14 @@ const create = (options = {}) => {
         helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
         partials: Object.assign({}, options?.partials || {}),
         functions: Object.assign({}, options?.functions || {}),
+        transforms: new Set(), // empty transforms list
         initialState: {}, // Object.assign({}, options?.initialState || {}),
-        preTransforms: [], // list of pre-transform to apply to the template
-        postTransforms: [], // list of post-transforms to apply to the result
     });
     // entry method to compile the template with the provided data object
-    const compileTemplate = (template, data = {}) => {
-        const output = [], input = ctx.preTransforms.reduce((content, fn) => fn(content), template);
+    const compileTemplate = (template, data = {}, output = []) => {
+        const input = Array.from(ctx.transforms).reduce((content, fn) => fn(content), template);
         compile(ctx, tokenize(input), output, data, { ...ctx.initialState, root: data }, 0, "");
-        return ctx.postTransforms.reduce((result, fn) => fn(result), output.join(""));
+        return output.join("");
     };
     // assign api methods and return method to compile the template
     return Object.assign(compileTemplate, {
@@ -286,9 +285,14 @@ const create = (options = {}) => {
                 plugin(ctx);
             }
             else if (typeof plugin === "object" && !!plugin) {
+                // 1. merge helpers, functions, partials, and initial state
                 ["helpers", "functions", "partials", "initialState"].forEach(field => {
                     Object.assign(ctx[field], plugin?.[field] || {});
                 });
+                // 2. if a transform function is provided, include it
+                if (typeof plugin?.transform === "function") {
+                    ctx.transforms.add(plugin.transform);
+                }
             }
         },
         addHelper: (name, fn) => ctx.helpers[name] = fn,
@@ -307,8 +311,10 @@ const mikel = (template = "", data = {}, options = {}) => {
 
 // @description plugin to define a new state variable
 mikel.SetStatePlugin = (name, value) => {
-    return (context) => {
-        context.initialState[name] = value;
+    return {
+        initialState: {
+            [name]: value,
+        },
     };
 };
 

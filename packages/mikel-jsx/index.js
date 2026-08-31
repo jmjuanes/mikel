@@ -71,7 +71,7 @@ const replaceAll = (str, re, replacer) => {
 };
 
 // @description the actual template transform: string in, string out
-const transform = content => {
+const transformJsxTemplate = content => {
     // 1. self-closing tags first: no nesting to worry about
     content = replaceAll(content, SELF_CLOSING_RE, ([, prefix, name, attrs]) => {
         const args = parseAttributes(attrs);
@@ -95,6 +95,8 @@ const transform = content => {
 };
 
 // @description mikel plugin: registers the transform as a preTransform
-export default ctx => {
-    ctx.preTransforms.push(transform);
+export default () => {
+    return {
+        transform: transformJsxTemplate,
+    };
 };
