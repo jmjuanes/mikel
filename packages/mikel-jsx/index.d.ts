@@ -1,9 +1,7 @@
 import type { MikelTransform } from "mikel";
 
 declare function mikelJsxPlugin(): {
-    transforms: {
-        jsx: MikelTransform,
-    };
+    transform: MikelTransform,
 };
 
 export default mikelJsxPlugin;
