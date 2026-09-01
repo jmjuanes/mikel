@@ -1,3 +1,5 @@
+export type MikelState = Record<string, any>;
+
 export type MikelHelperCallback = (
     data?: Record<string, any>,
     state?: Record<string, any>,
@@ -6,57 +8,35 @@ export type MikelHelperCallback = (
 export type MikelHelper = (params: {
     args: any[];
     options: Record<string, any>;
-    tokens: string[];
-    data: Record<string, any>;
-    state: Record<string, any>;
+    context: {
+        tokens: string[];
+        data: Record<string, any>;
+        state: MikelState;
+    },
     fn: MikelHelperCallback;
 }) => string;
 
-export type MikelPartial = string | {
-    body: string;
-    data: Record<string, any>;
-};
-
-export type MikelFunction = (params: {
-    args: any[];
-    options: Record<string,any>;
-    data: Record<string, any>;
-    state: Record<string, any>;
-}) => string | void;
-
-export type MikelState = Record<string, string>;
+export type MikelPartial = string;
 
 export type MikelTransform = (content: string) => string;
 
 export type MikelOptions = {
     helpers?: Record<string, MikelHelper>;
     partials?: Record<string, MikelPartial>;
-    functions?: Record<string, MikelFunction>;
 };
 
-export type MikelPluginOptions = MikelOptions & {
-    initialState?: MikelState;
-};
-
-export type MikelContext = {
-    helpers: Record<string, MikelFunction>;
-    functions: Record<string, MikelFunction>;
-    partials: Record<string, MikelPartial>;
-    transforms: Set<MikelTransform>;
-    initialState: MikelState;
-};
-
-export type MikelPlugin = (ctx: MikelContext) => void;
-
-export type Mikel = {
-    (template: string, data?: any): string;
-    use(plugin: Partial<MikelPluginOptions> | MikelPlugin): void;
+export type MikelApi = {
     addHelper(name: string, fn: MikelHelper): void;
     removeHelper(name: string): void;
-    addFunction(name: string, fn: MikelFunction): void;
-    removeFunction(name: string): void;
     addPartial(name: string, partial: MikelPartial): void;
     removePartial(name: string): void;
+};
+
+export type MikelPlugin = (ctx: MikelApi) => void;
+
+export type Mikel = MikelApi & {
+    (template: string, data?: any): string;
+    use(plugin: MikelPlugin): void;
 };
 
 export type MikelSetStatePlugin = (name: string, value: any) => MikelPlugin;
