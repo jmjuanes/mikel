@@ -479,16 +479,16 @@ describe("templating", () => {
     //     });
     // });
 
-    // describe("argument values", () => {
-    //     const options = {
-    //         helpers: {
-    //             concat: params => params.args.join(params.options.delimiter || " "),
-    //         },
-    //     };
-    //     it("should support single quotes in arguments", () => {
-    //         assert.equal(m(`{{#concat 'Hello' 'World' /}}`, {}, options), "Hello World");
-    //     });
-    // });
+    describe("argument values", () => {
+        const options = {
+            helpers: {
+                concat: params => params.args.join(params.options.delimiter || "__"),
+            },
+        };
+        it("should support single quotes in arguments", () => {
+            assert.equal(m(`{{#concat 'Hello' 'World 2' /}}`, {}, options), "Hello__World 2");
+        });
+    });
 
     describe("{{!-- --}}", () => {
         it("should remove single-line comments", () => {
