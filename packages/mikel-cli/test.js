@@ -143,7 +143,7 @@ describe("cli", () => {
     it("should compile with partials", () => {
         const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
         try {
-            fs.writeFileSync(path.join(dir, "template.html"), "{{> greeting.html}}");
+            fs.writeFileSync(path.join(dir, "template.html"), "{{#greeting.html /}}");
             fs.writeFileSync(path.join(dir, "greeting.html"), "Hello {{name}}!");
             fs.writeFileSync(path.join(dir, "data.json"), JSON.stringify({ name: "World" }));
             const result = execute(

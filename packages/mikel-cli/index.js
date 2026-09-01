@@ -170,10 +170,9 @@ const loadModules = async (root, patterns = []) => {
 export const resolveConfigurationFromArgs = async (root = process.cwd(), args = {}) => {
     const config = await loadConfiguration(args?.values?.config);
 
-    // resolve partials, helpers and functions from cli arguments
+    // resolve partials and helpers from cli arguments
     const partials = await loadPartials(root, args?.values?.partial || []);
     const helpers = await loadModules(root, args?.values?.helper || []);
-    const functions = await loadModules(root, args?.values?.function || []);
 
     // return parsed configuration object
     return {
@@ -183,7 +182,6 @@ export const resolveConfigurationFromArgs = async (root = process.cwd(), args = 
         data: args?.values?.data || config.data,
         partials: Object.assign(config.partials || {}, partials),
         helpers: Object.assign(config.helpers || {}, helpers),
-        functions: Object.assign(config.functions || {}, functions),
         plugins: args?.values?.plugin || config.plugins || [],
     };
 };
@@ -194,7 +192,6 @@ export const build = async (config = {}) => {
     const data = await loadData(config.context, config.data);
     const mikelInstance = mikel.create({
         helpers: config.helpers,
-        functions: config.functions,
         partials: config.partials,
     });
 
