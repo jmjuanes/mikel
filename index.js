@@ -26,46 +26,8 @@ const untokenize = (ts = [], s = "{{", e = "}}") => {
     return ts.length > 0 ? ts.reduce((p, t, i) => p + (i % 2 === 0 ? e : s) + t) : "";
 };
 
-// @description tokenize args
-const tokenizeArgs = (str = "", tokens = [], strings = []) => {
-    let current = "", depth = 0;
-    // 1. replace strings in single/double quotes
-    str = str.replace(/("([^"\\]|\\.)*"|'([^'\\]|\\.)*')/g, (match) => {
-        const id = `__STR${strings.length}__`;
-        strings.push(match);
-        return id;
-    });
-    // 2. tokenize arguments
-    for (let i = 0; i < str.length; i++) {
-        const c = str[i];
-        if (c === "(") {
-            depth++;
-            current = current + c;
-        } else if (c === ")") {
-            depth--;
-            current = current + c;
-        } else if (c === " " && depth === 0) {
-            if (current.trim()) {
-                tokens.push(current.trim());
-            }
-            current = "";
-        } else {
-            current = current + c;
-        }
-    }
-    // 3. add current token
-    if (current.trim()) {
-        tokens.push(current.trim());
-    }
-    // 4. replace strings back and return parsed tokens
-    return tokens.map(token => {
-        return token.replace(/__STR(\d+)__/g, (_, i) => strings[i]);
-    });
-};
-
 // @description parse string arguments
 const parseArgs = (str = "", data = {}, state = {}, fns = {}, argv = [], opt = {}) => {
-    // const [t, ...args] = tokenizeArgs(str.trim());
     const [t, ...args] = str.trim().match(/(?:[^\s"]+|"[^"]*")+/g);
     args.forEach(argStr => {
         if (argStr.includes("=") && !argStr.startsWith(`"`) && !argStr.startsWith(`'`)) {
@@ -152,48 +114,6 @@ const compile = (tokens, output, data = {}, directives = {}, state = {}, index =
                 output.push(result);
             }
         }
-        // else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
-        //     const t = tokens[i].slice(1).trim();
-        //     const value = get(data, t);
-        //     const negate = tokens[i].startsWith("^");
-        //     if (!negate && value && Array.isArray(value)) {
-        //         const j = i + 1;
-        //         (value.length > 0 ? value : [""]).forEach(item => {
-        //             i = compile(ctx, tokens, value.length > 0 ? output : [], item, state, j, t);
-        //         });
-        //     }
-        //     else {
-        //         const includeOutput = (!negate && !!value) || (negate && !!!value);
-        //         i = compile(ctx, tokens, includeOutput ? output : [], data, state, i + 1, t);
-        //     }
-        // }
-        // else if (tokens[i].startsWith(">")) {
-        //     const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), data, state, ctx.functions);
-        //     const j = i + 1, blockContent = []; // to store partial block content
-        //     if (tokens[i].startsWith(">>")) {
-        //         i = compile(ctx, tokens, blockContent, data, state, i + 1, t);
-        //     }
-        //     if (typeof ctx.partials[t] === "string" || typeof ctx.partials[t]?.body === "string") {
-        //         const partialBody = ctx.partials[t]?.body || ctx.partials[t];
-        //         const partialData = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : data);
-        //         const partialState = {
-        //             ...state,
-        //             content: blockContent.join(""),
-        //             partial: {
-        //                 name: t,
-        //                 attributes: ctx.partials[t]?.attributes || ctx.partials[t]?.data || {},
-        //                 args: args || [],
-        //                 options: opt || {},
-        //                 context: partialData,
-        //                 rawContent: i > j ? untokenize(tokens.slice(j, i)) : "",
-        //             },
-        //         };
-        //         compile(ctx, tokenize(partialBody), output, partialData, partialState, 0, "");
-        //     }
-        // }
-        // else if (tokens[i].startsWith("=")) {
-        //     output.push(evaluateExpression(tokens[i].slice(1), data, state, ctx.functions) ?? "");
-        // }
         else if (tokens[i].startsWith("/")) {
             if (tokens[i].slice(1).trim() !== section) {
                 throw new Error(`Unmatched section end: {{${tokens[i]}}}`);
@@ -249,18 +169,18 @@ const defaultDirectives = {
     "each": p => {
         const values = p.options?.items || p.args[0] || {};
         const items = typeof values === "object" ? Object.entries(values) : [];
+        const skip = p.options?.skip || 0;
         const limit = Math.min(items.length - (p.options?.skip || 0), p.options?.limit || items.length);
-        return items.slice(p.options?.skip || 0, (p.options?.skip || 0) + limit)
-            .map((item, index) => {
-                return p.fn(item[1], {
-                    index: index, 
-                    key: item[0],
-                    value: item[1],
-                    first: index === 0,
-                    last: index === items.length - 1,
-                });
-            })
-            .join("");
+        const result = items.slice(skip, skip + limit).map((item, index) => {
+            return p.fn(item[1], {
+                index: index, 
+                key: item[0],
+                value: item[1],
+                first: index === 0,
+                last: index === items.length - 1,
+            });
+        });
+        return result.join("");
     },
     "if": p => !!(p.options?.condition ?? p.args[0]) ? p.fn(p.context.data) : "",
     "unless": p => !!!(p.options?.condition ?? p.args[0]) ? p.fn(p.context.data) : "",
