@@ -65,9 +65,10 @@ const tokenizeArgs = (str = "", tokens = [], strings = []) => {
 
 // @description parse string arguments
 const parseArgs = (str = "", data = {}, state = {}, fns = {}, argv = [], opt = {}) => {
-    const [t, ...args] = tokenizeArgs(str.trim());
+    // const [t, ...args] = tokenizeArgs(str.trim());
+    const [t, ...args] = str.trim().match(/(?:[^\s"]+|"[^"]*")+/g);
     args.forEach(argStr => {
-        if (argStr.includes("=") && !argStr.startsWith(`"`)) {
+        if (argStr.includes("=") && !argStr.startsWith(`"`) && !argStr.startsWith(`'`)) {
             const [k, v] = argStr.split("=");
             opt[k] = parse(v, data, state, fns);
         }
@@ -84,22 +85,8 @@ const parseArgs = (str = "", data = {}, state = {}, fns = {}, argv = [], opt = {
     return [t, argv, opt];
 };
 
-// @description evaluate an expression
-const evaluateExpression = (str = "", data = {}, state = {}, fns = {}) => {
-    const [fnName, args, options] = parseArgs(str, data, state, fns);
-    if (typeof fns[fnName] === "function") {
-        return fns[fnName]({ args, options, data, state });
-    }
-    // if no function has been found with this name
-    // throw new Error(`Unknown function '${fnName}'`);
-    return "";
-};
-
 // @description parse a string value to a native type
 const parse = (v, data = {}, state = {}, fns = {}) => {
-    if (v.startsWith("(") && v.endsWith(")")) {
-        return evaluateExpression(v.slice(1, -1).trim(), data, state, fns);
-    }
     if ((v.startsWith(`"`) && v.endsWith(`"`)) || (v.startsWith(`'`) && v.endsWith(`'`)) || /^-?\d+\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
         const normalized = (v.startsWith(`'`) && v.endsWith(`'`)) ? `"${v.slice(1, -1).replace(/"/g, '\\"')}"` : v;
         return JSON.parse(normalized);
@@ -124,89 +111,89 @@ const findClosingToken = (tokens, i, token) => {
 };
 
 // @description internal method to compile the template
-const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
+const compile = (tokens, output, data = {}, directives = {}, state = {}, index = 0, section = "") => {
     let i = index;
     while (i < tokens.length) {
         if (i % 2 === 0) {
             output.push(tokens[i]);
         }
-        else if (tokens[i].startsWith("#") && typeof ctx.helpers[tokens[i].slice(1).trim().split(" ")[0]] === "function") {
-            const value = tokens[i].slice(1).replace(/\s*\/$/, ""); // removes self-closing helper character
+        else if (tokens[i].startsWith("#")) {
+            const value = tokens[i].slice(1).replace(/\s*\/$/, ""); // removes self-closing directive character
             const isSelfClosing = tokens[i].trim().endsWith("/");
-            const [t, args, opt] = parseArgs(value, data, state, ctx.functions);
+            const [t, args, opt] = parseArgs(value, data, state);
             const j = i + 1;
             if (!isSelfClosing) {
                 i = findClosingToken(tokens, j, t);
             }
-            output.push(ctx.helpers[t]({
-                context: ctx,
-                args: args,
-                options: opt,
-                tokens: tokens.slice(j, i),
-                data: data,
-                state: state,
-                fn: (blockData = {}, customBlockState = {}, blockOutput = []) => {
-                    if (!isSelfClosing) {
-                        const blockState = {
-                            ...state,
-                            ...customBlockState,
-                            helper: {
-                                name: t,
-                                options: opt || {},
-                                args: args || [],
-                                context: blockData,
-                            },
-                            parent: data,
-                            root: state.root,
-                        };
-                        compile(ctx, tokens, blockOutput, blockData, blockState, j, t);
-                    }
-                    return blockOutput.join("");
-                },
-            }));
-        }
-        else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
-            const t = tokens[i].slice(1).trim();
-            const value = get(data, t);
-            const negate = tokens[i].startsWith("^");
-            if (!negate && value && Array.isArray(value)) {
-                const j = i + 1;
-                (value.length > 0 ? value : [""]).forEach(item => {
-                    i = compile(ctx, tokens, value.length > 0 ? output : [], item, state, j, t);
-                });
-            }
-            else {
-                const includeOutput = (!negate && !!value) || (negate && !!!value);
-                i = compile(ctx, tokens, includeOutput ? output : [], data, state, i + 1, t);
-            }
-        }
-        else if (tokens[i].startsWith(">")) {
-            const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), data, state, ctx.functions);
-            const j = i + 1, blockContent = []; // to store partial block content
-            if (tokens[i].startsWith(">>")) {
-                i = compile(ctx, tokens, blockContent, data, state, i + 1, t);
-            }
-            if (typeof ctx.partials[t] === "string" || typeof ctx.partials[t]?.body === "string") {
-                const partialBody = ctx.partials[t]?.body || ctx.partials[t];
-                const partialData = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : data);
-                const partialState = {
-                    ...state,
-                    content: blockContent.join(""),
-                    partial: {
-                        name: t,
-                        attributes: ctx.partials[t]?.attributes || ctx.partials[t]?.data || {},
-                        args: args || [],
-                        options: opt || {},
-                        context: partialData,
-                        rawContent: i > j ? untokenize(tokens.slice(j, i)) : "",
+            // only compile if there is a directive with this name
+            if (typeof directives[t] === "function") {
+                const result = directives[t]({
+                    context: Object.freeze({
+                        state: state,
+                        directives: directives,
+                        data: data,
+                        tokens: tokens.slice(j, i),
+                    }),
+                    args: args,
+                    options: opt,
+                    fn: (blockData = {}, customBlockState = {}, blockOutput = []) => {
+                        if (!isSelfClosing) {
+                            const blockState = {
+                                ...state,
+                                ...customBlockState,
+                                parent: data,
+                                root: state.root,
+                            };
+                            compile(tokens, blockOutput, blockData, directives, blockState, j, t);
+                        }
+                        return blockOutput.join("");
                     },
-                };
-                compile(ctx, tokenize(partialBody), output, partialData, partialState, 0, "");
+                });
+                output.push(result);
             }
         }
-        else if (tokens[i].startsWith("=")) {
-            output.push(evaluateExpression(tokens[i].slice(1), data, state, ctx.functions) ?? "");
-        }
+        // else if (tokens[i].startsWith("#") || tokens[i].startsWith("^")) {
+        //     const t = tokens[i].slice(1).trim();
+        //     const value = get(data, t);
+        //     const negate = tokens[i].startsWith("^");
+        //     if (!negate && value && Array.isArray(value)) {
+        //         const j = i + 1;
+        //         (value.length > 0 ? value : [""]).forEach(item => {
+        //             i = compile(ctx, tokens, value.length > 0 ? output : [], item, state, j, t);
+        //         });
+        //     }
+        //     else {
+        //         const includeOutput = (!negate && !!value) || (negate && !!!value);
+        //         i = compile(ctx, tokens, includeOutput ? output : [], data, state, i + 1, t);
+        //     }
+        // }
+        // else if (tokens[i].startsWith(">")) {
+        //     const [t, args, opt] = parseArgs(tokens[i].replace(/^>{1,2}/, ""), data, state, ctx.functions);
+        //     const j = i + 1, blockContent = []; // to store partial block content
+        //     if (tokens[i].startsWith(">>")) {
+        //         i = compile(ctx, tokens, blockContent, data, state, i + 1, t);
+        //     }
+        //     if (typeof ctx.partials[t] === "string" || typeof ctx.partials[t]?.body === "string") {
+        //         const partialBody = ctx.partials[t]?.body || ctx.partials[t];
+        //         const partialData = args.length > 0 ? args[0] : (Object.keys(opt).length > 0 ? opt : data);
+        //         const partialState = {
+        //             ...state,
+        //             content: blockContent.join(""),
+        //             partial: {
+        //                 name: t,
+        //                 attributes: ctx.partials[t]?.attributes || ctx.partials[t]?.data || {},
+        //                 args: args || [],
+        //                 options: opt || {},
+        //                 context: partialData,
+        //                 rawContent: i > j ? untokenize(tokens.slice(j, i)) : "",
+        //             },
+        //         };
+        //         compile(ctx, tokenize(partialBody), output, partialData, partialState, 0, "");
+        //     }
+        // }
+        // else if (tokens[i].startsWith("=")) {
+        //     output.push(evaluateExpression(tokens[i].slice(1), data, state, ctx.functions) ?? "");
+        // }
         else if (tokens[i].startsWith("/")) {
             if (tokens[i].slice(1).trim() !== section) {
                 throw new Error(`Unmatched section end: {{${tokens[i]}}}`);
@@ -229,8 +216,36 @@ const compile = (ctx, tokens, output, data, state, index = 0, section = "") => {
     return i;
 };
 
-// @description default helpers
-const defaultHelpers = {
+// internal method to extract data passed to a partial
+const getPartialDataFromParams = params => {
+    // 1. positional argument is provided, return the first argument
+    if (params.args.length > 0) {
+        return params.args[0];
+    }
+    // 2. optional arguments provided, return them
+    if (Object.keys(params.options).length > 0) {
+        return params.options;
+    }
+    // other case, return the data
+    return params.context.data || {};
+};
+
+// utility method to create a partial directive
+const createPartial = partial => {
+    return params => {
+        const partialResult = [];
+        const partialData = getPartialDataFromParams(params);
+        const partialState = {
+            ...params.context.state,
+            content: params.fn(params.context.data),
+        };
+        compile(tokenize(partial), partialResult, partialData, params.context.directives, partialState, 0, "");
+        return partialResult.join("");
+    };
+};
+
+// @description default directives
+const defaultDirectives = {
     "each": p => {
         const values = p.options?.items || p.args[0] || {};
         const items = typeof values === "object" ? Object.entries(values) : [];
@@ -247,60 +262,60 @@ const defaultHelpers = {
             })
             .join("");
     },
-    "if": p => !!(p.options?.condition ?? p.args[0]) ? p.fn(p.data) : "",
-    "unless": p => !!!(p.options?.condition ?? p.args[0]) ? p.fn(p.data) : "",
-    "eq": p => (p.options?.left ?? p.args[0]) === (p.options?.right ?? p.args[1]) ? p.fn(p.data) : "",
-    "ne": p => (p.options?.left ?? p.args[0]) !== (p.options?.right ?? p.args[1]) ? p.fn(p.data) : "",
+    "if": p => !!(p.options?.condition ?? p.args[0]) ? p.fn(p.context.data) : "",
+    "unless": p => !!!(p.options?.condition ?? p.args[0]) ? p.fn(p.context.data) : "",
+    "eq": p => (p.options?.left ?? p.args[0]) === (p.options?.right ?? p.args[1]) ? p.fn(p.context.data) : "",
+    "ne": p => (p.options?.left ?? p.args[0]) !== (p.options?.right ?? p.args[1]) ? p.fn(p.context.data) : "",
     "with": p => p.fn(p.options?.context ?? p.args[0]),
-    "escape": p => escape(p.fn(p.data)),
-    "raw": p => untokenize(p.tokens),
+    "escape": p => escape(p.fn(p.context.data)),
+    "raw": p => untokenize(p.context.tokens),
     "slot": p => {
-        if (typeof p.state.slot === "undefined") {
-            p.state.slot = {};
+        if (typeof p.context.state.slot === "undefined") {
+            p.context.state.slot = {};
         }
-        p.state.slot[(p.options?.name ?? p.args[0]).trim()] = p.fn(p.data);
+        p.context.state.slot[(p.options?.name ?? p.args[0]).trim()] = p.fn(p.context.data);
         return "";
     },
 };
 
 // @description create a new instance of mikel
 const create = (options = {}) => {
-    const ctx = Object.freeze({
-        helpers: Object.assign({}, defaultHelpers, options?.helpers || {}),
-        partials: Object.assign({}, options?.partials || {}),
-        functions: Object.assign({}, options?.functions || {}),
-        transforms: new Set(), // empty transforms list
-        initialState: {}, // Object.assign({}, options?.initialState || {}),
-    });
-    // entry method to compile the template with the provided data object
+    const directives = Object.assign({}, defaultDirectives); // map to save directives (helpers and partials)
+    const transforms = new Set(); // to save pretransforms
+    const state = {}; // Object.assign({}, options?.initialState || {});
+    // 1. add initial helpers and partials
+    Object.keys(options?.helpers || {}).forEach(key => directives[key] = options.helpers[key]);
+    Object.keys(options?.partials || {}).forEach(key => directives[key] = createPartial(options.partials[key]));
+    // 2. entry method to compile the template with the provided data object
     const compileTemplate = (template, data = {}, output = []) => {
-        const input = Array.from(ctx.transforms).reduce((content, fn) => fn(content), template);
-        compile(ctx, tokenize(input), output, data, { ...ctx.initialState, root: data }, 0, "");
+        const input = Array.from(transforms).reduce((content, fn) => fn(content), template);
+        compile(tokenize(input), output, data, directives, { ...state, root: data }, 0, "");
         return output.join("");
     };
-    // assign api methods and return method to compile the template
-    return Object.assign(compileTemplate, {
+    // 3. generate api methods
+    const mk = Object.freeze({
+        addHelper: (name, value) => directives[name] = value,
+        removeHelper: name => delete directives[name],
+        addPartial: (name, value) => directives[name] = createPartial(value || ""),
+        removePartial: name => delete directives[name],
+    });
+    // 4. return merged compileTemplate and api methods
+    return Object.assign(compileTemplate, mk, {
         use: (plugin) => {
             if (typeof plugin === "function") {
-                plugin(ctx);
+                plugin(mk);
             }
             else if (typeof plugin === "object" && !!plugin) {
-                // 1. merge helpers, functions, partials, and initial state
-                ["helpers", "functions", "partials", "initialState"].forEach(field => {
-                    Object.assign(ctx[field], plugin?.[field] || {});
-                });
+                // 1. merge directives and internal state
+                Object.keys(plugin?.helpers || {}).forEach(key => directives[key] = plugin.helpers[key]);
+                Object.keys(plugin?.partials || {}).forEach(key => directives[key] = createPartial(plugin.partials[key]));
+                Object.assign(state, plugin?.initialState || {});
                 // 2. if a transform function is provided, include it
                 if (typeof plugin?.transform === "function") {
-                    ctx.transforms.add(plugin.transform);
+                    transforms.add(plugin.transform);
                 }
             }
         },
-        addHelper: (name, fn) => ctx.helpers[name] = fn,
-        removeHelper: name => delete ctx.helpers[name],
-        addFunction: (name, fn) => ctx.functions[name] = fn,
-        removeFunction: name => delete ctx.functions[name],
-        addPartial: (name, partial) => ctx.partials[name] = partial,
-        removePartial: name => delete ctx.partials[name],
     });
 };
 
