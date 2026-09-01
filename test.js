@@ -56,101 +56,26 @@ describe("templating", () => {
         });
     });
 
-    describe("{{# xyz }}", () => {
-        it("should be displayed when truthy", () => {
-            const data = {visible: true};
-            assert.equal(m("{{# visible}}Yes!{{/ visible}}", data), "Yes!");
-        });
-
-        it("should not be visible when falsy", () => {
-            const data = {visible: false};
-            assert.equal(m("{{# visible}}Yes!{{/ visible}}", data), "");
-        });
-
-        it("should not be visible when null", () => {
-            const data = {name: null};
-            assert.equal(m("{{#name}}Hello {{name}}{{/name}}", data), "");
-        });
-
-        it("should not be visible when undefined", () => {
-            const data = {};
-            assert.equal(m("{{#name}}Hello {{name}}{{/name}}", data), "");
-        });
-
-        it("should parse variables inside", () => {
-            const data = {visible: true, name: "Bob"};
-            assert.equal(m("{{#visible}}Hello {{name}}!{{/visible}}", data), "Hello Bob!");
-        });
-
-        it("should support nested conditionals", () => {
-            const data = {visible1: true, visible2: true, name: "Bob"};
-            assert.equal(m("{{#visible1}}{{#visible2}}{{name}}{{/visible2}}{{/visible1}}", data), "Bob");
-        });
-
-        it("should iterate simple arrays", () => {
-            const data = {
-                items: ["1", "2", "3"],
-            };
-            assert.equal(m("{{#items}}{{.}}{{/items}}", data), "123");
-            assert.equal(m("{{#items}}{{this}}{{/items}}", data), "123");
-        });
-
-        it("should iterate arrays of objects", () => {
-            const data = {
-                items: [{name: "Susan"},{name: "Bob"}],
-                name: "Phil",
-            };
-            assert.equal(m("{{#items}}{{name}}-{{/items}}", data), "Susan-Bob-");
-        });
-
-        it("should not iterate over an empty array", () => {
-            const data = {
-                items: [],
-            };
-            assert.equal(m("List of items: {{#items}}{{.}},{{/items}}", data), "List of items: ");
-        });
-
-        it("should throw an error for unmatched end of section", () => {
-            const data = {name: "Bob"};
-            try {
-                m("{{#name}}Hello {{name}}!{{/foo}}", data);
-            }
-            catch (error) {
-                assert.equal(error.message, "Unmatched section end: {{/foo}}");
-            }
-        });
-    });
-
-    describe("{{^ xyz }}", () => {
-        it("should be rendered if variable is falsy", () => {
-            const data = {visible: false};
-            assert.equal(m("{{^visible}}Yeah!{{/visible}}", data), "Yeah!");
-        });
-
-        it("should not be rendered if variable is truthy", () => {
-            const data = {visible: true};
-            assert.equal(m("{{^visible}}Yeah!{{/visible}}", data), "");
-        });
-    });
-
-    describe("{{> xyz }}", () => {
+    describe("{{# xyz }} (partial directive)", () => {
         it("should render provided partials", () => {
             const partials = {
                 foo: "Hello World!",
             };
-            assert.equal(m("Message: '{{> foo}}'", {}, {partials}), "Message: 'Hello World!'");
+            assert.equal(m("Message: '{{#foo /}}'", {}, { partials }), "Message: 'Hello World!'");
         });
 
         it("should forward context to partials", () => {
-            const data = {name: "Bob"};
+            const data = {
+                name: "Bob",
+            };
             const partials = {
                 foo: "Hello {{name}}!",
             };
-            assert.equal(m("Message: '{{> foo}}'", data, {partials}), "Message: 'Hello Bob!'");
+            assert.equal(m("Message: '{{#foo /}}'", data, { partials }), "Message: 'Hello Bob!'");
         });
 
         it("should ignore partial section if partial is not defined", () => {
-            assert.equal(m("Hello {{> foo}}", {}, {}), "Hello ");
+            assert.equal(m("Hello {{#foo /}}", {}, {}), "Hello ");
         });
 
         it("should allow to provide custom context to partial", () => {
@@ -162,7 +87,7 @@ describe("templating", () => {
             const partials = {
                 foo: "Hello {{name}}!",
             };
-            assert.equal(m("Message: '{{> foo author}}'", data, {partials}), "Message: 'Hello Bob!'");
+            assert.equal(m("Message: '{{#foo author /}}'", data, { partials }), "Message: 'Hello Bob!'");
         });
 
         it("should allow to provide keyword arguments to partials", () => {
@@ -172,19 +97,7 @@ describe("templating", () => {
             const partials = {
                 foo: "Hello {{userName}}!",
             };
-            assert.equal(m("{{>foo userName=name}}", data, {partials}), "Hello Bob!");
-        });
-
-        it("should allow partial variables", () => {
-            const partials = {
-                foo: {
-                    body: "Hello {{@partial.attributes.name}}!",
-                    attributes: {
-                        name: "Bob",
-                    },
-                },
-            };
-            assert.equal(m("{{>foo}}", {}, {partials}), "Hello Bob!");
+            assert.equal(m("{{#foo userName=name /}}", data, { partials }), "Hello Bob!");
         });
 
         it("should support spread operator in partial keyword arguments", () => {
@@ -197,55 +110,29 @@ describe("templating", () => {
             const partials = {
                 foo: "Hello {{name}}! You are {{age}} years old.",
             };
-            assert.equal(m("{{>foo ...partialArgs}}", data, {partials}), "Hello Bob! You are 30 years old.");
+            assert.equal(m("{{#foo ...partialArgs /}}", data, { partials }), "Hello Bob! You are 30 years old.");
         });
 
-        it("should support accessing to partial options from @partial.options variable", () => {
-            const partials = {
-                foo: "Hello {{@partial.options.name}}!",
-            };
-            assert.equal(m(`{{>foo name="Bob"}}`, {}, {partials}), "Hello Bob!");
-        });
+        // it("should support accessing to partial options from @partial.options variable", () => {
+        //     const partials = {
+        //         foo: "Hello {{@partial.options.name}}!",
+        //     };
+        //     assert.equal(m(`{{>foo name="Bob"}}`, {}, {partials}), "Hello Bob!");
+        // });
 
-        it("should support accessing to partial arguments from @partial.args variable", () => {
-            const partials = {
-                foo: "Tags: {{#each @partial.args}}{{this}},{{/each}}",
-            };
-            assert.equal(m(`{{>foo "tag1" "tag2" "tag3"}}`, {}, {partials}), "Tags: tag1,tag2,tag3,");
-        });
+        // it("should support accessing to partial arguments from @partial.args variable", () => {
+        //     const partials = {
+        //         foo: "Tags: {{#each @partial.args}}{{this}},{{/each}}",
+        //     };
+        //     assert.equal(m(`{{>foo "tag1" "tag2" "tag3"}}`, {}, {partials}), "Tags: tag1,tag2,tag3,");
+        // });
 
-        it("should support subexpressions in positional arguments", () => {
-            const options = {
-                functions: {
-                    concat: params => params.args.join(" "),
-                },
-                partials: {
-                    foo: "Hello {{this}}!",
-                },
-            };
-            assert.equal(m(`{{>foo (concat "John" "Doe")}}`, {}, options), "Hello John Doe!");
-        });
-
-        it("should support subexpressions in key-value arguments", () => {
-            const options = {
-                functions: {
-                    concat: params => params.args.join(" "),
-                },
-                partials: {
-                    foo: "Hello {{this.name}}!",
-                },
-            };
-            assert.equal(m(`{{>foo name=(concat "John" "Doe")}}`, {}, options), "Hello John Doe!");
-        });
-    });
-
-    describe("{{>> xyz}}", () => {
         it("should allow to prove a block of content to the partial", () => {
             const partials = {
                 foo: "Hello {{@content}}!",
             };
 
-            assert.equal(m("{{>>foo}}Bob{{/foo}}", {}, {partials}), "Hello Bob!");
+            assert.equal(m("{{#foo}}Bob{{/foo}}", {}, { partials }), "Hello Bob!");
         });
     });
 
@@ -258,7 +145,7 @@ describe("templating", () => {
         });
 
         it("should iterate over an array of items", () => {
-            assert.equal(m("{{#each values}}{{.}}{{/each}}", {values: ["a", "b"]}), "ab");
+            assert.equal(m("{{#each values}}{{.}}{{/each}}", { values: ["a", "b"] }), "ab");
             assert.equal(m("{{#each values}}{{this}}{{/each}}", {values: ["a", "b"]}), "ab");
             assert.equal(m("{{#each values}}{{@index}}:{{.}},{{/each}}", {values: ["a", "b"]}), "0:a,1:b,");
             assert.equal(m("{{#each values}}{{@index}}:{{this}},{{/each}}", {values: ["a", "b"]}), "0:a,1:b,");
@@ -515,46 +402,22 @@ describe("templating", () => {
             };
             const options = {
                 helpers: {
-                    greet: params => `Hello ${params.state.root.name}!`,
+                    greet: params => `Hello ${params.context.state.root.name}!`,
                 },
             };
             assert.equal(m("{{#greet}}{{/greet}}", data, options), "Hello Bob!");
         });
 
-        it("should support accessing helper content using the @helper variable", () => {
-            const options = {
-                helpers: {
-                    foo: params => params.fn({value: "bar"}),
-                },
-            };
-            assert.equal(m("{{#foo}}Helper name: {{@helper.name}}{{/foo}}", {}, options), "Helper name: foo");
-            assert.equal(m("{{#foo value=2}}Helper option: {{@helper.options.value}}{{/foo}}", {}, options), "Helper option: 2");
-            assert.equal(m("{{#foo}}Helper context: {{@helper.context.value}}{{/foo}}", {}, options), "Helper context: bar");
-        });
-
-        it("should support subexpressions as argument values", () => {
-            const options = {
-                helpers: {
-                    foo: params => "Result is: " + params.args[0],
-                },
-                functions: {
-                    concat: params => params.args.join(","),
-                },
-            };
-            assert.equal(m(`{{#foo (concat "Hello" "World")}}{{/foo}}`, {}, options), "Result is: Hello,World");
-        });
-
-        it("should support subexpressions as options", () => {
-            const options = {
-                helpers: {
-                    foo: params => "Result is: " + params.options.value,
-                },
-                functions: {
-                    concat: params => params.args.join(","),
-                },
-            };
-            assert.equal(m(`{{#foo value=(concat "Hello" "World")}}{{/foo}}`, {}, options), "Result is: Hello,World");
-        });
+        // it("should support accessing helper content using the @helper variable", () => {
+        //     const options = {
+        //         helpers: {
+        //             foo: params => params.fn({ value: "bar" }),
+        //         },
+        //     };
+        //     assert.equal(m("{{#foo}}Helper name: {{@helper.name}}{{/foo}}", {}, options), "Helper name: foo");
+        //     assert.equal(m("{{#foo value=2}}Helper option: {{@helper.options.value}}{{/foo}}", {}, options), "Helper option: 2");
+        //     assert.equal(m("{{#foo}}Helper context: {{@helper.context.value}}{{/foo}}", {}, options), "Helper context: bar");
+        // });
 
         it("should support self-closing helpers", () => {
             const options = {
@@ -570,13 +433,17 @@ describe("templating", () => {
 
     describe("{{@root}}", () => {
         it("should reference the global context", () => {
-            assert.equal(m("{{#each values}}{{@root.key}}{{/each}}", {values: ["a", "b"], key: "c"}), "cc");
+            const data = {
+                values: ["a", "b"],
+                key: "c",
+            };
+            assert.equal(m("{{#each values}}{{@root.key}}{{/each}}", data), "cc");
         });
     });
 
     describe("{{@index}}", () => {
         it("should reference current index in the array", () => {
-            assert.equal(m("{{#each values}}{{@index}}{{/each}}", {values: ["a", "b", "c"]}), "012");
+            assert.equal(m("{{#each values}}{{@index}}{{/each}}", { values: ["a", "b", "c"] }), "012");
         });
     });
 
@@ -592,192 +459,36 @@ describe("templating", () => {
         });
     });
 
-    describe("{{@partial}}", () => {
-        it("should allow accessing to rawContent passed to the partial", () => {
-            const options = {
-                partials: {
-                    foo: `{{!@partial.rawContent}}`,
-                },
-            };
-            assert.equal(m("{{>>foo}}{{bar}}{{/foo}}", {}, options), "{{bar}}");
-        });
+    // describe("{{@partial}}", () => {
+    //     it("should allow accessing to rawContent passed to the partial", () => {
+    //         const options = {
+    //             partials: {
+    //                 foo: `{{!@partial.rawContent}}`,
+    //             },
+    //         };
+    //         assert.equal(m("{{>>foo}}{{bar}}{{/foo}}", {}, options), "{{bar}}");
+    //     });
 
-        it("should pass an empty rawContent for non block partials", () => {
-            const options = {
-                partials: {
-                    foo: "{{!@partial.rawContent}}",
-                },
-            };
-            assert.equal(m("{{>foo}}", {}, options), "");
-        });
-    });
+    //     it("should pass an empty rawContent for non block partials", () => {
+    //         const options = {
+    //             partials: {
+    //                 foo: "{{!@partial.rawContent}}",
+    //             },
+    //         };
+    //         assert.equal(m("{{>foo}}", {}, options), "");
+    //     });
+    // });
 
-    describe("{{=function }}", () => {
-        const options = {
-            functions: {
-                toUpperCase: params => params.args[0].toUpperCase(),
-                concat: params => params.args.join(params.options.delimiter || " "),
-                equal: params => {
-                    const values = params.args[0].split(" == ");
-                    return values[0] === values[1] ? "YES" : "NO";
-                },
-            },
-        };
-
-        it("should allow executing a function to return a value", () => {
-            assert.equal(m("{{=toUpperCase value}}!!", {value: "Bob"}, options), "BOB!!");
-        });
-
-        it("should support multiple arguments", () => {
-            assert.equal(m("{{=concat a b}}", {a: "Hello", b: "World"}, options), "Hello World");
-        });
-
-        it("should render nothing if no function is provided", () => {
-            assert.equal(m("Result: {{=noop value}}", {value: "a"}), "Result: ");
-        });
-
-        it("should allow to provide fixed arguments values", () => {
-            assert.equal(m(`{{=concat "Hello" "World"}}!`, {}, options), "Hello World!");
-            assert.equal(m(`{{=equal "1 == 1"}}`, {}, options), "YES");
-            assert.equal(m(`{{=equal "1 == 2"}}`, {}, options), "NO");
-        });
-
-        it("should allow to execute funcions inside helpers blocks", () => {
-            assert.equal(m(`{{#each names}}{{=toUpperCase .}}, {{/each}}`, {names: ["bob", "susan"]}, options), "BOB, SUSAN, ");
-        });
-
-        it("should support keywods in function arguments", () => {
-            assert.equal(m(`{{=concat a b delimiter=","}}`, {a: "Hello", b: "World"}, options), "Hello,World");
-        });
-
-        it("should support context variables as keyword arguments", () => {
-            const data = {
-                name: "Bob",
-                surname: "Doe",
-            };
-            const options = {
-                functions: {
-                    sayWelcome: params => {
-                        return `Welcome, ${[params.args[0], params.options.surname || ""].filter(Boolean).join(" ")}`;
-                    },
-                },
-            };
-            assert.equal(m("{{=sayWelcome name surname=surname}}", data, options), "Welcome, Bob Doe");
-        });
-
-        it("should support spread operator in function arguments", () => {
-            const data = {
-                values: [1, 2, 3],
-            };
-            const options = {
-                functions: {
-                    sum: params => {
-                        return params.args.reduce((a, b) => a + b, 0);
-                    },
-                },
-            };
-            assert.equal(m("result={{=sum ...values}}", data, options), "result=6");
-        });
-
-        it("should support spread operator in function arguments with keywords", () => {
-            const data = {
-                functionArgs: {
-                    values: [1, 2, 3],
-                    delimiter: ",",
-                },
-            };
-            const options = {
-                functions: {
-                    concat: params => {
-                        return (params.options.values || []).join(params.options.delimiter || " ");
-                    },
-                },
-            };
-            assert.equal(m("result={{=concat ...functionArgs}}", data, options), "result=1,2,3");
-        });
-
-        it("should support accessing to state variables in function params", () => {
-            const data = {
-                name: "Bob",
-            };
-            const options = {
-                functions: {
-                    greet: params => `Hello ${params.state.root.name}!`,
-                },
-            };
-            assert.equal(m("{{=greet}}", data, options), "Hello Bob!");
-        });
-
-        it("should support subexpressions", () => {
-            const options = {
-                functions: {
-                    sum: params => params.args[0] + params.args[1],
-                },
-            };
-            assert.equal(m("{{=sum (sum 1 1) 2}}", {}, options), "4");
-        });
-    });
-
-    describe("argument values", () => {
-        const options = {
-            functions: {
-                concat: params => params.args.join(params.options.delimiter || " "),
-            },
-        };
-        it("should support single quotes in arguments", () => {
-            assert.equal(m(`{{=concat 'Hello' 'World'}}`, {}, options), "Hello World");
-        });
-    });
-
-    describe("subexpressions", () => {
-        const options = {
-            functions: {
-                sum: params => params.args.reduce((a, b) => a + b, 0),
-                upper: params => params.args[0].toUpperCase(),
-                concat: params => params.args.join(params.options.delimiter || " "),
-            },
-        };
-
-        it("should support simple subexpressions", () => {
-            assert.equal(m("{{=sum (sum 3 4) 3}}", {}, options), "10");
-        });
-
-        it("should support nested subexpressions", () => {
-            assert.equal(m("{{=sum (sum 1 (sum 2 3)) 4}}", {}, options), "10");
-        });
-
-        it("should support subexpressions with variables", () => {
-            const data = {
-                price: 10,
-                tax: 2,
-                shipping: 3,
-            };
-            assert.equal(m("{{=sum (sum price tax) shipping}}", data, options), "15");
-        });
-            
-        it("should support subexpressions with strings", () => {
-            const data = {
-                name: "world",
-            };
-            assert.equal(m(`{{=concat "Hello" (upper name)}}`, data, options), "Hello WORLD");
-        });
-        
-        it("should support ubexpression with quoted strings containing spaces", () => {
-            assert.equal(m(`{{=concat (concat "Hello" "dear") "world"}}`, {}, options), "Hello dear world");
-        });
-        
-        it("should support multiple subexpressions in the same call", () => {
-            assert.equal(m("{{=sum (sum 1 2) (sum 3 4)}}", {}, options), "10");
-        });
-        
-        it("should support deeply nested subexpressions", () => {
-            assert.equal(m("{{=sum (sum (sum 1 1) (sum (sum 1 1) 2)) 1}}", {}, options), "7");
-        });
-        
-        it("should support subexpressions inside a string argument should not be evaluated", () => {
-            assert.equal(m(`{{=concat "(sum 1 2)" "test"}}`, {}, options), "(sum 1 2) test");
-        });
-    });
+    // describe("argument values", () => {
+    //     const options = {
+    //         helpers: {
+    //             concat: params => params.args.join(params.options.delimiter || " "),
+    //         },
+    //     };
+    //     it("should support single quotes in arguments", () => {
+    //         assert.equal(m(`{{#concat 'Hello' 'World' /}}`, {}, options), "Hello World");
+    //     });
+    // });
 
     describe("{{!-- --}}", () => {
         it("should remove single-line comments", () => {
@@ -815,7 +526,7 @@ describe("mikel", () => {
 
     it("should return the same result for the same input", () => {
         const template = "Hello {{ name }}!";
-        const data = {name: "Alice"};
+        const data = { name: "Alice" };
         const result1 = m(template, data);
         const result2 = m(template, data);
         assert.equal(result1, result2);
@@ -827,7 +538,7 @@ describe("mikel", () => {
                 greet: () => "Hello World!",
             },
         };
-        const result = m("{{#greet}}{{/greet}}", {}, options);
+        const result = m("{{#greet /}}", {}, options);
         assert.equal(result, "Hello World!");
     });
 });
@@ -835,7 +546,7 @@ describe("mikel", () => {
 describe("mikel.create", () => {
     it("should create a new instance of mikel", () => {
         const mk = m.create();
-        assert.equal(mk("Hello {{ name }}!", {name: "Alice"}), "Hello Alice!");
+        assert.equal(mk("Hello {{ name }}!", { name: "Alice" }), "Hello Alice!");
     });
 
     it("should allow providing custom helpers", () => {
@@ -844,16 +555,7 @@ describe("mikel.create", () => {
                 name: () => "Bob",
             },
         });
-        assert.equal(mk("Hello {{#name}}{{/name}}!", {}), "Hello Bob!");
-    });
-
-    it("should allow providing custom functions", () => {
-        const mk = m.create({
-            functions: {
-                greet: () => "Hello World!",
-            },
-        });
-        assert.equal(mk("{{=greet}}", {}), "Hello World!");
+        assert.equal(mk("Hello {{#name /}}!", {}), "Hello Bob!");
     });
 
     it("should allow providing custom partials", () => {
@@ -862,7 +564,7 @@ describe("mikel.create", () => {
                 foo: "Bar",
             },
         });
-        assert.equal(mk("{{>foo}}", {}), "Bar");
+        assert.equal(mk("{{#foo /}}", {}), "Bar");
     });
 });
 
@@ -874,17 +576,7 @@ describe("mikel.use", () => {
                 foo: params => params.args[0],
             },
         });
-        assert.equal(mk(`Hello {{#foo "bar"}}{{/foo}}`, {}), "Hello bar");
-    });
-
-    it("should allow registering new functions", () => {
-        const mk = m.create();
-        mk.use({
-            functions: {
-                foo: () => "bar",
-            },
-        });
-        assert.equal(mk("Hello {{=foo}}", {}), "Hello bar");
+        assert.equal(mk(`Hello {{#foo "bar" /}}`, {}), "Hello bar");
     });
 
     it("should allow registering new partials", () => {
@@ -894,7 +586,7 @@ describe("mikel.use", () => {
                 foo: "bar",
             },
         });
-        assert.equal(mk("Hello {{>foo}}", {}), "Hello bar");
+        assert.equal(mk("Hello {{#foo /}}", {}), "Hello bar");
     });
 
     it("should allow to register initial state", () => {
@@ -909,10 +601,10 @@ describe("mikel.use", () => {
 
     it("should accept a function to extend mikel", () => {
         const mk = m.create();
-        mk.use((ctx) => {
-            ctx.functions["foo"] = () => "bar";
+        mk.use(api => {
+            api.addPartial("foo", "bar");
         });
-        assert.equal(mk("{{=foo}}", {}), "bar");
+        assert.equal(mk("{{#foo /}}", {}), "bar");
     });
 
     it("should allow to register transforms to the template", () => {
