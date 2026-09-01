@@ -1,10 +1,13 @@
+import type { MikelHelper, MikelPluginObject } from "mikel";
+
 /**
  * Options for the mikel-frontmatter plugin
  */
 export interface MikelFrontmatterOptions {
     /**
-     * Custom parser function to override the default YAML/JSON parser
+     * Custom parser function to override the default YAML/JSON/TOML parser
      * @param content - The raw frontmatter content string
+     * @param format - The format of the frontmatter block ('yaml', 'json', 'toml')
      * @returns Parsed data object
      */
     parser?: (content: string, format: string) => Record<string, any>;
@@ -25,22 +28,11 @@ export type YamlParser = (yaml: string) => Record<string, any>;
 export type TomlParser = (toml: string) => Record<string, any>;
 
 /**
- * Mikel frontmatter plugin
+ * Mikel frontmatter plugin factory
  * @param options - Plugin configuration options
  * @returns Plugin object with helpers
  */
-declare function mikelFrontmatter(options?: MikelFrontmatterOptions): {
-    helpers: {
-        frontmatter: (params: {
-            args: any[];
-            options: Record<string, any>;
-            tokens: string[];
-            data: Record<string, any>;
-            state: Record<string, any>;
-            fn: (blockData?: Record<string, any>, blockState?: Record<string, any>, blockOutput?: string[]) => string;
-        }) => string;
-    };
-};
+declare function mikelFrontmatter(options?: MikelFrontmatterOptions): MikelPluginObject;
 
 /**
  * YAML parser exposed for direct use
@@ -51,3 +43,4 @@ declare namespace mikelFrontmatter {
 }
 
 export default mikelFrontmatter;
+
