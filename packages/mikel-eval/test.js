@@ -123,19 +123,19 @@ describe("evaluate", () => {
     });
 });
 
-describe("{{=eval}}", () => {
+describe("{{#eval}}", () => {
     const options = evaluate();
     it("should evaluate expressions", () => {
-        assert.equal(m(`{{=eval "1 + 1"}}`, {}, options), "2");
-        assert.equal(m(`{{=eval "'Hello' + ' ' + 'World'"}}`, {}, options), "Hello World");
+        assert.equal(m(`{{#eval "1 + 1" /}}`, {}, options), "2");
+        assert.equal(m(`{{#eval "'Hello' + ' ' + 'World'"/}}`, {}, options), "Hello World");
     });
 
     it("should evaluate expressions with variables", () => {
-        assert.equal(m(`{{=eval "x + 1"}}`, {x: 1}, options), "2");
-        assert.equal(m(`{{=eval "x * y"}}`, {x: 2, y: 3}, options), "6");
-        assert.equal(m(`{{=eval "x + y"}}`, {x: 5, y: 10}, options), "15");
-        assert.equal(m(`{{=eval "'Hello ' + name"}}`, {name: "Bob"}, options), "Hello Bob");
-        assert.equal(m(`{{=eval "replace('Hello', 'Hello', name)"}}`, {name: "Alice"}, options), "Alice");
+        assert.equal(m(`{{#eval "x + 1" /}}`, {x: 1}, options), "2");
+        assert.equal(m(`{{#eval "x * y" /}}`, {x: 2, y: 3}, options), "6");
+        assert.equal(m(`{{#eval "x + y" /}}`, {x: 5, y: 10}, options), "15");
+        assert.equal(m(`{{#eval "'Hello ' + name" /}}`, {name: "Bob"}, options), "Hello Bob");
+        assert.equal(m(`{{#eval "replace('Hello', 'Hello', name)" /}}`, {name: "Alice"}, options), "Alice");
     });
 });
 

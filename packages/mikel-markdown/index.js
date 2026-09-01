@@ -209,13 +209,13 @@ const parser = (str = "", options = {}) => {
 const markdownPlugin = (options = {}) => ({
     helpers: {
         markdown: params => {
-            params.state.toc = []; // variable to save table of contents
-            return parser(params.fn(params.data) || "", {
+            params.context.state.toc = []; // variable to save table of contents
+            return parser(params.fn(params.context.data) || "", {
                 ...options,
                 hooks: {
                     beforeRender: (key, args) => {
                         if (key === "heading") {
-                            params.state.toc.push({
+                            params.context.state.toc.push({
                                 level: args[1].length,
                                 text: args[2],
                                 slug: args[2].toLowerCase().replaceAll(" ", "-"),
@@ -226,7 +226,7 @@ const markdownPlugin = (options = {}) => ({
             });
         },
         inlineMarkdown: params => {
-            return parser(params.fn(params.data) || "", {
+            return parser(params.fn(params.context.data) || "", {
                 ...options,
                 expressions: getInlineExpressions(options.expressions || allExpressions),
             });

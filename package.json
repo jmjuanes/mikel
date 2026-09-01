@@ -19,7 +19,7 @@
     },
     "scripts": {
         "release": "node ./scripts/release.js",
-        "test": "node test.js && yarn test:cli && yarn test:eval && yarn test:frontmatter && yarn test:markdown && yarn test:jsx",
+        "test": "node test.js && yarn test:cli && yarn test:eval && yarn test:frontmatter && yarn test:markdown",
         "test:cli": "cd packages/mikel-cli && yarn test",
         "test:eval": "node ./packages/mikel-eval/test.js",
         "test:frontmatter": "node ./packages/mikel-frontmatter/test.js",

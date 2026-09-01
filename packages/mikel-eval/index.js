@@ -300,21 +300,19 @@ const evaluate = (str = "", options = {}) => {
 // @description evaluate plugin
 const evaluatePlugin = (options = {}) => {
     return {
-        functions: {
+        helpers: {
             eval: params => {
                 return evaluate(params.args[0], {
-                    values: params.data,
+                    values: params.context.data,
                     functions: options.functions,
                 });
             },
-        },
-        helpers: {
             when: params => {
                 const condition = evaluate(params.args[0], {
-                    values: params.data,
+                    values: params.context.data,
                     functions: options.functions,
                 });
-                return !!condition ? params.fn(params.data) : "";
+                return !!condition ? params.fn(params.context.data) : "";
             },
         },
     };

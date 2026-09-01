@@ -217,8 +217,8 @@ const mikelFrontmatter = (options = {}) => ({
             const variableName = params.options.as || "frontmatter";
             const format = params.options.format || "yaml";
             // register the variable (overwrite if it already exists)
-            Object.assign(params.state, {
-                [variableName]: parseFrontmatterBlock(params.fn(params.data) || "", format, options.parser),
+            Object.assign(params.context.state, {
+                [variableName]: parseFrontmatterBlock(params.fn(params.context.data) || "", format, options.parser),
             });
             // don't render anything
             return "";
