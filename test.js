@@ -113,19 +113,19 @@ describe("templating", () => {
             assert.equal(m("{{#foo ...partialArgs /}}", data, { partials }), "Hello Bob! You are 30 years old.");
         });
 
-        // it("should support accessing to partial options from @partial.options variable", () => {
-        //     const partials = {
-        //         foo: "Hello {{@partial.options.name}}!",
-        //     };
-        //     assert.equal(m(`{{>foo name="Bob"}}`, {}, {partials}), "Hello Bob!");
-        // });
+        it("should support accessing to partial options from @partial.options variable", () => {
+            const partials = {
+                foo: "Hello {{@partial.options.name}}!",
+            };
+            assert.equal(m(`{{#foo name="Bob" /}}`, {}, { partials }), "Hello Bob!");
+        });
 
-        // it("should support accessing to partial arguments from @partial.args variable", () => {
-        //     const partials = {
-        //         foo: "Tags: {{#each @partial.args}}{{this}},{{/each}}",
-        //     };
-        //     assert.equal(m(`{{>foo "tag1" "tag2" "tag3"}}`, {}, {partials}), "Tags: tag1,tag2,tag3,");
-        // });
+        it("should support accessing to partial arguments from @partial.args variable", () => {
+            const partials = {
+                foo: "Tags: {{#each @partial.args}}{{this}},{{/each}}",
+            };
+            assert.equal(m(`{{#foo "tag1" "tag2" "tag3" /}}`, {}, { partials }), "Tags: tag1,tag2,tag3,");
+        });
 
         it("should allow to prove a block of content to the partial", () => {
             const partials = {
@@ -133,6 +133,18 @@ describe("templating", () => {
             };
 
             assert.equal(m("{{#foo}}Bob{{/foo}}", {}, { partials }), "Hello Bob!");
+        });
+
+        it("should support partial variables", () => {
+            const partials = {
+                foo: {
+                    body: "Hello {{@partial.attributes.name}}!",
+                    attributes: {
+                        name: "Bob",
+                    },
+                },
+            };
+            assert.equal(m("{{#foo /}}", {}, { partials }), "Hello Bob!");
         });
     });
 
@@ -408,16 +420,15 @@ describe("templating", () => {
             assert.equal(m("{{#greet}}{{/greet}}", data, options), "Hello Bob!");
         });
 
-        // it("should support accessing helper content using the @helper variable", () => {
-        //     const options = {
-        //         helpers: {
-        //             foo: params => params.fn({ value: "bar" }),
-        //         },
-        //     };
-        //     assert.equal(m("{{#foo}}Helper name: {{@helper.name}}{{/foo}}", {}, options), "Helper name: foo");
-        //     assert.equal(m("{{#foo value=2}}Helper option: {{@helper.options.value}}{{/foo}}", {}, options), "Helper option: 2");
-        //     assert.equal(m("{{#foo}}Helper context: {{@helper.context.value}}{{/foo}}", {}, options), "Helper context: bar");
-        // });
+        it("should support accessing helper content using the @helper variable", () => {
+            const options = {
+                helpers: {
+                    foo: params => params.fn({ value: "bar" }),
+                },
+            };
+            assert.equal(m("{{#foo}}Helper name: {{@helper.name}}{{/foo}}", {}, options), "Helper name: foo");
+            assert.equal(m("{{#foo value=2}}Helper option: {{@helper.options.value}}{{/foo}}", {}, options), "Helper option: 2");
+        });
 
         it("should support self-closing helpers", () => {
             const options = {
@@ -459,25 +470,25 @@ describe("templating", () => {
         });
     });
 
-    // describe("{{@partial}}", () => {
-    //     it("should allow accessing to rawContent passed to the partial", () => {
-    //         const options = {
-    //             partials: {
-    //                 foo: `{{!@partial.rawContent}}`,
-    //             },
-    //         };
-    //         assert.equal(m("{{>>foo}}{{bar}}{{/foo}}", {}, options), "{{bar}}");
-    //     });
+    describe("{{@partial}}", () => {
+        it("should allow accessing to @partial.content passed to the partial", () => {
+            const options = {
+                partials: {
+                    foo: `{{!@partial.content}}`,
+                },
+            };
+            assert.equal(m("{{#foo}}{{bar}}{{/foo}}", {}, options), "{{bar}}");
+        });
 
-    //     it("should pass an empty rawContent for non block partials", () => {
-    //         const options = {
-    //             partials: {
-    //                 foo: "{{!@partial.rawContent}}",
-    //             },
-    //         };
-    //         assert.equal(m("{{>foo}}", {}, options), "");
-    //     });
-    // });
+        it("should pass an empty @partial.content for non block partials", () => {
+            const options = {
+                partials: {
+                    foo: "{{!@partial.content}}",
+                },
+            };
+            assert.equal(m("{{#foo /}}", {}, options), "");
+        });
+    });
 
     describe("argument values", () => {
         const options = {
@@ -597,14 +608,6 @@ describe("mikel.use", () => {
             },
         });
         assert.equal(mk("Hello {{@foo}}", {}), "Hello bar");
-    });
-
-    it("should accept a function to extend mikel", () => {
-        const mk = m.create();
-        mk.use(api => {
-            api.addPartial("foo", "bar");
-        });
-        assert.equal(mk("{{#foo /}}", {}), "bar");
     });
 
     it("should allow to register transforms to the template", () => {
