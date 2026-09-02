@@ -96,20 +96,9 @@ const compile = (tokens, output, data = {}, directives = {}, state = {}, index =
                         data: data,
                         tokens: tokens.slice(j, i),
                     }),
+                    name: t,
                     args: args,
                     options: opt,
-                    fn: (blockData = {}, customBlockState = {}, blockOutput = []) => {
-                        if (!isSelfClosing) {
-                            const blockState = {
-                                ...state,
-                                ...customBlockState,
-                                parent: data,
-                                root: state.root,
-                            };
-                            compile(tokens, blockOutput, blockData, directives, blockState, j, t);
-                        }
-                        return blockOutput.join("");
-                    },
                 });
                 output.push(result);
             }
@@ -153,20 +142,54 @@ const getPartialDataFromParams = params => {
 // utility method to create a partial directive
 const createPartial = partial => {
     return params => {
-        const partialResult = [];
-        const partialData = getPartialDataFromParams(params);
-        const partialState = {
+        const { tokens, directives } = params.context;
+        const result = [], content = [];
+        const data = getPartialDataFromParams(params);
+        const body = typeof partial === "object" ? partial?.body : partial;
+        compile(tokens, content, params.context.data, directives, params.context.state);
+        compile(tokenize(body || ""), result, data, directives, {
             ...params.context.state,
-            content: params.fn(params.context.data),
-        };
-        compile(tokenize(partial), partialResult, partialData, params.context.directives, partialState, 0, "");
-        return partialResult.join("");
+            content: content.join(""),
+            partial: {
+                attributes: partial?.attributes || partial?.data || {},
+                args: params.args || [],
+                options: params.options || {},
+                content: tokens.length > 0 ? untokenize(tokens) : "",
+            },
+        });
+        return result.join("");
+    };
+};
+
+// utility method to create a helper directive
+const createHelper = listener => {
+    return params => {
+        const { directives, tokens } = params.context;
+        return listener({
+            ...params,
+            fn: (data = {}, customState = {}, output = []) => {
+                if (params.context.tokens.length > 0) {
+                    const state = {
+                        ...params.context.state,
+                        ...customState,
+                        parent: params.context.data,
+                        helper: {
+                            name: params.name,
+                            options: params.options,
+                            args: params.args,
+                        },
+                    };
+                    compile(tokens, output, data, directives, state);
+                }
+                return output.join("");
+            },
+        });
     };
 };
 
 // @description default directives
 const defaultDirectives = {
-    "each": p => {
+    "each": createHelper(p => {
         const values = p.options?.items || p.args[0] || {};
         const items = typeof values === "object" ? Object.entries(values) : [];
         const skip = p.options?.skip || 0;
@@ -181,62 +204,73 @@ const defaultDirectives = {
             });
         });
         return result.join("");
-    },
-    "if": p => !!(p.options?.condition ?? p.args[0]) ? p.fn(p.context.data) : "",
-    "unless": p => !!!(p.options?.condition ?? p.args[0]) ? p.fn(p.context.data) : "",
-    "eq": p => (p.options?.left ?? p.args[0]) === (p.options?.right ?? p.args[1]) ? p.fn(p.context.data) : "",
-    "ne": p => (p.options?.left ?? p.args[0]) !== (p.options?.right ?? p.args[1]) ? p.fn(p.context.data) : "",
-    "with": p => p.fn(p.options?.context ?? p.args[0]),
-    "escape": p => escape(p.fn(p.context.data)),
-    "raw": p => untokenize(p.context.tokens),
-    "slot": p => {
+    }),
+    "if": createHelper(p => {
+        return !!(p.options?.condition ?? p.args[0]) ? p.fn(p.context.data) : "";
+    }),
+    "unless": createHelper(p => {
+        return !!!(p.options?.condition ?? p.args[0]) ? p.fn(p.context.data) : "";
+    }),
+    "eq": createHelper(p => {
+        return (p.options?.left ?? p.args[0]) === (p.options?.right ?? p.args[1]) ? p.fn(p.context.data) : "";
+    }),
+    "ne": createHelper(p => {
+        return (p.options?.left ?? p.args[0]) !== (p.options?.right ?? p.args[1]) ? p.fn(p.context.data) : "";
+    }),
+    "with": createHelper(p => p.fn(p.options?.context ?? p.args[0])),
+    "escape": createHelper(p => escape(p.fn(p.context.data))),
+    "raw": createHelper(p => untokenize(p.context.tokens)),
+    "slot": createHelper(p => {
         if (typeof p.context.state.slot === "undefined") {
             p.context.state.slot = {};
         }
         p.context.state.slot[(p.options?.name ?? p.args[0]).trim()] = p.fn(p.context.data);
         return "";
-    },
+    }),
 };
 
 // @description create a new instance of mikel
 const create = (options = {}) => {
-    const directives = Object.assign({}, defaultDirectives); // map to save directives (helpers and partials)
-    const transforms = new Set(); // to save pretransforms
-    const state = {}; // Object.assign({}, options?.initialState || {});
-    // 1. add initial helpers and partials
-    Object.keys(options?.helpers || {}).forEach(key => directives[key] = options.helpers[key]);
-    Object.keys(options?.partials || {}).forEach(key => directives[key] = createPartial(options.partials[key]));
-    // 2. entry method to compile the template with the provided data object
-    const compileTemplate = (template, data = {}, output = []) => {
-        const input = Array.from(transforms).reduce((content, fn) => fn(content), template);
-        compile(tokenize(input), output, data, directives, { ...state, root: data }, 0, "");
+    // 0. initialize internal context
+    const ctx = {
+        directives: Object.assign({}, defaultDirectives), // map to save directives (helpers and partials)
+        transforms: new Set(), // to save pretransforms
+        initialState: {}, // Object.assign({}, options?.initialState || {});
+    };
+    // 1. entry method to compile the template with the provided data object
+    const mk = (template, data = {}, output = []) => {
+        const input = Array.from(ctx.transforms).reduce((content, fn) => fn(content), template);
+        compile(tokenize(input), output, data, ctx.directives, { ...ctx.initialState, root: data }, 0, "");
         return output.join("");
     };
-    // 3. generate api methods
-    const mk = Object.freeze({
-        addHelper: (name, value) => directives[name] = value,
-        removeHelper: name => delete directives[name],
-        addPartial: (name, value) => directives[name] = createPartial(value || ""),
-        removePartial: name => delete directives[name],
-    });
-    // 4. return merged compileTemplate and api methods
-    return Object.assign(compileTemplate, mk, {
-        use: (plugin) => {
-            if (typeof plugin === "function") {
-                plugin(mk);
-            }
-            else if (typeof plugin === "object" && !!plugin) {
-                // 1. merge directives and internal state
-                Object.keys(plugin?.helpers || {}).forEach(key => directives[key] = plugin.helpers[key]);
-                Object.keys(plugin?.partials || {}).forEach(key => directives[key] = createPartial(plugin.partials[key]));
-                Object.assign(state, plugin?.initialState || {});
-                // 2. if a transform function is provided, include it
-                if (typeof plugin?.transform === "function") {
-                    transforms.add(plugin.transform);
+    // 2. return merged compileTemplate and api methods
+    Object.assign(mk, {
+        use: (plugin = {}) => {
+            // 2.1. merge helper directives
+            Object.keys(plugin?.helpers || {}).forEach(key => {
+                if (typeof plugin.helpers[key] == "function") {
+                    ctx.directives[key] = createHelper(plugin.helpers[key]);
                 }
+            });
+            // 2.2. merge partial directives
+            Object.keys(plugin?.partials || {}).forEach(key => {
+                // partials can be a string, or an object containing {body, attributes}
+                if (typeof plugin.partials[key] === "string" || typeof plugin.partials[key] === "object") {
+                    ctx.directives[key] = createPartial(plugin.partials[key]);
+                }
+            });
+            // 2.3. merge internal state
+            Object.assign(ctx.initialState, plugin?.initialState || {});
+            // 2.4. if a transform function is provided, include it
+            if (typeof plugin?.transform === "function") {
+                ctx.transforms.add(plugin.transform);
             }
         },
     });
+    // 3. initialize internal context with options provided in the constructor
+    mk.use(options);
+    // 4. return mikel instance
+    return mk;
 };
 
 // @description main compiler function

@@ -1,40 +1,39 @@
-export type MikelState = Record<string, any>;
-
 export type MikelHelperCallback = (
     data?: Record<string, any>,
     state?: Record<string, any>,
 ) => string;
 
 export type MikelHelper = (params: {
+    name: string;
     args: any[];
     options: Record<string, any>;
     context: {
         tokens: string[];
         data: Record<string, any>;
-        state: MikelState;
+        state: Record<string, any>;
+        directives: Record<string, any>;
     },
     fn: MikelHelperCallback;
 }) => string;
 
-export type MikelPartial = string;
+export type MikelPartial = string | {
+    body: string;
+    data?: Record<string, any>;
+    attributes?: Record<string, any>;
+};
 
 export type MikelTransform = (content: string) => string;
 
 export type MikelOptions = {
-    helpers?: Record<string, MikelHelper>;
-    partials?: Record<string, MikelPartial>;
+    helpers: Record<string, MikelHelper>;
+    partials: Record<string, MikelPartial>;
+    transform: MikelTransform;
+    initialState: Record<string, any>;
 };
 
-export type MikelApi = {
-    addHelper(name: string, fn: MikelHelper): void;
-    removeHelper(name: string): void;
-    addPartial(name: string, partial: MikelPartial): void;
-    removePartial(name: string): void;
-};
+export type MikelPlugin = Partial<MikelOptions>;
 
-export type MikelPlugin = (ctx: MikelApi) => void;
-
-export type Mikel = MikelApi & {
+export type Mikel = {
     (template: string, data?: any): string;
     use(plugin: MikelPlugin): void;
 };
