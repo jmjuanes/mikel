@@ -2,6 +2,9 @@
 
 > **⚠️ Experimental.** This package is a work in progress — the tag syntax, attribute rules, and public API can change at any time without notice. Not recommended for production use yet.
 
+![npm version](https://badgen.net/npm/v/mikel-jsx?labelColor=1d2734&color=21bf81)
+![license](https://badgen.net/github/license/jmjuanes/mikel?labelColor=1d2734&color=21bf81)
+
 A plugin for [mikel](https://github.com/jmjuanes/mikel) that adds a JSX-style `<m-name>` tag for calling mikel directives (helpers and partials) from HTML-ish templates, as an alternative to the usual mustache syntax (`{{# }}`).
 
 ```html
