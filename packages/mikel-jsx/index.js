@@ -1,20 +1,19 @@
 //
-// Adds JSX-style tags for calling mikel partials, helpers and functions
-// from HTML-ish templates. Other tags (<div>, <span>, your own custom
-// elements) are left completely untouched, since only tags prefixed with
-// m-, x- or f- are recognized.
+// Adds a single JSX-style <m-name> tag for calling mikel directives
+// (helpers and partials — both share the same `#` mechanism now, so
+// there's nothing to disambiguate). One prefix, one output shape:
 //
-//   <m-header title="Hello" />              -->  {{>header title="Hello"}}
-//   <m-card title="Hello">...</m-card>      -->  {{>>card title="Hello"}}...{{/card}}
-//   <x-if isAdmin>...</x-if>                -->  {{#if isAdmin}}...{{/if}}
-//   <x-each users skip={1} />               -->  {{#each users skip=1 /}}
-//   <f-fullName user.first user.last />     -->  {{=fullName user.first user.last}}
+//   <m-header title="Hello" />             -->  {{#header title="Hello" /}}
+//   <m-if isAdmin>...</m-if>               -->  {{#if isAdmin}}...{{/if}}
+//   <m-each users skip={1} />...</m-each>  -->  {{#each users skip=1}}...{{/each}}
+//
+// Other tags (<div>, <span>, your own custom elements) are left untouched.
 //
 // Attribute rules:
 //   name               --> positional, raw value (bare attribute, dotted paths ok)
 //   key="literal"      --> keyword, string literal, always — never auto-typed
-//   key={expr}          --> keyword, raw value (variable, string, number, boolean, subexpression...)
-//   key="{expr}"        --> same as key={expr}, quoted so HTML linters don't flag it (undocumented, but tested)
+//   key={expr}         --> keyword, raw value (variable, string, number, boolean, subexpression...)
+//   key="{expr}"       --> same as key={expr}, quoted so HTML linters don't flag it (undocumented, but tested)
 //   {expr}             --> positional, raw value (for values that aren't identifiers)
 //   {...expr}          --> spread
 
@@ -28,7 +27,7 @@
 //   name         --> positional, raw value (bare attr)             e.g. isAdmin, users
 const ATTR_RE = /\{\s*\.\.\.\s*([^}]+?)\s*\}|([a-zA-Z_][\w-]*)\s*=\s*"\{\s*([^}]+?)\s*\}"|([a-zA-Z_][\w-]*)\s*=\s*"([^"]*)"|([a-zA-Z_][\w-]*)\s*=\s*\{\s*([^}]+?)\s*\}|\{\s*([^}]+?)\s*\}|([a-zA-Z_][\w.-]*)/g;
 
-const parseAttributes = (raw = "") => {
+export const parseAttributes = (raw = "") => {
     const parts = [];
     let m;
     ATTR_RE.lastIndex = 0;
@@ -52,12 +51,12 @@ const parseAttributes = (raw = "") => {
 };
 
 // matches a self-closing tag: <m-name attrs />
-const SELF_CLOSING_RE = /<(m|x|f)-([a-zA-Z_][\w-]*)((?:\s+[^<>]*?)?)\s*\/>/;
+const SELF_CLOSING_RE = /<m-([a-zA-Z_][\w-]*)((?:\s+[^<>]*?)?)\s*\/>/;
 
 // matches an innermost paired tag: <m-name attrs>...</m-name>. The negative
 // lookahead in the content group stops the match before any nested custom
 // tag, so the innermost pair is always resolved first.
-const PAIRED_RE = /<(m|x)-([a-zA-Z_][\w-]*)((?:\s+[^<>]*?)?)\s*>((?:(?!<[mxf]-)[\s\S])*?)<\/\1-\2\s*>/;
+const PAIRED_RE = /<m-([a-zA-Z_][\w-]*)((?:\s+[^<>]*?)?)\s*>((?:(?!<m-)[\s\S])*?)<\/m-\1\s*>/;
 
 // @description replaces one match at a time, re-searching after each
 // replacement (needed since nested tags only become matchable once their
@@ -70,33 +69,30 @@ const replaceAll = (str, re, replacer) => {
     return str;
 };
 
-// @description the actual template transform: string in, string out
-const transformJsxTemplate = content => {
+// @description the actual template transform: string in, string out.
+// No lookup, no ambiguity: every <m-name> becomes {{#name ...}}, since
+// helpers and partials are now the same underlying mechanism in mikel.
+export const transform = content => {
     // 1. self-closing tags first: no nesting to worry about
-    content = replaceAll(content, SELF_CLOSING_RE, ([, prefix, name, attrs]) => {
+    content = replaceAll(content, SELF_CLOSING_RE, ([, name, attrs]) => {
         const args = parseAttributes(attrs);
         const suffix = args ? ` ${args}` : "";
-        if (prefix === "m") {
-            return `{{>${name}${suffix}}}`;
-        }
-        if (prefix === "x") {
-            return `{{#${name}${suffix} /}}`;
-        }
-        return `{{=${name}${suffix}}}`; // prefix === "f"
+        return `{{#${name}${suffix} /}}`;
     });
     // 2. paired (block) tags, innermost first, repeated until none are left
-    content = replaceAll(content, PAIRED_RE, ([, prefix, name, attrs, inner]) => {
+    content = replaceAll(content, PAIRED_RE, ([, name, attrs, inner]) => {
         const args = parseAttributes(attrs);
         const suffix = args ? ` ${args}` : "";
-        const open = prefix === "m" ? `{{>>${name}${suffix}}}` : `{{#${name}${suffix}}}`;
-        return `${open}${inner}{{/${name}}}`;
+        return `{{#${name}${suffix}}}${inner}{{/${name}}}`;
     });
     return content;
 };
 
-// @description mikel plugin: registers the transform as a preTransform
+// @description mikel plugin: a factory returning a plain options object for
+// mk.use(), following the same convention as mikel.SetStatePlugin — call it
+// to get the object, then pass that to use(): mk.use(mikelJsx())
 export default () => {
     return {
-        transform: transformJsxTemplate,
+        transform: transform,
     };
 };
