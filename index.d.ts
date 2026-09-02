@@ -1,5 +1,3 @@
-export type MikelState = Record<string, any>;
-
 export type MikelHelperCallback = (
     data?: Record<string, any>,
     state?: Record<string, any>,
@@ -12,7 +10,7 @@ export type MikelHelper = (params: {
     context: {
         tokens: string[];
         data: Record<string, any>;
-        state: MikelState;
+        state: Record<string, any>;
         directives: Record<string, any>;
     },
     fn: MikelHelperCallback;
@@ -27,15 +25,17 @@ export type MikelPartial = string | {
 export type MikelTransform = (content: string) => string;
 
 export type MikelOptions = {
-    helpers?: Record<string, MikelHelper>;
-    partials?: Record<string, MikelPartial>;
-    transform?: MikelTransform;
-    initialState?: MikelState;
+    helpers: Record<string, MikelHelper>;
+    partials: Record<string, MikelPartial>;
+    transform: MikelTransform;
+    initialState: Record<string, any>;
 };
+
+export type MikelPlugin = Partial<MikelOptions>;
 
 export type Mikel = {
     (template: string, data?: any): string;
-    use(options: MikelOptions): void;
+    use(plugin: MikelPlugin): void;
 };
 
 export type MikelSetStatePlugin = (name: string, value: any) => MikelPlugin;
