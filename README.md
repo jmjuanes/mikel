@@ -353,15 +353,13 @@ console.log(result); // --> "0: John, 1: Alice, 2: Bob,"
 Helpers that don't need to render a block of content can be self-closed by adding a forward slash `/` right before the closing `}}`. This removes the need to write a matching closing tag.
 
 ```javascript
-const template = `
-{{#macro "sayHello"}}
-Hello {{this.name}}!!
-{{/macro}}
+const options = {
+    helpers: {
+        toUpperCase: params => params.args[0].toUpperCase(),
+    },
+};
 
-{{#call "sayHello" name="Bob" /}}
-`;
-
-console.log(m(template, {})); // --> 'Hello Bob!!'
+console.log(m("Hello {{#toUpperCase 'Bob' /}}", {}, options)); // --> 'Hello BOB'
 ```
 
 A self-closing helper is equivalent to an empty block, so `{{#name args /}}` behaves the same as `{{#name args}}{{/name}}`.
@@ -392,6 +390,17 @@ const options = {
 const result = m("{{#join ...items ...options}}{{/join}}", data, options);
 console.log(result); // --> "John, Alice, Bob"
 ```
+
+#### Accessing to helper metadata using the `@helper` variable
+
+> Introduced in `v0.28.0`.
+> Breaking change introduced in `v0.40.0`.
+
+Inside any helper block, you can access metadata about the current invocation through the `@helper` variable. It exposes the following fields:
+
+- `@helper.name`: the name of the helper being invoked.
+- `@helper.args`: an array of positional arguments passed to the helper.
+- `@helper.options`: an object containing named (key-value) arguments.
 
 ### Partials
 
@@ -490,6 +499,46 @@ const result = m("{{#foo}}Bob{{/foo}}", {}, options);
 // Output: 'Hello Bob!'
 ```
 
+#### Partials data
+
+> Added in `v0.18.0`.
+
+Partials allows you to define custom data. Instead of providing a string with the partial content, you can provide an object with the following keys:
+
+- `body`: a string with the partial content.
+- `data`: an object with your custom data for the partial. You can also use `attributes` as an alias.
+
+Custom data will be available in the partial content in the `@partial.attributes` variable.
+
+Example:
+
+```javascript
+const options = {
+    partials: {
+        foo: {
+            body: "Hello {{@partial.attributes.name}}!",
+            data: {
+                name: "Bob",
+            },
+        },
+    },
+};
+
+const result = m("{{#foo /}}", {}, options);
+// Output: 'Hello Bob!'
+```
+
+#### Accessing to partial metadata using the `@partial` variable
+
+> Added in `v0.28.0`.
+> Breaking change introduced in `v0.40.0`.
+
+Partial metadata can be accessed using the `@partial` variable inside the partial. It contains the following fields:
+
+- `@partial.args`: an array containing the positional arguments provided to the partial (if any).
+- `@partial.options`: an object containing the keyword arguments provided to the partial (if any).
+- `@partial.attributes`: the custom data provided to the partial (if any).
+
 ### State Variables
 
 > Added in `v0.4.0`.
@@ -580,19 +629,18 @@ const mk = mikel.create({
     },
 });
 
-console.log(mk("{{#hello /}}", {name: "Bob"})); // --> "Hello, Bob!"
-console.log(mk("{{#hello /}}", {name: "Susan"})); // --> "Hello, Susan!"
+console.log(mk("{{#hello /}}", { name: "Bob" })); // --> "Hello, Bob!"
+console.log(mk("{{#hello /}}", { name: "Susan" })); // --> "Hello, Susan!"
 ```
 
 It also exposes the following additional methods:
 
-#### `mk.use(options | function)`
+#### `mk.use(options)`
 
 > Added in `v0.19.0`.
+> Breaking change introduced in `v0.40.0`.
 
-Extends the instance with additional helpers, partials, or initial state. Accepts either an options object or a plugin function.
-
-When called with an **object**, it registers the provided helpers and partials directly:
+Extends the instance with additional helpers, partials, or initial state.
 
 ```javascript
 mk.use({
@@ -603,50 +651,6 @@ mk.use({
         foo: "Hello {{name}}!",
     },
 });
-```
-
-When called with a **function**, the function receives the internal API of the instance. This is the recommended approach for writing reusable plugins:
-
-```javascript
-const myPlugin = (ctx) => {
-    ctx.addHelper("uppercase", ({ fn, context }) => {
-        return fn(context.data).toUpperCase();
-    });
-};
-
-mk.use(myPlugin);
-```
-
-#### `mk.addHelper(helperName, helperFn)`
-
-Registers a new helper.
-
-```javascript
-mk.addHelper("foo", () => { ... });
-```
-
-#### `mk.removeHelper(helperName)`
-
-Removes a previously added helper.
-
-```javascript
-mk.removeHelper("foo");
-```
-
-#### `mk.addPartial(partialName, partialCode)`
-
-Registers a new partial.
-
-```javascript
-mk.addPartial("bar", " ... ");
-```
-
-#### `mk.removePartial(partialName)`
-
-Removes a previously added partial.
-
-```javascript
-mk.removePartial("bar");
 ```
 
 ### `mikel.escape(str)`
