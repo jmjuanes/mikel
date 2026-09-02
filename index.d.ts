@@ -6,37 +6,36 @@ export type MikelHelperCallback = (
 ) => string;
 
 export type MikelHelper = (params: {
+    name: string;
     args: any[];
     options: Record<string, any>;
     context: {
         tokens: string[];
         data: Record<string, any>;
         state: MikelState;
+        directives: Record<string, any>;
     },
     fn: MikelHelperCallback;
 }) => string;
 
-export type MikelPartial = string;
+export type MikelPartial = string | {
+    body: string;
+    data?: Record<string, any>;
+    attributes?: Record<string, any>;
+};
 
 export type MikelTransform = (content: string) => string;
 
 export type MikelOptions = {
     helpers?: Record<string, MikelHelper>;
     partials?: Record<string, MikelPartial>;
+    transform?: MikelTransform;
+    initialState?: MikelState;
 };
 
-export type MikelApi = {
-    addHelper(name: string, fn: MikelHelper): void;
-    removeHelper(name: string): void;
-    addPartial(name: string, partial: MikelPartial): void;
-    removePartial(name: string): void;
-};
-
-export type MikelPlugin = (ctx: MikelApi) => void;
-
-export type Mikel = MikelApi & {
+export type Mikel = {
     (template: string, data?: any): string;
-    use(plugin: MikelPlugin): void;
+    use(options: MikelOptions): void;
 };
 
 export type MikelSetStatePlugin = (name: string, value: any) => MikelPlugin;
