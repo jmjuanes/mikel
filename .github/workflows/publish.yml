@@ -12,6 +12,8 @@ jobs:
   publish:
     if: ${{ github.repository == 'jmjuanes/mikel' }}
     runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -19,14 +21,14 @@ jobs:
           node-version: latest
           registry-url: 'https://registry.npmjs.org'
       - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
   publish-packages:
     if: ${{ github.repository == 'jmjuanes/mikel' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
         package: [mikel-press, mikel-markdown, mikel-eval, mikel-frontmatter, mikel-jsx, mikel-cli]
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -35,5 +37,3 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: yarn release
       - run: cd packages/${{ matrix.package }} && npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
