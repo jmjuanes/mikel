@@ -35,5 +35,5 @@ jobs:
         with:
           node-version: latest
           registry-url: 'https://registry.npmjs.org'
-      - run: yarn release
+      - run: yarn run release
       - run: cd packages/${{ matrix.package }} && npm publish
