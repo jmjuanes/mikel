@@ -179,7 +179,7 @@ const parseFactor = ctx => {
 };
 
 // @description default functions
-const defaultFunctions = {
+export const defaultFunctions = {
     // common functions
     len: x => {
         if (Array.isArray(x) || typeof x === "string") {
@@ -279,7 +279,7 @@ const defaultFunctions = {
 // @param options {object} the options to use
 // @param options.values {object} context where the expression will be evaluated
 // @param options.functions {object} functions to use in the expression
-const evaluate = (str = "", options = {}) => {
+export const evaluate = (str = "", options = {}) => {
     const context = {
         pos: 0,
         current: str.charAt(0) || "",
@@ -298,7 +298,7 @@ const evaluate = (str = "", options = {}) => {
 };
 
 // @description evaluate plugin
-const evaluatePlugin = (options = {}) => {
+export default (options = {}) => {
     return {
         helpers: {
             eval: params => {
@@ -317,10 +317,3 @@ const evaluatePlugin = (options = {}) => {
         },
     };
 };
-
-// assign additional options for this plugin
-evaluatePlugin.evaluate = evaluate;
-evaluatePlugin.defaultFunctions = defaultFunctions;
-
-// export the evaluate plugin
-export default evaluatePlugin;
