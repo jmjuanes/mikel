@@ -1,10 +1,10 @@
 import {describe, it} from "node:test";
 import assert from "node:assert";
-import evaluate from "./index.js";
+import mikelEval, { evaluate } from "./index.js";
 import m from "../../index.js";
 
 describe("evaluate", () => {
-    const e = evaluate.evaluate;
+    const e = evaluate;
 
     describe("math operations", () => {
         it("should evaluate addition", () => {
@@ -124,7 +124,7 @@ describe("evaluate", () => {
 });
 
 describe("{{#eval}}", () => {
-    const options = evaluate();
+    const options = mikelEval();
     it("should evaluate expressions", () => {
         assert.equal(m(`{{#eval "1 + 1" /}}`, {}, options), "2");
         assert.equal(m(`{{#eval "'Hello' + ' ' + 'World'"/}}`, {}, options), "Hello World");
@@ -140,7 +140,7 @@ describe("{{#eval}}", () => {
 });
 
 describe("{{#when}}", () => {
-    const options = evaluate();
+    const options = mikelEval();
     it("should render content if expression is true", () => {
         assert.equal(m(`{{#when "1 + 1"}}True{{/when}}`, {}, options), "True");
         assert.equal(m(`{{#when "x > 1"}}Greater{{/when}}`, {x: 2}, options), "Greater");

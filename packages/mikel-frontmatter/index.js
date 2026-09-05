@@ -78,7 +78,7 @@ const extractKeyValue = (line = "", separator = ":") => {
 };
 
 // @description parse a simple YAML string into an object
-const parseYaml = (yaml = "") => {
+export const yamlParser = (yaml = "") => {
     const lines = yaml.split("\n").filter(line => {
         return line.trim() !== "" && !line.trim().startsWith("#");
     });
@@ -144,7 +144,7 @@ const parseYaml = (yaml = "") => {
 };
 
 // @description parse a simple TOML string into an object
-const parseToml = (toml = "") => {
+export const tomlParser = (toml = "") => {
     const lines = toml.split("\n");
     const result = {};
     let currentTable = result;
@@ -202,16 +202,16 @@ const parseFrontmatterBlock = (content = "", format = "yaml", parser = null) => 
         return JSON.parse(content.trim());
     }
     if (format === "toml") {
-        return parseToml(content);
+        return tomlParser(content);
     }
     // 3. fallback to YAML
-    return parseYaml(content);
+    return yamlParser(content);
 };
 
 // @description plugin to register a #frontmatter helper
 // @param {Object} options - plugin options
 // @param {Function} options.parser - custom YAML parser function
-const mikelFrontmatter = (options = {}) => ({
+export default (options = {}) => ({
     helpers: {
         frontmatter: params => {
             const variableName = params.options.as || "frontmatter";
@@ -225,10 +225,3 @@ const mikelFrontmatter = (options = {}) => ({
         },
     },
 });
-
-// assign additional metadata to the plugin function
-mikelFrontmatter.yamlParser = parseYaml;
-mikelFrontmatter.tomlParser = parseToml;
-
-// export the plugin as default
-export default mikelFrontmatter;

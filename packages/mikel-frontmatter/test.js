@@ -1,65 +1,64 @@
 import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert";
-import mikelFrontmatter from "./index.js";
+import mikelFrontmatter, { yamlParser, tomlParser } from "./index.js";
 import mikel from "../../index.js";
 
 describe("yamlParser", () => {
-    const parseYAML = mikelFrontmatter.yamlParser;
     const joinLines = (lines = []) => lines.join("\n");
 
     describe("basic types", () => {
         it("should parse strings", () => {
-            const result = parseYAML("name: John Doe");
+            const result = yamlParser("name: John Doe");
             assert.deepEqual(result, { name: "John Doe" });
         });
 
         it("should parse quoted strings", () => {
-            const result = parseYAML('title: "Hello World"');
+            const result = yamlParser('title: "Hello World"');
             assert.deepEqual(result, { title: "Hello World" });
         });
 
         it("should parse single-quoted strings", () => {
-            const result = parseYAML("title: 'Hello World'");
+            const result = yamlParser("title: 'Hello World'");
             assert.deepEqual(result, { title: "Hello World" });
         });
 
         it("should parse integers", () => {
-            const result = parseYAML("age: 25");
+            const result = yamlParser("age: 25");
             assert.deepEqual(result, { age: 25 });
         });
 
         it("should parse negative integers", () => {
-            const result = parseYAML("temperature: -5");
+            const result = yamlParser("temperature: -5");
             assert.deepEqual(result, { temperature: -5 });
         });
 
         it("should parse floats", () => {
-            const result = parseYAML("price: 19.99");
+            const result = yamlParser("price: 19.99");
             assert.deepEqual(result, { price: 19.99 });
         });
 
         it("should parse booleans (true)", () => {
-            const result = parseYAML("published: true");
+            const result = yamlParser("published: true");
             assert.deepEqual(result, { published: true });
         });
 
         it("should parse booleans (false)", () => {
-            const result = parseYAML("active: false");
+            const result = yamlParser("active: false");
             assert.deepEqual(result, { active: false });
         });
 
         it("should parse booleans (yes/no)", () => {
-            const result = parseYAML("enabled: yes\ndisabled: no");
+            const result = yamlParser("enabled: yes\ndisabled: no");
             assert.deepEqual(result, { enabled: true, disabled: false });
         });
 
         it("should parse null", () => {
-            const result = parseYAML("value: null");
+            const result = yamlParser("value: null");
             assert.deepEqual(result, { value: null });
         });
 
         it("should parse empty value as null", () => {
-            const result = parseYAML("value:");
+            const result = yamlParser("value:");
             assert.deepEqual(result, { value: null });
         });
     });
@@ -71,7 +70,7 @@ describe("yamlParser", () => {
                 "  name: John Doe",
                 "  email: john@example.com",
             ]);
-            const result = parseYAML(yaml);
+            const result = yamlParser(yaml);
             assert.deepEqual(result, {
                 author: {
                     name: "John Doe",
@@ -88,7 +87,7 @@ describe("yamlParser", () => {
                 "    settings:",
                 "      theme: dark",
             ]);
-            const result = parseYAML(yaml);
+            const result = yamlParser(yaml);
             assert.deepEqual(result, {
                 user: {
                     profile: {
@@ -110,7 +109,7 @@ describe("yamlParser", () => {
                 "  - nodejs",
                 "  - template",
             ]);
-            const result = parseYAML(yaml);
+            const result = yamlParser(yaml);
             assert.deepEqual(result, {
                 tags: ["javascript", "nodejs", "template"],
             });
@@ -123,7 +122,7 @@ describe("yamlParser", () => {
                 "  - 2",
                 "  - 3",
             ]);
-            const result = parseYAML(yaml);
+            const result = yamlParser(yaml);
             assert.deepEqual(result, {
                 numbers: [1, 2, 3],
             });
@@ -136,7 +135,7 @@ describe("yamlParser", () => {
                 "  - false",
                 "  - true",
             ]);
-            const result = parseYAML(yaml);
+            const result = yamlParser(yaml);
             assert.deepEqual(result, {
                 flags: [true, false, true],
             });
@@ -150,7 +149,7 @@ describe("yamlParser", () => {
                 "  - name: Bob",
                 "    role: user",
             ]);
-            const result = parseYAML(yaml);
+            const result = yamlParser(yaml);
             assert.deepEqual(result, {
                 users: [
                     { name: "Alice", role: "admin" },
@@ -160,22 +159,22 @@ describe("yamlParser", () => {
         });
 
         it("should parse inline arrays", () => {
-            assert.deepEqual(parseYAML(`items: [apple, banana, cherry]`), {
+            assert.deepEqual(yamlParser(`items: [apple, banana, cherry]`), {
                 items: ["apple", "banana", "cherry"],
             });
-            assert.deepEqual(parseYAML(`colors: [green, red, blue]`), {
+            assert.deepEqual(yamlParser(`colors: [green, red, blue]`), {
                 colors: ["green", "red", "blue"],
             });
-            assert.deepEqual(parseYAML(`colors: [ green ,  red ,  blue ]`), {
+            assert.deepEqual(yamlParser(`colors: [ green ,  red ,  blue ]`), {
                 colors: ["green", "red", "blue"],
             });
-            assert.deepEqual(parseYAML(`colors: [red, green, blue]`), {
+            assert.deepEqual(yamlParser(`colors: [red, green, blue]`), {
                 colors: ["red", "green", "blue"],
             });
-            assert.deepEqual(parseYAML(`numbers: [1, 2, 3, 4]`), {
+            assert.deepEqual(yamlParser(`numbers: [1, 2, 3, 4]`), {
                 numbers: [1, 2, 3, 4],
             });
-            assert.deepEqual(parseYAML(`flags: [true, false, true]`), {
+            assert.deepEqual(yamlParser(`flags: [true, false, true]`), {
                 flags: [true, false, true],
             });
         });
@@ -194,7 +193,7 @@ describe("yamlParser", () => {
                 "published: true",
                 "views: 1234",
             ]);
-            const result = parseYAML(yaml);
+            const result = yamlParser(yaml);
             assert.deepEqual(result, {
                 title: "My Blog Post",
                 author: {
@@ -215,7 +214,7 @@ describe("yamlParser", () => {
                 "",
                 "age: 30",
             ]);
-            const result = parseYAML(yaml);
+            const result = yamlParser(yaml);
             assert.deepEqual(result, { name: "John", age: 30 });
         });
 
@@ -226,44 +225,43 @@ describe("yamlParser", () => {
                 "# Another comment",
                 "age: 30",
             ]);
-            const result = parseYAML(yaml);
+            const result = yamlParser(yaml);
             assert.deepEqual(result, { name: "John", age: 30 });
         });
 
         it("should return empty object for empty string", () => {
-            const result = parseYAML("");
+            const result = yamlParser("");
             assert.deepEqual(result, {});
         });
     });
 });
 
 describe("tomlParser", () => {
-    const parseTOML = mikelFrontmatter.tomlParser;
     const joinLines = (lines = []) => lines.join("\n");
 
     describe("basic types", () => {
         it("should parse strings", () => {
-            const result = parseTOML("name = \"John Doe\"");
+            const result = tomlParser("name = \"John Doe\"");
             assert.deepEqual(result, { name: "John Doe" });
         });
 
         it("should parse integers", () => {
-            const result = parseTOML("age = 25");
+            const result = tomlParser("age = 25");
             assert.deepEqual(result, { age: 25 });
         });
 
         it("should parse floats", () => {
-            const result = parseTOML("price = 19.99");
+            const result = tomlParser("price = 19.99");
             assert.deepEqual(result, { price: 19.99 });
         });
 
         it("should parse booleans", () => {
-            const result = parseTOML("active = true\nvisible = false");
+            const result = tomlParser("active = true\nvisible = false");
             assert.deepEqual(result, { active: true, visible: false });
         });
 
         it("should parse null", () => {
-            const result = parseTOML("value = null");
+            const result = tomlParser("value = null");
             assert.deepEqual(result, { value: null });
         });
     });
@@ -275,7 +273,7 @@ describe("tomlParser", () => {
                 "name = \"John Doe\"",
                 "email = \"john@example.com\"",
             ]);
-            const result = parseTOML(toml);
+            const result = tomlParser(toml);
             assert.deepEqual(result, {
                 author: {
                     name: "John Doe",
@@ -291,7 +289,7 @@ describe("tomlParser", () => {
                 "[user.settings]",
                 "theme = \"dark\"",
             ]);
-            const result = parseTOML(toml);
+            const result = tomlParser(toml);
             assert.deepEqual(result, {
                 user: {
                     profile: { name: "Alice" },
@@ -303,14 +301,14 @@ describe("tomlParser", () => {
 
     describe("complex structures", () => {
         it("should parse inline arrays", () => {
-            const result = parseTOML("tags = [\"js\", \"node\", \"toml\"]");
+            const result = tomlParser("tags = [\"js\", \"node\", \"toml\"]");
             assert.deepEqual(result, {
                 tags: ["js", "node", "toml"],
             });
         });
 
         it("should parse inline objects", () => {
-            const result = parseTOML("user = { name: \"John\", age: 30 }");
+            const result = tomlParser("user = { name: \"John\", age: 30 }");
             assert.deepEqual(result, {
                 user: { name: "John", age: 30 },
             });
@@ -328,7 +326,7 @@ describe("tomlParser", () => {
                 'name = "Nail"',
                 "sku = 284758393",
             ]);
-            const result = parseTOML(toml);
+            const result = tomlParser(toml);
             assert.deepEqual(result, {
                 products: [
                     { name: "Hammer", sku: 738594937 },
@@ -351,7 +349,7 @@ describe("tomlParser", () => {
                 'color = "yellow"',
                 'shape = "curved"',
             ]);
-            const result = parseTOML(toml);
+            const result = tomlParser(toml);
             assert.deepEqual(result, {
                 fruit: [
                     {
@@ -374,7 +372,7 @@ describe("tomlParser", () => {
                 "[[user.groups]]",
                 'name = "editor"',
             ]);
-            const result = parseTOML(toml);
+            const result = tomlParser(toml);
             assert.deepEqual(result, {
                 user: {
                     groups: [
@@ -393,7 +391,7 @@ describe("tomlParser", () => {
                 "",
                 "age = 30",
             ]);
-            const result = parseTOML(toml);
+            const result = tomlParser(toml);
             assert.deepEqual(result, { name: "John", age: 30 });
         });
 
@@ -404,12 +402,12 @@ describe("tomlParser", () => {
                 "# Another comment",
                 "age = 30",
             ]);
-            const result = parseTOML(toml);
+            const result = tomlParser(toml);
             assert.deepEqual(result, { name: "John", age: 30 });
         });
 
         it("should handle key-value pairs with different spacing", () => {
-            const result = parseTOML("a=1\nb = 2\nc  =  3");
+            const result = tomlParser("a=1\nb = 2\nc  =  3");
             assert.deepEqual(result, { a: 1, b: 2, c: 3 });
         });
     });

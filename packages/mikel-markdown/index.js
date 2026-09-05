@@ -6,7 +6,7 @@ const escapedChars = {
     "'": "&#039;",
 };
 
-const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
+export const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 
 // @description custom method to render the provided tag and content
 // @param tag {string} tag to render
@@ -14,7 +14,7 @@ const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
 // @param content {string} content to add to the tag
 // @return {string} the rendered tag
 // @example render("div", {class: "my-class"}, "Hello world") --> '<div class="my-class">Hello world</div>'
-const render = (tag, props = {}, content = "") => {
+export const render = (tag, props = {}, content = "") => {
     const attrs = Object.keys(props).filter(k => !!props[k]).map(k => `${k}="${props[k]}"`);
     if (tag === "hr" || tag === "img") {
         return `<${[tag, ...attrs].join(" ")} />`;
@@ -23,7 +23,7 @@ const render = (tag, props = {}, content = "") => {
 };
 
 // @description all available expressions
-const allExpressions = {
+export const expressions = {
     pre: {
         regex: /(?:^``` *([^\n]*)\n([\s\S]*?)\n``` *$)/gm,
         replace: (args, opt) => {
@@ -147,8 +147,8 @@ const getInlineExpressions = expressions => {
 };
 
 // @description markdown parser
-const parser = (str = "", options = {}) => {
-    const expressions = options?.expressions || allExpressions; // custom expressions
+export const parser = (str = "", options = {}) => {
+    const customExpressions = options?.expressions || expressions; // custom expressions
     const hooks = options?.hooks || {};
     const ignoredBlocks = []; // chunks to ignore
     str = str.replace(/\r\n/g, "\n");
@@ -163,8 +163,8 @@ const parser = (str = "", options = {}) => {
         return `<!--HTML-BLOCK-${(ignoredBlocks.length - 1)}-->`;
     });
     // replace all expressions
-    Object.keys(expressions).forEach(key => {
-        str = str.replace(expressions[key].regex, (...args) => {
+    Object.keys(customExpressions).forEach(key => {
+        str = str.replace(customExpressions[key].regex, (...args) => {
             // call the before render hook
             if (typeof hooks?.beforeRender === "function") {
                 const newArgs = hooks.beforeRender(key, args, options);
@@ -173,7 +173,7 @@ const parser = (str = "", options = {}) => {
                 }
             }
             // get the result
-            let value = expressions[key].replace(args, options);
+            let value = customExpressions[key].replace(args, options);
             // call the after render hook
             if (typeof hooks?.afterRender === "function") {
                 let newValue = hooks.afterRender(value, key, args, options);
@@ -189,8 +189,8 @@ const parser = (str = "", options = {}) => {
             return value;
         });
         // check for regex to apply after the main refex
-        if (typeof expressions[key].afterRegex !== "undefined") {
-            str = str.replace(expressions[key].afterRegex, "");
+        if (typeof customExpressions[key].afterRegex !== "undefined") {
+            str = str.replace(customExpressions[key].afterRegex, "");
         }
     });
     // replace all the ignored blocks
@@ -206,7 +206,7 @@ const parser = (str = "", options = {}) => {
 
 // @description markdown plugin
 // @param options {object} options for this plugin
-const markdownPlugin = (options = {}) => ({
+export default (options = {}) => ({
     helpers: {
         markdown: params => {
             params.context.state.toc = []; // variable to save table of contents
@@ -228,16 +228,8 @@ const markdownPlugin = (options = {}) => ({
         inlineMarkdown: params => {
             return parser(params.fn(params.context.data) || "", {
                 ...options,
-                expressions: getInlineExpressions(options.expressions || allExpressions),
+                expressions: getInlineExpressions(options.expressions || expressions),
             });
         },
     },
 });
-
-// assign additional options for this plugin
-markdownPlugin.parser = parser;
-markdownPlugin.render = render;
-markdownPlugin.expressions = allExpressions;
-
-// export the plugin
-export default markdownPlugin;
