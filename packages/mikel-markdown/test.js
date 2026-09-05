@@ -1,10 +1,10 @@
-import {describe, it} from "node:test";
+import { describe, it } from "node:test";
 import assert from "node:assert";
-import markdown from "./index.js";
+import markdown, { parser, render, expressions } from "./index.js";
 import m from "../../index.js";
 
 describe("parser", () => {
-    const mk = markdown.parser;
+    const mk = parser;
 
     describe("text formatting", () => {
         it("should parse bold with **", () => {
@@ -40,13 +40,13 @@ describe("parser", () => {
             const code = "```html\nCode\n```";
             const result = mk(code, {
                 expressions: {
-                    ...markdown.expressions,
+                    ...expressions,
                     pre: {
-                        regex: markdown.expressions.pre.regex,
+                        regex: expressions.pre.regex,
                         replace: args => {
                             assert.equal(args[1], "html");
                             assert.equal(args[2], "Code");
-                            return markdown.render("pre", {}, args[2]);
+                            return render("pre", {}, args[2]);
                         },
                     },
                 },
@@ -306,7 +306,7 @@ describe("parser", () => {
 });
 
 describe("hooks", () => {
-    const mk = markdown.parser;
+    const mk = parser;
 
     it("should allow to provide a hook to preprocess markdown content", () => {
         const result = mk("**Bob**", {
