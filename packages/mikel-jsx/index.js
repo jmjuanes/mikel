@@ -93,6 +93,8 @@ export const transform = content => {
 // to get the object, then pass that to use(): mk.use(mikelJsx())
 export default () => {
     return {
-        transform: transform,
+        hooks: {
+            preprocess: template => transform(template),
+        },
     };
 };

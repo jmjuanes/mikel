@@ -661,6 +661,44 @@ This function converts special HTML characters `&`, `<`, `>`, `"`, and `'` to th
 
 This function returns the value in `object` following the provided `path` string.
 
+## Hooks
+
+> Added in `v0.41.0`.
+
+Hooks allow you to plug into different stages of the compilation process. They are registered in the `hooks` field of the plugin object passed to `mk.use()`:
+
+```
+mk.use({
+    hooks: {
+        preprocess: template => template.replace(/foo/g, "bar"),
+    },
+});
+```
+
+You can register multiple hooks for the same stage, from the same or different plugins. They will be called in registration order, each one receiving the value returned by the previous one.
+
+Mikel currently supports the following hooks:
+
+| Signature | Description |
+|-----------|-------------|
+| `preprocess(template: string): string` | Process template before sending it to the Mikel compiler. |
+| `postprocess(result: string): string` | Process the result of the compilation before returning it. |
+| `processPartial(partial: MikelPartial): MikelPartial` | Process the registered partial before converting it to directive. |
+
+> **Important**: `processPartial` hooks must be registered **before** the partials they should apply to. Since partials are converted into directives at registration time, a `processPartial` hook only affects partials registered after it — it is never re-applied to partials that were already registered. If you need a hook to apply to every partial in your app, register it in the same `mk.use()` call (or an earlier one) than your partials.
+
+Example: 
+
+```javascript
+const options = {
+    hooks: {
+        preprocess: template => template.toUpperCase(),
+    },
+};
+
+console.log(m("hello {{name}}!", { name: "Bob" }, options)); // --> 'HELLO {{NAME}}!'
+```
+
 ## Advanced
 
 ### Built‑in Plugins

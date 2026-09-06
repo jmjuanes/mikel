@@ -525,6 +525,40 @@ describe("templating", () => {
     });
 });
 
+describe("hooks", () => {
+    it("should support register a hook to process partials", () => {
+        const mk = m.create({
+            partials: {
+                foo: "Hello Bob!",
+            },
+            hooks: {
+                processPartial: partial => {
+                    return partial.replace("Hello", "Goodbye");
+                },
+            },
+        });
+        assert.equal(mk("{{#foo /}}", {}), "Goodbye Bob!");
+    });
+
+    it("should support register a hook to preprocess the template", () => {
+        const mk = m.create({
+            hooks: {
+                preprocess: template => template.replace("name", "key"),
+            },
+        });
+        assert.equal(mk("value is {{name}}", { key: "foo" }), "value is foo");
+    });
+
+    it("should support register a hook to postprocess the template", () => {
+        const mk = m.create({
+            hooks: {
+                postprocess: template => template.replace("foo", "bar"),
+            },
+        });
+        assert.equal(mk("value is {{value}}", { value: "foo" }), "value is bar");
+    });
+});
+
 describe("mikel", () => {
     it("should be a function", () => {
         assert.equal(typeof m, "function");
@@ -610,15 +644,15 @@ describe("mikel.use", () => {
         assert.equal(mk("Hello {{@foo}}", {}), "Hello bar");
     });
 
-    it("should allow to register transforms to the template", () => {
-        const mk = m.create();
-        mk.use({
-            transform: template => {
-                return "Hello " + template + "!";
-            },
-        });
-        assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob!");
-    });
+    // it("should allow to register transforms to the template", () => {
+    //     const mk = m.create();
+    //     mk.use({
+    //         transform: template => {
+    //             return "Hello " + template + "!";
+    //         },
+    //     });
+    //     assert.equal(mk("{{name}}", { name: "Bob" }), "Hello Bob!");
+    // });
 });
 
 describe("mikel.tokenize", () => {
