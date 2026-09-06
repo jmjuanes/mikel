@@ -235,6 +235,18 @@ export default {
 };
 ```
 
+#### `hooks`
+
+An object containing hooks that will be registered in the mikel engine:
+
+```js
+export default {
+    hooks: {
+        preprocess: template => template.toUpperCase(),
+    },
+};
+```
+
 #### `plugins`
 
 An array of Mikel plugins to load. See the [Plugins](#plugins) section for details.
