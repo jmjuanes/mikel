@@ -186,7 +186,7 @@ describe("cli", () => {
                 input: [
                     createInput("index.html", "<b>Hello World!</b>"),
                 ],
-                hooks {
+                hooks: {
                     preprocess: content => content.toUpperCase(),
                 },
                 output: {
