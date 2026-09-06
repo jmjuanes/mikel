@@ -1,4 +1,4 @@
-import type { MikelHelper, MikelPartial, MikelPlugin } from "mikel";
+import type { MikelHelper, MikelPartial, MikelHook, MikelPlugin } from "mikel";
 
 export type MikelCliPlugin = string | [string, ...any] | MikelPlugin;
 
@@ -11,6 +11,7 @@ export type MikelCliConfig = {
     };
     partials?: Record<string, string | MikelPartial>;
     helpers?: Record<string, MikelHelper>;
+    hooks?: Record<string, MikelHook>;
     plugins?: MikelCliPlugin[];
 };
 

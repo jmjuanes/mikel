@@ -182,6 +182,7 @@ export const resolveConfigurationFromArgs = async (root = process.cwd(), args = 
         data: args?.values?.data || config.data,
         partials: Object.assign(config.partials || {}, partials),
         helpers: Object.assign(config.helpers || {}, helpers),
+        hooks: config.hooks || {},
         plugins: args?.values?.plugin || config.plugins || [],
     };
 };
@@ -191,11 +192,10 @@ export const build = async (config = {}) => {
     const inputFiles = await loadInputFiles(config.context, config.input);
     const data = await loadData(config.context, config.data);
     const mikelInstance = mikel.create({
-        helpers: config.helpers,
-        partials: config.partials,
+        hooks: config.hooks,
     });
 
-    // load plugins
+    // 1. load plugins
     for (const plugin of config.plugins) {
         // check if the provided plugin is a function or an object
         if (typeof plugin === "function" || (typeof plugin === "object" && !Array.isArray(plugin) && !!plugin)) {
@@ -217,7 +217,13 @@ export const build = async (config = {}) => {
         }
     }
 
-    // process input files
+    // 2. load helpers and partials from configs
+    mikelInstance.use({
+        helpers:config.helpers,
+        partials: config.partials,
+    });
+
+    // 3. process input files
     for (const inputFile of inputFiles) {
         const inputPath = path.resolve(config.context, inputFile.path);
         // if (!existsSync(inputPath)) {

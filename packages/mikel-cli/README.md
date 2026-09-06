@@ -3,7 +3,7 @@
 ![npm version](https://badgen.net/npm/v/mikel-cli?labelColor=1d2734&color=21bf81)
 ![license](https://badgen.net/github/license/jmjuanes/mikel?labelColor=1d2734&color=21bf81)
 
-A command-line interface for the [Mikel](https://github.com/jmjuanes/mikel) templating engine. This CLI tool allows you to render Mikel templates from the command line with support for data files, partials, helpers, functions, and plugins.
+A command-line interface for the [Mikel](https://github.com/jmjuanes/mikel) templating engine. This CLI tool allows you to render Mikel templates from the command line with support for data files, partials, helpers, hooks, and plugins.
 
 ## Installation
 
@@ -38,7 +38,6 @@ $ mikel <template> [options]
 | `--plugin <module>` | `-L` | Load a Mikel plugin from a JavaScript module (can be used multiple times) |
 | `--partial <file>` | `-P` | Register a partial template (supports glob patterns, can be used multiple times) |
 | `--helper <file>` | `-H` | Register helper functions from a JavaScript module (supports glob patterns, can be used multiple times) |
-| `--function <file>` | `-F` | Register functions from a JavaScript module (supports glob patterns, can be used multiple times) |
 
 ### Examples
 
@@ -74,12 +73,12 @@ Register partial templates for reusable components:
 mikel template.html --data data.json --partial header.html --partial footer.html --output dist/index.html
 ```
 
-#### Using Helpers and Functions
+#### Using Helpers
 
-Register custom helpers and functions from JavaScript modules:
+Register custom helpers from JavaScript modules:
 
 ```bash
-mikel template.html --data data.json --helper helpers.js --function utils.js --output dist/index.html
+mikel template.html --data data.json --helper helpers.js --output dist/index.html
 ```
 
 #### Using Glob Patterns
@@ -224,18 +223,6 @@ export default {
 };
 ```
 
-#### `functions`
-
-An object containing functions that will be registered in the mikel engine:
-
-```js
-export default {
-    functions: {
-        sayHello: () => "Hello!",
-    },
-};
-```
-
 #### `partials`
 
 An object containing partials that will be registered in the mikel engine:
@@ -248,13 +235,25 @@ export default {
 };
 ```
 
+#### `hooks`
+
+An object containing hooks that will be registered in the mikel engine:
+
+```js
+export default {
+    hooks: {
+        preprocess: template => template.toUpperCase(),
+    },
+};
+```
+
 #### `plugins`
 
 An array of Mikel plugins to load. See the [Plugins](#plugins) section for details.
 
 ## Plugins
 
-Plugins extend Mikel's functionality by registering additional helpers, functions, or partials. They can be loaded both via the `--plugin` CLI flag and the `plugins` configuration field.
+Plugins extend Mikel's functionality by registering additional helpers, partials, or hooks. They can be loaded both via the `--plugin` CLI flag and the `plugins` configuration field.
 
 ### Loading Plugins via CLI
 
