@@ -22,12 +22,12 @@ export type MikelPartial = string | {
     attributes?: Record<string, any>;
 };
 
-export type MikelTransform = (content: string) => string;
+export type MikelHook = (value: any) => any; 
 
 export type MikelOptions = {
     helpers: Record<string, MikelHelper>;
     partials: Record<string, MikelPartial>;
-    transform: MikelTransform;
+    hooks: Record<string, MikelHook>;
     initialState: Record<string, any>;
 };
 
