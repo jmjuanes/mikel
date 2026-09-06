@@ -242,7 +242,7 @@ const create = (options = {}) => {
     // 1. entry method to compile the template with the provided data object
     const mk = (template, data = {}, output = []) => {
         const input = callHook(template, hooks.preprocess);
-        const state = callHook({ ...initialState, root: data }, hooks.processState);
+        const state = { ...initialState, root: data };
         compile(tokenize(input), output, data, directives, state, 0, "");
         return callHook(output.join(""), hooks.postprocess);
     };
