@@ -175,4 +175,28 @@ describe("cli", () => {
             fs.rmSync(dir, { recursive: true });
         }
     });
+
+    it("should support hooks", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "mikel.config.js"), `
+            import { createInput } from "mikel-cli";
+            export default {
+                context: "${dir}",
+                input: [
+                    createInput("index.html", "<b>Hello World!</b>"),
+                ],
+                hooks {
+                    preprocess: content => content.toUpperCase(),
+                },
+                output: {
+                    dir: "${path.join(dir, "dist/")}",
+                },
+            };`);
+            execute(`--config ${path.join(dir, "mikel.config.js")}`);
+            assert.strictEqual(fs.readFileSync(path.join(dir, "dist/index.html"), "utf8"), "<B>HELLO WORLD!</B>");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
 });
