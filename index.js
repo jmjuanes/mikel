@@ -241,10 +241,10 @@ const create = (options = {}) => {
     const initialState = {}; // Object.assign({}, options?.initialState || {});
     // 1. entry method to compile the template with the provided data object
     const mk = (template, data = {}, output = []) => {
-        // const input = Array.from(ctx.transforms).reduce((content, fn) => fn(content), template);
-        const input = template;
-        compile(tokenize(input), output, data, directives, { ...initialState, root: data }, 0, "");
-        return output.join("");
+        const input = callHook(template, hooks.preprocess);
+        const state = callHook({ ...initialState, root: data }, hooks.processState);
+        compile(tokenize(input), output, data, directives, state, 0, "");
+        return callHook(output.join(""), hooks.postprocess);
     };
     // 2. return merged compileTemplate and api methods
     Object.assign(mk, {
