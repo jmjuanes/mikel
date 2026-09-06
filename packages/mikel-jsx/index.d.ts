@@ -1,7 +1,10 @@
-import type { MikelTransform } from "mikel";
+import type { MikelHook } from "mikel";
 
 declare function mikelJsxPlugin(): {
-    transform: MikelTransform,
+    hooks: {
+        preprocess: MikelHook,
+        processPartial: MikelHook,
+    },
 };
 
 export default mikelJsxPlugin;
