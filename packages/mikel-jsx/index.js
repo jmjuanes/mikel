@@ -95,6 +95,18 @@ export default () => {
     return {
         hooks: {
             preprocess: template => transform(template),
+            processPartial: partial => {
+                // 1. check if partial is just an string
+                if (typeof partial === "string") {
+                    return transform(partial);
+                }
+                // 2. check if partial is an object { body, attributes }
+                if (typeof partial === "object" && typeof partial?.body === "string") {
+                    partial.body = transform(partial.body);
+                }
+                // return the partial object
+                return partial.body;
+            },
         },
     };
 };
