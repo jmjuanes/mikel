@@ -1,6 +1,7 @@
-import { test, describe } from "node:test";
+import { test, describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { transform, parseAttributes } from "./index.js";
+import mikel from "../../index.js";
+import jsxPlugin, { transform, parseAttributes } from "./index.js";
 
 describe("tag transform", () => {
     test("self-closing tag", () => {
@@ -71,5 +72,19 @@ describe("attributes", () => {
 
     test("spread attribute (via parseAttributes directly)", () => {
         assert.equal(parseAttributes(`{...person}`), `...person`);
+    });
+});
+
+describe("plugin", () => {
+    it("should preprocess JSX syntax in partials", () => {
+        const mk = mikel.create();
+        mk.use(jsxPlugin());
+        mk.use({
+            partials: {
+                foo: `<m-if condition={isAdmin}>ADMIN</m-if>`,
+            },
+        });
+
+        assert.equal(mk("<m-foo />", { isAdmin: true }), "ADMIN");
     });
 });
