@@ -22,7 +22,12 @@ export type MikelPartial = string | {
     attributes?: Record<string, any>;
 };
 
-export type MikelHook = (value: any) => any; 
+export type MikelHook = (value: any, context?: any) => any; 
+
+export type MikelHookManager = {
+    register: (name: string, listener: MikelHook) => void;
+    dispatch: (name: string, value: any, context?: any) => any;
+};
 
 export type MikelOptions = {
     helpers: Record<string, MikelHelper>;
@@ -52,3 +57,5 @@ declare const mikel: {
 };
 
 export default mikel;
+
+export declare const createHooksManager : (hooks?: any) => MikelHookManager;

@@ -204,11 +204,11 @@ export const build = async (config = {}) => {
 
     // 0. load input files
     const initialInputFiles = await loadInputFiles(config.context, config.input);
-    const inputFiles = hooks.dispatch("cli:processInputs", initialInputFiles, config);
+    const inputFiles = hooks.dispatch("cli:processInput", initialInputFiles, { config });
 
     // 0. load input data
     const initialData = await loadData(config.context, config.data);
-    const data = hooks.dispatch("cli:processData", initialData || {}, config);
+    const data = hooks.dispatch("cli:processData", initialData || {}, { config });
 
     // 1. load plugins
     for (const plugin of config.plugins) {
@@ -239,7 +239,7 @@ export const build = async (config = {}) => {
     });
 
     // 3. process input files
-    hooks.dispatch("cli:afterCompile", null, config);
+    hooks.dispatch("cli:afterCompile", null, { config, files: inputFiles });
     for (const inputFile of inputFiles) {
         const inputPath = path.resolve(config.context, inputFile.path);
         // if (!existsSync(inputPath)) {
@@ -248,14 +248,14 @@ export const build = async (config = {}) => {
         let template;
         try {
             template = inputFile.content ? inputFile.content : (await fs.readFile(inputPath, "utf8"));
-            template = hooks.dispatch("cli:template", template);
+            template = hooks.dispatch("cli:template", template, { config, file: inputFile });
         } catch (error) {
             throw new Error(`Failed to read template file '${inputPath}': ${error.message}`);
         }
         // compile the template
         let result;
         try {
-            result = hooks.dispatch("cli:compile", mikelInstance(template, data));
+            result = hooks.dispatch("cli:compile", mikelInstance(template, data), { config, file: inputFile });
         } catch (error) {
             throw new Error(`Template compilation error: ${error.message}`);
         }
@@ -273,8 +273,8 @@ export const build = async (config = {}) => {
                 }
             }
             try {
+                hooks.dispatch("cli:emit", null, { config, file: inputFile, source: inputPath, destination: outputPath });
                 await fs.writeFile(outputPath, result, "utf8");
-                console.error(`✓ Saving '${inputPath}' -> '${outputPath}'`);
             } catch (error) {
                 throw new Error(`Failed to write output file '${outputPath}': ${error.message}`);
             }
@@ -288,7 +288,8 @@ export const build = async (config = {}) => {
         }
     }
     // end processing
-    hooks.dispatch("cli:beforeCompile", null, config);
+    hooks.dispatch("cli:beforeCompile", null, { config });
+    hooks.dispatch("cli:done", null, { config });
 };
 
 // @description utility method to provide a typed configuration
