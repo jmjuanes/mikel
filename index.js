@@ -238,8 +238,8 @@ export const createHooksManager = (hooks = {}) => {
             }
             hooks[name].push(listener);
         },
-        dispatch: (name, value) => {
-            return (hooks[name] || []).reduce((prevValue, fn) => fn(prevValue), value);
+        dispatch: (name, value, context) => {
+            return (hooks[name] || []).reduce((prevValue, fn) => fn(prevValue, context), value);
         },
     };
 };
