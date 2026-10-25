@@ -190,8 +190,6 @@ export const resolveConfigurationFromArgs = async (root = process.cwd(), args = 
 
 // @description main build script
 export const build = async (config = {}) => {
-    const inputFiles = await loadInputFiles(config.context, config.input);
-    const data = await loadData(config.context, config.data);
     const hooks = createHooksManager({});
     const mikelInstance = mikel.create({
         hooks: {
@@ -203,6 +201,14 @@ export const build = async (config = {}) => {
             },
         },
     });
+
+    // 0. load input files
+    const initialInputFiles = await loadInputFiles(config.context, config.input);
+    const inputFiles = hooks.dispatch("cli:processInputs", initialInputFiles, config);
+
+    // 0. load input data
+    const initialData = await loadData(config.context, config.data);
+    const data = hooks.dispatch("cli:processData", initialData || {}, config);
 
     // 1. load plugins
     for (const plugin of config.plugins) {
@@ -233,7 +239,7 @@ export const build = async (config = {}) => {
     });
 
     // 3. process input files
-    hooks.dispatch("cli:preprocess", { config, files: inputFiles });
+    hooks.dispatch("cli:afterCompile", null, config);
     for (const inputFile of inputFiles) {
         const inputPath = path.resolve(config.context, inputFile.path);
         // if (!existsSync(inputPath)) {
@@ -242,13 +248,14 @@ export const build = async (config = {}) => {
         let template;
         try {
             template = inputFile.content ? inputFile.content : (await fs.readFile(inputPath, "utf8"));
+            template = hooks.dispatch("cli:template", template);
         } catch (error) {
             throw new Error(`Failed to read template file '${inputPath}': ${error.message}`);
         }
         // compile the template
         let result;
         try {
-            result = mikelInstance(template, data);
+            result = hooks.dispatch("cli:compile", mikelInstance(template, data));
         } catch (error) {
             throw new Error(`Template compilation error: ${error.message}`);
         }
@@ -281,7 +288,7 @@ export const build = async (config = {}) => {
         }
     }
     // end processing
-    hooks.dispatch("cli:postprocess", { config });
+    hooks.dispatch("cli:beforeCompile", null, config);
 };
 
 // @description utility method to provide a typed configuration
