@@ -229,22 +229,33 @@ const defaultDirectives = {
     }),
 };
 
-const callHook = (value, listeners = []) => {
-    return (listeners || []).reduce((prevValue, fn) => fn(prevValue), value);
+// @description internal method to create a hooks manager
+export const createHooksManager = (hooks = {}) => {
+    return {
+        register: (name, listener) => {
+            if (typeof hooks[name] === "undefined") {
+                hooks[name] = [];
+            }
+            hooks[name].push(listener);
+        },
+        dispatch: (name, value) => {
+            return (hooks[name] || []).reduce((prevValue, fn) => fn(prevValue), value);
+        },
+    };
 };
 
 // @description create a new instance of mikel
 const create = (options = {}) => {
     // 0. initialize internal context
     const directives = Object.assign({}, defaultDirectives); // map to save directives (helpers and partials)
-    const hooks = {}; // internal object to save hooks
+    const hooks = createHooksManager({}); // internal object to save hooks
     const initialState = {}; // Object.assign({}, options?.initialState || {});
     // 1. entry method to compile the template with the provided data object
     const mk = (template, data = {}, output = []) => {
-        const input = callHook(template, hooks.preprocess);
+        const input = hooks.dispatch("preprocess", template);
         const state = { ...initialState, root: data };
         compile(tokenize(input), output, data, directives, state, 0, "");
-        return callHook(output.join(""), hooks.postprocess);
+        return hooks.dispatch("postprocess", output.join(""));
     };
     // 2. return merged compileTemplate and api methods
     Object.assign(mk, {
@@ -252,10 +263,8 @@ const create = (options = {}) => {
             // 2.1. merge hooks from plugin object
             Object.keys(plugin?.hooks || {}).forEach(name => {
                 if (typeof plugin.hooks[name] === "function") {
-                    if (typeof hooks[name] === "undefined") {
-                        hooks[name] = []; // initialize listeners for this hook
-                    }
-                    hooks[name].push(plugin.hooks[name]);
+                    hooks.register(name, plugin.hooks[name]);
+                    hooks.dispatch("on:hook", { name, listener: plugin.hooks[name] });
                 }
             });
             // 2.2. merge helper directives
@@ -268,7 +277,7 @@ const create = (options = {}) => {
             Object.keys(plugin?.partials || {}).forEach(key => {
                 // partials can be a string, or an object containing {body, attributes}
                 if (typeof plugin.partials[key] === "string" || typeof plugin.partials[key] === "object") {
-                    directives[key] = createPartial(callHook(plugin.partials[key], hooks.processPartial));
+                    directives[key] = createPartial(hooks.dispatch("processPartial", plugin.partials[key]));
                 }
             });
             // 2.4. merge internal state
