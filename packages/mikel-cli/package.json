@@ -46,7 +46,8 @@
         "cli.js",
         "index.js",
         "index.d.ts",
-        "plugins.js"
+        "plugins.js",
+        "plugins.d.ts"
     ],
     "keywords": [
         "mikel",
