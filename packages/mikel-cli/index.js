@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import mikel from "mikel";
+import { createHooksManager } from "mikel";
 
 // @description get the files that matches the provided patterns
 // this is a utility function to expand glob patterns to actual file paths.
@@ -189,11 +190,25 @@ export const resolveConfigurationFromArgs = async (root = process.cwd(), args = 
 
 // @description main build script
 export const build = async (config = {}) => {
-    const inputFiles = await loadInputFiles(config.context, config.input);
-    const data = await loadData(config.context, config.data);
+    const hooks = createHooksManager({});
     const mikelInstance = mikel.create({
-        hooks: config.hooks,
+        hooks: {
+            ...config.hooks,
+            "on:hook": hook => {
+                if (hook.name.startsWith("cli:")) {
+                    hooks.register(hook.name, hook.listener);
+                }
+            },
+        },
     });
+
+    // 0. load input files
+    const initialInputFiles = await loadInputFiles(config.context, config.input);
+    const inputFiles = hooks.dispatch("cli:processInputs", initialInputFiles, config);
+
+    // 0. load input data
+    const initialData = await loadData(config.context, config.data);
+    const data = hooks.dispatch("cli:processData", initialData || {}, config);
 
     // 1. load plugins
     for (const plugin of config.plugins) {
@@ -224,6 +239,7 @@ export const build = async (config = {}) => {
     });
 
     // 3. process input files
+    hooks.dispatch("cli:afterCompile", null, config);
     for (const inputFile of inputFiles) {
         const inputPath = path.resolve(config.context, inputFile.path);
         // if (!existsSync(inputPath)) {
@@ -232,13 +248,14 @@ export const build = async (config = {}) => {
         let template;
         try {
             template = inputFile.content ? inputFile.content : (await fs.readFile(inputPath, "utf8"));
+            template = hooks.dispatch("cli:template", template);
         } catch (error) {
             throw new Error(`Failed to read template file '${inputPath}': ${error.message}`);
         }
         // compile the template
         let result;
         try {
-            result = mikelInstance(template, data);
+            result = hooks.dispatch("cli:compile", mikelInstance(template, data));
         } catch (error) {
             throw new Error(`Template compilation error: ${error.message}`);
         }
@@ -270,6 +287,8 @@ export const build = async (config = {}) => {
             throw new Error(`Unconsistent usage of input and output arguments.`);
         }
     }
+    // end processing
+    hooks.dispatch("cli:beforeCompile", null, config);
 };
 
 // @description utility method to provide a typed configuration
