@@ -239,7 +239,7 @@ export const build = async (config = {}) => {
     });
 
     // 3. process input files
-    hooks.dispatch("cli:afterCompile", null, { config, files: inputFiles });
+    hooks.dispatch("cli:beforeCompile", null, { config, files: inputFiles });
     for (const inputFile of inputFiles) {
         const inputPath = path.resolve(config.context, inputFile.path);
         // if (!existsSync(inputPath)) {
@@ -288,7 +288,7 @@ export const build = async (config = {}) => {
         }
     }
     // end processing
-    hooks.dispatch("cli:beforeCompile", null, { config });
+    hooks.dispatch("cli:afterCompile", null, { config });
     hooks.dispatch("cli:done", null, { config });
 };
 
