@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, globSync } from "node:fs";
 import path from "node:path";
 import mikel from "mikel";
 import { createHooksManager } from "mikel";
@@ -7,21 +7,18 @@ import { createHooksManager } from "mikel";
 // @description get the files that matches the provided patterns
 // this is a utility function to expand glob patterns to actual file paths.
 // it uses Node.js 24+ built-in fs.glob to handle glob patterns.
-export const expandGlobPatterns = async (root, patterns = []) => {
-    const files = [];
-    for (const pattern of patterns) {
+export const expandGlobPatterns = (root, patterns = []) => {
+    const files = patterns.map(pattern => {
         if (pattern.includes("*") || pattern.includes("?") || pattern.includes("[")) {
             // use Node.js 24+ built-in fs.glob
             // https://nodejs.org/api/fs.html#fspromisesglobpattern-options
-            for await (const file of fs.glob(pattern, { cwd: root })) {
-                files.push(file);
-            }
+            return globSync(pattern, { cwd: root });
         } else {
-            files.push(pattern);
+            return [pattern];
         }
-    }
+    });
     // remove duplicates
-    return Array.from(new Set(files));
+    return Array.from(new Set(files.flat()));
 };
 
 // @description apply a rename to the provided file path based on a rename configuration
