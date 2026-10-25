@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import mikel from "mikel";
+import { createHooksManager } from "mikel";
 
 // @description get the files that matches the provided patterns
 // this is a utility function to expand glob patterns to actual file paths.
@@ -191,8 +192,16 @@ export const resolveConfigurationFromArgs = async (root = process.cwd(), args = 
 export const build = async (config = {}) => {
     const inputFiles = await loadInputFiles(config.context, config.input);
     const data = await loadData(config.context, config.data);
+    const hooks = createHooksManager({});
     const mikelInstance = mikel.create({
-        hooks: config.hooks,
+        hooks: {
+            ...config.hooks,
+            "on:hook": hook => {
+                if (hook.name.startsWith("cli:")) {
+                    hooks.register(hook.name, hook.listener);
+                }
+            },
+        },
     });
 
     // 1. load plugins
@@ -224,6 +233,7 @@ export const build = async (config = {}) => {
     });
 
     // 3. process input files
+    hooks.dispatch("cli:preprocess", { config, files: inputFiles });
     for (const inputFile of inputFiles) {
         const inputPath = path.resolve(config.context, inputFile.path);
         // if (!existsSync(inputPath)) {
@@ -270,6 +280,8 @@ export const build = async (config = {}) => {
             throw new Error(`Unconsistent usage of input and output arguments.`);
         }
     }
+    // end processing
+    hooks.dispatch("cli:postprocess", { config });
 };
 
 // @description utility method to provide a typed configuration
