@@ -2,21 +2,26 @@ import { mkdirSync, cpSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { expandGlobPatterns } from "./index.js";
 
+// default handler method for the progress plugin
+const defaultHandler = (percentage = 0, message = "") => {
+    console.error(`[${Math.floor(percentage * 100).toString().padStart(3, " ")}%] ${message}`);
+};
+
 // plugin to display the process
-export const ProgressPlugin = () => {
-    let totalFiles = 0, currentFile = 0;
+export const ProgressPlugin = (options = {}) => {
+    let total = 0, current = 0;
+    const handler = options?.handler || defaultHandler;
     return {
         hooks: {
             "cli:beforeCompile": (_, { files }) => {
-                totalFiles = files.length;
+                total = files.length; // save the total number of files
             },
             "cli:emit": (_, { source, destination }) => {
-                currentFile = currentFile + 1; // increment files count
-                const porcentage = Math.floor(currentFile * 100 / totalFiles).toString();
-                console.error(`[${porcentage.padStart(3, " ")}%] ✓ Saving '${source}' -> '${destination}'`);
+                current = current + 1; // increment file count
+                handler(current / total, `✓ Saving '${source}' -> '${destination}'`);
             },
             "cli:done": () => {
-                console.error(`[100%] ✓ Compiled ${totalFiles} templates`);
+                handler(1, `✓ Compiled ${total} templates`);
             },
         },
     };
@@ -35,15 +40,15 @@ const getFilesToCopy = (files, sourcePath, destinationPath) => {
 export const CopyPlugin = (patterns = []) => {
     return {
         hooks: {
-            "cli:afterCompile": (_, { config }) => {
-                patterns.forEach(({ from, to }, index) => {
+            "cli:afterCompile": (_, { config, context }) => {
+                patterns.forEach(({ from, to }) => {
                     const files = expandGlobPatterns(config.context, [from]);
                     const sourcePath = config.context;
                     const destinationPath = join(config.context, config.output?.dir || ".", to || "./");
                     getFilesToCopy(files, sourcePath, destinationPath).forEach(({ source, destination }) => {
                         mkdirSync(dirname(destination), { recursive: true });
                         cpSync(source, destination, { force: true });
-                        console.error(`[100%] ✓ Copied '${source}' -> '${destination}'`);
+                        defaultHandler(1, `✓ Copied '${source}' -> '${destination}'`);
                     });
                 });
             },
