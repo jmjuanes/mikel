@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { applyNameMapping, createInput } from "./index.js";
+import { CopyAssetsPlugin } from "./plugins.js";
 
 describe("utility functions", () => {
     describe("applyNameMapping", () => {
@@ -195,6 +196,36 @@ describe("cli", () => {
             };`);
             execute(`--config ${path.join(dir, "mikel.config.js")}`);
             assert.strictEqual(fs.readFileSync(path.join(dir, "dist/index.html"), "utf8"), "<B>HELLO WORLD!</B>");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
+});
+
+describe("CopyAssetsPlugin", () => {
+    it("should copy assets after compiling templates", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "mikel.config.js"), `
+            import { createInput } from "mikel-cli";
+            import { CopyAssetsPlugin } from "mikel-cli/plugins";
+            export default {
+                context: "${dir}",
+                input: [
+                    createInput("index.html", "<b>Hello World!</b>"),
+                ],
+                output: {
+                    dir: "${path.join(dir, "dist/")}",
+                },
+                plugins: [
+                    CopyAssetsPlugin([
+                        { from: "asset.txt" },
+                    ]),
+                ],
+            };`);
+            fs.writeFileSync(path.join(dir, "asset.txt"), "ASSET");
+            execute(`--config ${path.join(dir, "mikel.config.js")}`);
+            assert.strictEqual(fs.existsSync(path.join(dir, "dist/asset.txt")), true);
         } finally {
             fs.rmSync(dir, { recursive: true });
         }
