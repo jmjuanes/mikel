@@ -214,7 +214,8 @@ describe("CopyAssetsPlugin", () => {
                     createInput("index.html", "<b>Hello World!</b>"),
                 ],
                 output: {
-                    dir: "${path.join(dir, "dist/")}",
+                    // dir: "${path.join(dir, "dist/")}",
+                    dir: "dist",
                 },
                 plugins: [
                     CopyAssetsPlugin([
