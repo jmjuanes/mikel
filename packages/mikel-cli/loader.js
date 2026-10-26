@@ -8,6 +8,9 @@ registerHooks({
         else if (specifier === "mikel-cli") {
             return nextResolve(new URL("./index.js", import.meta.url).href);
         }
+        else if (specifier === "mikel-cli/plugins") {
+            return nextResolve(new URL("./plugins.js", import.meta.url).href);
+        }
         return nextResolve(specifier, context);
     },
 });

@@ -6,6 +6,10 @@ import path from "node:path";
 
 import { applyNameMapping, createInput } from "./index.js";
 
+const execute = (args) => {
+    return execSync(`node --import=./loader.js ./cli.js ${args}`);
+};
+
 describe("utility functions", () => {
     describe("applyNameMapping", () => {
         it("should apply the rename", () => {
@@ -46,10 +50,6 @@ describe("utility functions", () => {
 });
 
 describe("cli", () => {
-    const execute = (args) => {
-        return execSync(`node --import=./loader.js ./cli.js ${args}`);
-    };
-
     it("should compile a template to stdout", () => {
         const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
         try {
@@ -195,6 +195,36 @@ describe("cli", () => {
             };`);
             execute(`--config ${path.join(dir, "mikel.config.js")}`);
             assert.strictEqual(fs.readFileSync(path.join(dir, "dist/index.html"), "utf8"), "<B>HELLO WORLD!</B>");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
+});
+
+describe("CopyAssetsPlugin", () => {
+    it("should copy assets after compiling templates", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "mikel.config.js"), `
+            import { createInput } from "mikel-cli";
+            import { CopyAssetsPlugin } from "mikel-cli/plugins";
+            export default {
+                context: "${dir}",
+                input: [
+                    createInput("index.html", "<b>Hello World!</b>"),
+                ],
+                output: {
+                    dir: "dist/",
+                },
+                plugins: [
+                    CopyAssetsPlugin([
+                        { from: "asset.txt" },
+                    ]),
+                ],
+            };`);
+            fs.writeFileSync(path.join(dir, "asset.txt"), "ASSET");
+            execute(`--config ${path.join(dir, "mikel.config.js")}`);
+            assert.strictEqual(fs.existsSync(path.join(dir, "dist/asset.txt")), true);
         } finally {
             fs.rmSync(dir, { recursive: true });
         }
