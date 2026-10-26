@@ -1,5 +1,5 @@
 import { mkdirSync, cpSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { expandGlobPatterns } from "./index.js";
 
 // plugin to display the process
@@ -36,7 +36,7 @@ export const CopyAssetsPlugin = (patterns = []) => {
                 patterns.forEach(({ from, to }) => {
                     const files = expandGlobPatterns(config.context, [from]);
                     const sourcePath = config.context;
-                    const destinationPath = join(config.context, config.output?.dir || "", to || "./");
+                    const destinationPath = resolve(config.context, join(config.output?.dir || ".", to || "./"));
                     getFilesToCopy(files, sourcePath, destinationPath).forEach(({ source, destination }) => {
                         mkdirSync(dirname(destination), { recursive: true });
                         cpSync(source, destination, { force: true });
