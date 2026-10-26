@@ -36,7 +36,7 @@ export const CopyAssetsPlugin = (patterns = []) => {
                 patterns.forEach(({ from, to }) => {
                     const files = expandGlobPatterns(config.context, [from]);
                     const sourcePath = config.context;
-                    const destinationPath = join(config.context, config.output?.dir || ".", to || "./"));
+                    const destinationPath = join(config.context, config.output?.dir || ".", to || "./");
                     getFilesToCopy(files, sourcePath, destinationPath).forEach(({ source, destination }) => {
                         mkdirSync(dirname(destination), { recursive: true });
                         cpSync(source, destination, { force: true });
