@@ -5,5 +5,9 @@ export type CopyPattern = {
     to?: string;
 };
 
+export type ProgressOptions = {
+    handler?: (percentage: number, message: string) => void;
+};
+
 export declare const CopyPlugin: (patterns: CopyPattern[]) => MikelPlugin; 
-export declare const ProgressPlugin: () => MikelPlugin;
+export declare const ProgressPlugin: (options?: ProgressOptions) => MikelPlugin;
