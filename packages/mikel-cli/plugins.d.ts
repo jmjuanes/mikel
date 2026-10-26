@@ -1,6 +1,9 @@
 import type { MikelPlugin } from "mikel";
 
-export type CopyAssetsPattern = { from: string, to: string; };
+export type CopyPattern = {
+    from: string;
+    to?: string;
+};
 
-export declare const CopyAssetsPlugin: (patterns: CopyAssetsPattern[]) => MikelPlugin; 
+export declare const CopyPlugin: (patterns: CopyPattern[]) => MikelPlugin; 
 export declare const ProgressPlugin: () => MikelPlugin;
