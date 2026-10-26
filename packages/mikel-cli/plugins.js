@@ -23,13 +23,13 @@ const getFilesToCopy = (files, sourcePath, destinationPath) => {
     return files.map(file => {
         return {
             source: join(sourcePath, file),
-            destination: destinationPath.endsWith("/") ? join(destinationPath, basename(file)) : destinationPath,
+            destination: join(destinationPath, basename(file)),
         };
     });
 };
 
-// plugin to copy assets from the provided sources to www folder
-export const CopyAssetsPlugin = (patterns = []) => {
+// @description plugin to copy files into output.dir as part of the build process
+export const CopyPlugin = (patterns = []) => {
     return {
         hooks: {
             "cli:afterCompile": (_, { config }) => {

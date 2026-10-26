@@ -201,23 +201,23 @@ describe("cli", () => {
     });
 });
 
-describe("CopyAssetsPlugin", () => {
-    it("should copy assets after compiling templates", () => {
+describe("CopyPlugin", () => {
+    it("should copy files after compiling templates", () => {
         const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
         try {
             fs.writeFileSync(path.join(dir, "mikel.config.js"), `
             import { createInput } from "mikel-cli";
-            import { CopyAssetsPlugin } from "mikel-cli/plugins";
+            import { CopyPlugin } from "mikel-cli/plugins";
             export default {
                 context: "${dir}",
                 input: [
                     createInput("index.html", "<b>Hello World!</b>"),
                 ],
                 output: {
-                    dir: "dist/",
+                    dir: "dist",
                 },
                 plugins: [
-                    CopyAssetsPlugin([
+                    CopyPlugin([
                         { from: "asset.txt" },
                     ]),
                 ],
