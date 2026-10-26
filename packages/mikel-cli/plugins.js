@@ -32,7 +32,7 @@ const getFilesToCopy = (files, sourcePath, destinationPath) => {
 export const CopyAssetsPlugin = (patterns = []) => {
     return {
         hooks: {
-            "cli:beforeCompile": (_, { config }) => {
+            "cli:afterCompile": (_, { config }) => {
                 patterns.forEach(({ from, to }) => {
                     const files = expandGlobPatterns(config.context, [from]);
                     const sourcePath = config.context;
