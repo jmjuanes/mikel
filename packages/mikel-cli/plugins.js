@@ -19,11 +19,11 @@ export const ProgressPlugin = () => {
     };
 };
 
-const getFilesToCopy = (files, root, to) => {
+const getFilesToCopy = (files, sourcePath, destinationPath) => {
     return files.map(file => {
         return {
-            source: join(root, file),
-            destination: to.endsWith("/") ? join(root, to) : join(root, to, basename(file)),
+            source: join(sourcePath, file),
+            destination: destinationPath.endsWith("/") ? join(destinationPath, basename(file)) : destinationPath,
         };
     });
 };
@@ -34,8 +34,10 @@ export const CopyAssetsPlugin = (patterns = []) => {
         hooks: {
             "cli:beforeCompile": (_, { config }) => {
                 patterns.forEach(({ from, to }) => {
-                    const files = expandGlobPatterns(config.context, from);
-                    getFilesToCopy(files, config.context, to).forEach(({ source, destination }) => {
+                    const files = expandGlobPatterns(config.context, [from]);
+                    const sourcePath = config.context;
+                    const destinationPath = join(config.context, config.output?.dir || "", to || "./");
+                    getFilesToCopy(files, sourcePath, destinationPath).forEach(({ source, destination }) => {
                         mkdirSync(dirname(destination), { recursive: true });
                         cpSync(source, destination, { force: true });
                         console.error(`[CopyAssetsPlugin] ✓ Copied '${source}' -> '${destination}'`);
