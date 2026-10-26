@@ -5,7 +5,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { applyNameMapping, createInput } from "./index.js";
-import { CopyAssetsPlugin } from "./plugins.js";
+
+const execute = (args) => {
+    return execSync(`node --import=./loader.js ./cli.js ${args}`);
+};
 
 describe("utility functions", () => {
     describe("applyNameMapping", () => {
@@ -47,10 +50,6 @@ describe("utility functions", () => {
 });
 
 describe("cli", () => {
-    const execute = (args) => {
-        return execSync(`node --import=./loader.js ./cli.js ${args}`);
-    };
-
     it("should compile a template to stdout", () => {
         const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
         try {
