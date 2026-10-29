@@ -249,7 +249,7 @@ describe("TransformPlugin", () => {
                 plugins: [
                     TransformPlugin({
                         test: /^index/,
-                        transform: content => content.toUpperCase();
+                        transform: content => content.toUpperCase(),
                     }),
                 ],
             };`);
