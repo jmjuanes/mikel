@@ -14,7 +14,7 @@
     },
     "bugs": "https://github.com/jmjuanes/mikel/issues",
     "engines": {
-        "node": ">=24.0.0"
+        "node": ">=24"
     },
     "types": "index.d.ts",
     "scripts": {
