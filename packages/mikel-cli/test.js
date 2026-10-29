@@ -230,3 +230,33 @@ describe("CopyPlugin", () => {
         }
     });
 });
+
+describe("TransformPlugin", () => {
+    it("should transform the content of the input templates", () => {
+        const dir = fs.mkdtempSync(path.join("/tmp", "mikel-test-"));
+        try {
+            fs.writeFileSync(path.join(dir, "mikel.config.js"), `
+            import { createInput } from "mikel-cli";
+            import { TransformPlugin } from "mikel-cli/plugins";
+            export default {
+                context: "${dir}",
+                input: [
+                    createInput("index.html", "<b>Hello</b>"),
+                ],
+                output: {
+                    dir: "dist",
+                },
+                plugins: [
+                    TransformPlugin({
+                        test: /^index/,
+                        transform: content => content.toUpperCase(),
+                    }),
+                ],
+            };`);
+            execute(`--config ${path.join(dir, "mikel.config.js")}`);
+            assert.strictEqual(fs.readFileSync(path.join(dir, "dist/index.html"), "utf8"), "<B>HELLO</B>");
+        } finally {
+            fs.rmSync(dir, { recursive: true });
+        }
+    });
+});

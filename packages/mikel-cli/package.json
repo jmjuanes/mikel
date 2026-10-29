@@ -13,9 +13,6 @@
         "directory": "packages/mikel-cli"
     },
     "bugs": "https://github.com/jmjuanes/mikel/issues",
-    "engines": {
-        "node": ">=24.0.0"
-    },
     "types": "index.d.ts",
     "scripts": {
         "test": "node --import=./loader.js test.js"

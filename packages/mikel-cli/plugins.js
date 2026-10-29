@@ -55,3 +55,23 @@ export const CopyPlugin = (patterns = []) => {
         },
     };
 };
+
+// @description apply a transform to each input file
+export const TransformPlugin = options => {
+    const fileMatchesTest = filePath => {
+        if (typeof options?.test === "function") {
+            return !!options.test(filePath);
+        }
+        if (options?.test && options?.test instanceof RegExp) {
+            return options.test.test(filePath);
+        }
+        return false;
+    };
+    return {
+        hooks: {
+            "cli:template": (content, { file }) => {
+                return fileMatchesTest(file.path) ? options.transform(content) : content;
+            },
+        },
+    };
+};
