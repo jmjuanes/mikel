@@ -2,7 +2,14 @@ import fs from "node:fs/promises";
 import { existsSync, globSync } from "node:fs";
 import path from "node:path";
 import mikel from "mikel";
-import { createHooksManager } from "mikel";
+
+// @description returns the display path for the provided file
+const displayPath = (config, file) => path.relative(config.context, file);
+
+// @description format the duration of the build process
+const formatDuration = ms => {
+    return ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(2)}s`;
+};
 
 // @description get the files that matches the provided patterns
 // this is a utility function to expand glob patterns to actual file paths.
@@ -187,25 +194,15 @@ export const resolveConfigurationFromArgs = async (root = process.cwd(), args = 
 
 // @description main build script
 export const build = async (config = {}) => {
-    const hooks = createHooksManager({});
     const mikelInstance = mikel.create({
         hooks: {
             ...config.hooks,
-            "on:hook": hook => {
-                if (hook.name.startsWith("cli:")) {
-                    hooks.register(hook.name, hook.listener);
-                }
-            },
         },
     });
 
-    // 0. load input files
-    const initialInputFiles = await loadInputFiles(config.context, config.input);
-    const inputFiles = hooks.dispatch("cli:processInput", initialInputFiles, { config });
-
-    // 0. load input data
-    const initialData = await loadData(config.context, config.data);
-    const data = hooks.dispatch("cli:processData", initialData || {}, { config });
+    // 0. load input files and data
+    const inputs = await loadInputFiles(config.context, config.input);
+    const data = await loadData(config.context, config.data);
 
     // 1. load plugins
     for (const plugin of config.plugins) {
@@ -236,57 +233,34 @@ export const build = async (config = {}) => {
     });
 
     // 3. process input files
-    hooks.dispatch("cli:beforeCompile", null, { config, files: inputFiles });
-    for (const inputFile of inputFiles) {
-        const inputPath = path.resolve(config.context, inputFile.path);
-        // if (!existsSync(inputPath)) {
-        //     throw new Error(`Template file '${inputPath}' was not found.`);
-        // }
-        let template;
-        try {
-            template = inputFile.content ? inputFile.content : (await fs.readFile(inputPath, "utf8"));
-            template = hooks.dispatch("cli:template", template, { config, file: inputFile });
-        } catch (error) {
-            throw new Error(`Failed to read template file '${inputPath}': ${error.message}`);
-        }
-        // compile the template
-        let result;
-        try {
-            result = hooks.dispatch("cli:compile", mikelInstance(template, data), { config, file: inputFile });
-        } catch (error) {
-            throw new Error(`Template compilation error: ${error.message}`);
-        }
-        // check if output argument has been provided to write the result to a file
+    let count = 0, total = inputs.length, startTime = performance.now();
+    for (const input of inputs) {
+        const source = path.resolve(config.context, input.path);
+        const content = input.content ?? (await fs.readFile(inputPath, "utf8"));
+        // 3.2. compile the template using the mikel instance
+        const result = mikelInstance(content, data);
+        // 3.3. check if output argument has been provided to write the result to a file
         // this will also create any intermediary directory that does not exist
         if (config.output) {
-            const outputPath = resolveOutput(config.context, inputFile.path, config.output);
-            const outputDirectory = path.dirname(outputPath);
-            // make sure that any directory containing the output file exists
-            if (!existsSync(outputDirectory)) {
-                try {
-                    await fs.mkdir(outputDirectory, { recursive: true });
-                } catch (error) {
-                    throw new Error(`Failed to create output directory '${outputDirectory}': ${error.message}`);
-                }
-            }
-            try {
-                hooks.dispatch("cli:emit", null, { config, file: inputFile, source: inputPath, destination: outputPath });
-                await fs.writeFile(outputPath, result, "utf8");
-            } catch (error) {
-                throw new Error(`Failed to write output file '${outputPath}': ${error.message}`);
-            }
+            count = count + 1;
+            const destination = resolveOutput(config.context, inputFile.path, config.output);
+            await fs.mkdir(path.dirname(destination), { recursive: true });
+            await fs.writeFile(destination, result, "utf8");
+            const counter = `${count}`.padStart(`${total}`.length, " ");
+            console.error(`[${counter}/${total}] ${displayPath(config, source)} → ${displayPath(config, destination)}`);
         }
         // if no output file has been provided, print the result to console
-        else if (inputFiles.length === 1) {
+        else if (inputs.length === 1) {
             process.stdout.write(result);
         }
         else {
             throw new Error(`Unconsistent usage of input and output arguments.`);
         }
     }
-    // end processing
-    hooks.dispatch("cli:afterCompile", null, { config });
-    hooks.dispatch("cli:done", null, { config });
+
+    // 4. display confirmation
+    const endTime = performance.now();
+    console.error(`✔ ${total} templates compiled in ${formatDuration(endTime - startTime)}`);
 };
 
 // @description utility method to provide a typed configuration
