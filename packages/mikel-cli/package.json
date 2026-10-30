@@ -26,10 +26,6 @@
             "import": "./index.js",
             "types": "./index.d.ts"
         },
-        "./plugins": {
-            "import": "./plugins.js",
-            "types": "./plugins.d.ts"
-        },
         "./package.json": "./package.json"
     },
     "bin": {
@@ -42,9 +38,7 @@
         "README.md",
         "cli.js",
         "index.js",
-        "index.d.ts",
-        "plugins.js",
-        "plugins.d.ts"
+        "index.d.ts"
     ],
     "keywords": [
         "mikel",
