@@ -264,7 +264,6 @@ const create = (options = {}) => {
             Object.keys(plugin?.hooks || {}).forEach(name => {
                 if (typeof plugin.hooks[name] === "function") {
                     hooks.register(name, plugin.hooks[name]);
-                    hooks.dispatch("on:hook", { name, listener: plugin.hooks[name] });
                 }
             });
             // 2.2. merge helper directives
