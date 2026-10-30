@@ -63,7 +63,7 @@ export const loadConfiguration = async (configurationFile) => {
 };
 
 // @description get the files that matches the provided input files patterns
-export const loadInputFiles = async (root, inputFiles) => {
+export const loadInput = async (root, inputFiles) => {
     if (!inputFiles || inputFiles?.length === 0) {
         throw new Error(`No input templates provided.`);
     }
@@ -201,7 +201,7 @@ export const build = async (config = {}) => {
     });
 
     // 0. load input files and data
-    const inputs = await loadInputFiles(config.context, config.input);
+    const inputs = await loadInput(config.context, config.input);
     const data = await loadData(config.context, config.data);
 
     // 1. load plugins
@@ -236,14 +236,14 @@ export const build = async (config = {}) => {
     let count = 0, total = inputs.length, startTime = performance.now();
     for (const input of inputs) {
         const source = path.resolve(config.context, input.path);
-        const content = input.content ?? (await fs.readFile(inputPath, "utf8"));
+        const content = input.content ?? (await fs.readFile(source, "utf8"));
         // 3.2. compile the template using the mikel instance
         const result = mikelInstance(content, data);
         // 3.3. check if output argument has been provided to write the result to a file
         // this will also create any intermediary directory that does not exist
         if (config.output) {
             count = count + 1;
-            const destination = resolveOutput(config.context, inputFile.path, config.output);
+            const destination = resolveOutput(config.context, input.path, config.output);
             await fs.mkdir(path.dirname(destination), { recursive: true });
             await fs.writeFile(destination, result, "utf8");
             const counter = `${count}`.padStart(`${total}`.length, " ");
