@@ -295,13 +295,16 @@ const mikel = (template = "", data = {}, options = {}) => {
 };
 
 // @description plugin to define a new state variable
-mikel.SetStatePlugin = (name, value) => {
+export const SetStatePlugin = (name, value) => {
     return {
         initialState: {
             [name]: value,
         },
     };
 };
+
+// assign plugins
+mikel.SetStatePlugin = SetStatePlugin;
 
 // @description assign utilities
 mikel.create = create;
