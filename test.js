@@ -791,7 +791,7 @@ describe("plugins", () => {
         it("should allow to register a new partial", () => {
             const mk = m.create({});
             mk.use(SetPartialPlugin("foo", "bar"));
-            assert.equal(mk("Result is: {{>foo}}", {}), "Result is: bar");
+            assert.equal(mk("Result is: {{#foo /}}", {}), "Result is: bar");
         });
     });
 });
