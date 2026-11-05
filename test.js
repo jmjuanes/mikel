@@ -1,6 +1,7 @@
-import {describe, it} from "node:test";
+import { describe, it } from "node:test";
 import assert from "node:assert";
 import m from "./index.js";
+import { SetStatePlugin, SetHelperPlugin, SetPartialPlugin } from "./index.js";
 
 describe("templating", () => {
     describe("{{ xyz }}", () => {
@@ -766,15 +767,31 @@ describe("plugins", () => {
     describe("SetStatePlugin", () => {
         it("should allow to define state variables", () => {
             const mk = m.create({});
-            mk.use(m.SetStatePlugin("foo", "bar"));
+            mk.use(SetStatePlugin("foo", "bar"));
             assert.equal(mk("Result is: {{@foo}}", {}), "Result is: bar");
         });
 
         it("should override existing state variables", () => {
             const mk = m.create({});
-            mk.use(m.SetStatePlugin("foo", "bar"));
-            mk.use(m.SetStatePlugin("foo", "bar2"));
+            mk.use(SetStatePlugin("foo", "bar"));
+            mk.use(SetStatePlugin("foo", "bar2"));
             assert.equal(mk("Result is: {{@foo}}", {}), "Result is: bar2");
+        });
+    });
+
+    describe("SetHelperPlugin", () => {
+        it("should allow to register a new helper", () => {
+            const mk = m.create({});
+            mk.use(SetHelperPlugin("foo", () => "bar"));
+            assert.equal(mk("Result is: {{#foo /}}", {}), "Result is: bar");
+        });
+    });
+
+    describe("SetPartialPlugin", () => {
+        it("should allow to register a new partial", () => {
+            const mk = m.create({});
+            mk.use(SetPartialPlugin("foo", "bar"));
+            assert.equal(mk("Result is: {{#foo /}}", {}), "Result is: bar");
         });
     });
 });

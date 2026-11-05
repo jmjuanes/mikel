@@ -59,3 +59,7 @@ declare const mikel: {
 export default mikel;
 
 export declare const createHooksManager : (hooks?: any) => MikelHookManager;
+
+export declare const SetStatePlugin : MikelSetStatePlugin;
+export declare const SetHelperPlugin : (name: string, helper: MikelHelper) => MikelPlugin;
+export declare const SetPartialPlugin : (name: string, partial: MikelPartial) => MikelPlugin;

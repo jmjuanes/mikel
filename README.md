@@ -707,12 +707,38 @@ console.log(m("hello {{name}}!", { name: "Bob" }, options)); // --> 'HELLO {{NAM
 
 Mikel includes a small set of built‑in plugins that provide common functionality without requiring additional packages.
 
-#### `mikel.SetStatePlugin(name, value)`
+#### `SetStatePlugin(name, value)`
 
 Registers a static state variable that becomes available inside templates through the `@variable` syntax.
 
 ```javascript
-mk.use(mikel.SetStatePlugin("version", "1.0.0"));
+import { SetStatePlugin } from "mikel";
+// [...]
+mk.use(SetStatePlugin("version", "1.0.0"));
+```
+
+#### `SetHelperPlugin(name, helper)`
+
+> Added in `v0.43.0`.
+
+Registers a new helper with the provided name.
+
+```javascript
+import { SetHelperPlugin } from "mikel";
+// [...]
+mk.use(SetHelperPlugin("foo", params => ...));
+```
+
+#### `SetPartialPlugin(name, partial)`
+
+> Added in `v0.43.0`.
+
+Registers a new partial with the provided name.
+
+```javascript
+import { SetPartialPlugin } from "mikel";
+// [...]
+mk.use(SetPartialPlugin("foo", "Hello {{this.name}}"));
 ```
 
 ## License
