@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import { existsSync, globSync } from "node:fs";
 import path from "node:path";
-import mikel from "mikel";
+import { createMikel } from "mikel";
 
 // @description returns the display path for the provided file
 const displayPath = (config, file) => path.relative(config.context, file);
@@ -194,7 +194,7 @@ export const resolveConfigurationFromArgs = async (root = process.cwd(), args = 
 
 // @description main build script
 export const build = async (config = {}) => {
-    const mikelInstance = mikel.create({
+    const mikelInstance = createMikel({
         hooks: {
             ...config.hooks,
         },
