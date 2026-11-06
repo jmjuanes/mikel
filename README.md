@@ -614,16 +614,18 @@ const result = mikel("Hello, {{name}}!", data);
 console.log(result); // Output: "Hello, World!"
 ```
 
-### `mikel.create(options)`
+### `createMikel(options)`
+
+> Renamed in `v0.43.0`.
 
 Allows to create an isolated instance of mikel, useful when you want to use the same options for multiple templates. You can pass an `options` object with the same structure as the one used in the `mikel` function, which will be used for all templates compiled with this instance.
 
 It returns a function that you can call with the template and data to compile the template.
 
 ```javascript
-import mikel from "mikel";
+import { createMikel } from "mikel";
 
-const mk = mikel.create({
+const mk = createMikel({
     partials: {
         hello: "Hello, {{name}}!",
     },
@@ -653,13 +655,15 @@ mk.use({
 });
 ```
 
-### `mikel.escape(str)`
+### `escape(str)`
 
 This function converts special HTML characters `&`, `<`, `>`, `"`, and `'` to their corresponding HTML entities.
 
-### `mikel.get(object, path)`
+```javascript
+import { escape } from "mikel";
 
-This function returns the value in `object` following the provided `path` string.
+console.log(escape("<div>")); // -> "&lt;div&gt;"
+```
 
 ## Hooks
 
