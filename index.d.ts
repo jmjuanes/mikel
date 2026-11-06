@@ -25,6 +25,7 @@ export type MikelPartial = string | {
 export type MikelHook = (value: any, context?: any) => any; 
 
 export type MikelHookManager = {
+    _hooks: Record<string, MikelHook[]>;
     register: (name: string, listener: MikelHook) => void;
     dispatch: (name: string, value: any, context?: any) => any;
 };
@@ -59,7 +60,7 @@ export default mikel;
 
 // factory
 export declare const createMikel : (options?: Partial<MikelOptions>) => mikel;
-export declare const createHooksManager : (hooks?: any) => MikelHookManager;
+export declare const createHooks : (hooks?: any) => MikelHookManager;
 
 // plugins
 export declare const SetStatePlugin : (name: string, value: any) => MikelPlugin;

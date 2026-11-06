@@ -233,8 +233,9 @@ const defaultDirectives = {
 };
 
 // @description internal method to create a hooks manager
-export const createHooksManager = (hooks = {}) => {
+export const createHooks = (hooks = {}) => {
     return {
+        _hooks: hooks, // private copy of the hooks
         register: (name, listener) => {
             if (typeof hooks[name] === "undefined") {
                 hooks[name] = [];
@@ -242,7 +243,7 @@ export const createHooksManager = (hooks = {}) => {
             hooks[name].push(listener);
         },
         dispatch: (name, value, context) => {
-            return (hooks[name] || []).reduce((prevValue, fn) => fn(prevValue, context), value);
+            return (hooks[name] || []).reduce((prev, fn) => fn(prev, context), value);
         },
     };
 };
@@ -251,7 +252,7 @@ export const createHooksManager = (hooks = {}) => {
 const createMikel = (options = {}) => {
     // 0. initialize internal context
     const directives = Object.assign({}, defaultDirectives); // map to save directives (helpers and partials)
-    const hooks = createHooksManager({}); // internal object to save hooks
+    const hooks = createHooks({}); // internal object to save hooks
     const initialState = {}; // Object.assign({}, options?.initialState || {});
     // 1. entry method to compile the template with the provided data object
     const mk = (template, data = {}, output = []) => {
