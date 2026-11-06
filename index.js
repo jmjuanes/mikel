@@ -249,7 +249,7 @@ export const createHooks = (hooks = {}) => {
 };
 
 // @description create a new instance of mikel
-const createMikel = (options = {}) => {
+export const createMikel = (options = {}) => {
     // 0. initialize internal context
     const directives = Object.assign({}, defaultDirectives); // map to save directives (helpers and partials)
     const hooks = createHooks({}); // internal object to save hooks
