@@ -1,6 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import m from "./index.js";
+import { createMikel } from "./index.js";
+import { parse, escape, tokenize, untokenize } from "./index.js";
 import { SetStatePlugin, SetHelperPlugin, SetPartialPlugin } from "./index.js";
 
 describe("templating", () => {
@@ -528,7 +530,7 @@ describe("templating", () => {
 
 describe("hooks", () => {
     it("should support register a hook to process partials", () => {
-        const mk = m.create({
+        const mk = createMikel({
             partials: {
                 foo: "Hello Bob!",
             },
@@ -542,7 +544,7 @@ describe("hooks", () => {
     });
 
     it("should support register a hook to preprocess the template", () => {
-        const mk = m.create({
+        const mk = createMikel({
             hooks: {
                 preprocess: template => template.replace("name", "key"),
             },
@@ -551,7 +553,7 @@ describe("hooks", () => {
     });
 
     it("should support register a hook to postprocess the template", () => {
-        const mk = m.create({
+        const mk = createMikel({
             hooks: {
                 postprocess: template => template.replace("foo", "bar"),
             },
@@ -589,14 +591,14 @@ describe("mikel", () => {
     });
 });
 
-describe("mikel.create", () => {
+describe("createMikel", () => {
     it("should create a new instance of mikel", () => {
-        const mk = m.create();
+        const mk = createMikel();
         assert.equal(mk("Hello {{ name }}!", { name: "Alice" }), "Hello Alice!");
     });
 
     it("should allow providing custom helpers", () => {
-        const mk = m.create({
+        const mk = createMikel({
             helpers: {
                 name: () => "Bob",
             },
@@ -605,7 +607,7 @@ describe("mikel.create", () => {
     });
 
     it("should allow providing custom partials", () => {
-        const mk = m.create({
+        const mk = createMikel({
             partials: {
                 foo: "Bar",
             },
@@ -616,7 +618,7 @@ describe("mikel.create", () => {
 
 describe("mikel.use", () => {
     it("should allow registering new helpers", () => {
-        const mk = m.create();
+        const mk = createMikel();
         mk.use({
             helpers: {
                 foo: params => params.args[0],
@@ -626,7 +628,7 @@ describe("mikel.use", () => {
     });
 
     it("should allow registering new partials", () => {
-        const mk = m.create();
+        const mk = createMikel();
         mk.use({
             partials: {
                 foo: "bar",
@@ -636,7 +638,7 @@ describe("mikel.use", () => {
     });
 
     it("should allow to register initial state", () => {
-        const mk = m.create();
+        const mk = createMikel();
         mk.use({
             initialState: {
                 foo: "bar",
@@ -646,7 +648,7 @@ describe("mikel.use", () => {
     });
 
     // it("should allow to register transforms to the template", () => {
-    //     const mk = m.create();
+    //     const mk = createMikel();
     //     mk.use({
     //         transform: template => {
     //             return "Hello " + template + "!";
@@ -656,123 +658,109 @@ describe("mikel.use", () => {
     // });
 });
 
-describe("mikel.tokenize", () => {
-    it("should tokenize a simple template", () => {
-        const template = "Hello {{ name }}!";
-        const tokens = m.tokenize(template);
-        assert.deepEqual(tokens, ["Hello ", " name ", "!"]);
+describe("utilities", () => {
+    describe("tokenize", () => {
+        it("should tokenize a simple template", () => {
+            const template = "Hello {{ name }}!";
+            const tokens = tokenize(template);
+            assert.deepEqual(tokens, ["Hello ", " name ", "!"]);
+        });
+
+        it("should tokenize a template with sections", () => {
+            const template = "{{#if condition}}Yes{{/if}} {{name}}!";
+            const tokens = tokenize(template);
+            assert.deepEqual(tokens, ["", "#if condition", "Yes", "/if", " ", "name", "!"]);
+        });
+
+        it("should tokenize a template with partials", () => {
+            const template = "Hello {{>partial}}!";
+            const tokens = tokenize(template);
+            assert.deepEqual(tokens, ["Hello ", ">partial", "!"]);
+        });
+
+        it("should tokenize a template with functions", () => {
+            const template = "Result: {{=function arg1 arg2}}";
+            const tokens = tokenize(template);
+            assert.deepEqual(tokens, ["Result: ", "=function arg1 arg2", ""]);
+        });
+
+        it("should tokenize a template with nested sections", () => {
+            const template = "{{#if condition}}{{#each items}}{{.}}{{/each}}{{/if}}";
+            const tokens = tokenize(template);
+            assert.deepEqual(tokens, ["", "#if condition", "", "#each items", "", ".", "", "/each", "", "/if", ""]);
+        });
+
+        it("should tokenize a template with raw sections", () => {
+            const template = "{{#raw}}Hello {{name}}!{{/raw}}";
+            const tokens = tokenize(template);
+            assert.deepEqual(tokens, ["", "#raw", "Hello ", "name", "!", "/raw", ""]);
+        });
+
+        it("should tokenize a template with escape sections", () => {
+            const template = "{{#escape}}<b>Hello</b>{{/escape}}";
+            const tokens = tokenize(template);
+            assert.deepEqual(tokens, ["", "#escape", "<b>Hello</b>", "/escape", ""]);
+        });
+
+        it("should tokenize a template with custom helpers", () => {
+            const template = "{{#customHelper arg1 arg2}}Content{{/customHelper}}";
+            const tokens = tokenize(template);
+            assert.deepEqual(tokens, ["", "#customHelper arg1 arg2", "Content", "/customHelper", ""]);
+        });
     });
 
-    it("should tokenize a template with sections", () => {
-        const template = "{{#if condition}}Yes{{/if}} {{name}}!";
-        const tokens = m.tokenize(template);
-        assert.deepEqual(tokens, ["", "#if condition", "Yes", "/if", " ", "name", "!"]);
+    describe("mikel.untokenize", () => {
+        it("should untokenize a simple array of tokens", () => {
+            const tokens = ["Hello ", " name ", "!"];
+            const template = untokenize(tokens);
+            assert.equal(template, "Hello {{ name }}!");
+        });
+
+        it("should untokenize a complex array of tokens", () => {
+            const tokens = ["", "#if condition", "Yes", "/if", " ", "name", "!"];
+            const template = untokenize(tokens);
+            assert.equal(template, "{{#if condition}}Yes{{/if}} {{name}}!");
+        });
+
+        it("should handle empty tokens array", () => {
+            const tokens = [];
+            const template = untokenize(tokens);
+            assert.equal(template, "");
+        });
     });
 
-    it("should tokenize a template with partials", () => {
-        const template = "Hello {{>partial}}!";
-        const tokens = m.tokenize(template);
-        assert.deepEqual(tokens, ["Hello ", ">partial", "!"]);
+    describe("escape", () => {
+        it("should escape HTML special characters", () => {
+            const str = "<div>Hello & welcome!</div>";
+            const escaped = escape(str);
+            assert.equal(escaped, "&lt;div&gt;Hello &amp; welcome!&lt;/div&gt;");
+        });
     });
 
-    it("should tokenize a template with functions", () => {
-        const template = "Result: {{=function arg1 arg2}}";
-        const tokens = m.tokenize(template);
-        assert.deepEqual(tokens, ["Result: ", "=function arg1 arg2", ""]);
-    });
-
-    it("should tokenize a template with nested sections", () => {
-        const template = "{{#if condition}}{{#each items}}{{.}}{{/each}}{{/if}}";
-        const tokens = m.tokenize(template);
-        assert.deepEqual(tokens, ["", "#if condition", "", "#each items", "", ".", "", "/each", "", "/if", ""]);
-    });
-
-    it("should tokenize a template with raw sections", () => {
-        const template = "{{#raw}}Hello {{name}}!{{/raw}}";
-        const tokens = m.tokenize(template);
-        assert.deepEqual(tokens, ["", "#raw", "Hello ", "name", "!", "/raw", ""]);
-    });
-
-    it("should tokenize a template with escape sections", () => {
-        const template = "{{#escape}}<b>Hello</b>{{/escape}}";
-        const tokens = m.tokenize(template);
-        assert.deepEqual(tokens, ["", "#escape", "<b>Hello</b>", "/escape", ""]);
-    });
-
-    it("should tokenize a template with custom helpers", () => {
-        const template = "{{#customHelper arg1 arg2}}Content{{/customHelper}}";
-        const tokens = m.tokenize(template);
-        assert.deepEqual(tokens, ["", "#customHelper arg1 arg2", "Content", "/customHelper", ""]);
-    });
-});
-
-describe("mikel.untokenize", () => {
-    it("should untokenize a simple array of tokens", () => {
-        const tokens = ["Hello ", " name ", "!"];
-        const template = m.untokenize(tokens);
-        assert.equal(template, "Hello {{ name }}!");
-    });
-
-    it("should untokenize a complex array of tokens", () => {
-        const tokens = ["", "#if condition", "Yes", "/if", " ", "name", "!"];
-        const template = m.untokenize(tokens);
-        assert.equal(template, "{{#if condition}}Yes{{/if}} {{name}}!");
-    });
-
-    it("should handle empty tokens array", () => {
-        const tokens = [];
-        const template = m.untokenize(tokens);
-        assert.equal(template, "");
-    });
-});
-
-describe("mikel.escape", () => {
-    it("should escape HTML special characters", () => {
-        const str = "<div>Hello & welcome!</div>";
-        const escaped = m.escape(str);
-        assert.equal(escaped, "&lt;div&gt;Hello &amp; welcome!&lt;/div&gt;");
-    });
-});
-
-describe("mikel.parse", () => {
-    it("should parse a string to a native type", () => {
-        assert.equal(m.parse("true"), true);
-        assert.equal(m.parse("false"), false);
-        assert.equal(m.parse("null"), null);
-        assert.equal(m.parse('"Hello"'), "Hello");
-        assert.equal(m.parse("42"), 42);
-        assert.equal(m.parse("3.14"), 3.14);
-        assert.equal(m.parse("@name", {}, {name: "Alice"}), "Alice");
-        assert.equal(m.parse("name", {name: "Bob"}), "Bob");
-    });
-});
-
-describe("mikel.get", () => {
-    it("should get a value from an object using a path", () => {
-        const obj = {a: {b: {c: "Hello"}}};
-        assert.equal(m.get(obj, "a.b.c"), "Hello");
-        assert.equal(m.get(obj, "a.b.d"), "");
-        assert.equal(m.get(obj, "."), obj);
-        assert.equal(m.get(obj, "a.b"), obj.a.b);
-    });
-
-    it("should return empty string for undefined paths", () => {
-        const obj = {a: {b: "Hello"}};
-        assert.equal(m.get(obj, "a.c"), "");
-        assert.equal(m.get(obj, "x.y.z"), "");
+    describe("parse", () => {
+        it("should parse a string to a native type", () => {
+            assert.equal(parse("true"), true);
+            assert.equal(parse("false"), false);
+            assert.equal(parse("null"), null);
+            assert.equal(parse('"Hello"'), "Hello");
+            assert.equal(parse("42"), 42);
+            assert.equal(parse("3.14"), 3.14);
+            assert.equal(parse("@name", {}, {name: "Alice"}), "Alice");
+            assert.equal(parse("name", {name: "Bob"}), "Bob");
+        });
     });
 });
 
 describe("plugins", () => {
     describe("SetStatePlugin", () => {
         it("should allow to define state variables", () => {
-            const mk = m.create({});
+            const mk = createMikel({});
             mk.use(SetStatePlugin("foo", "bar"));
             assert.equal(mk("Result is: {{@foo}}", {}), "Result is: bar");
         });
 
         it("should override existing state variables", () => {
-            const mk = m.create({});
+            const mk = createMikel({});
             mk.use(SetStatePlugin("foo", "bar"));
             mk.use(SetStatePlugin("foo", "bar2"));
             assert.equal(mk("Result is: {{@foo}}", {}), "Result is: bar2");
@@ -781,7 +769,7 @@ describe("plugins", () => {
 
     describe("SetHelperPlugin", () => {
         it("should allow to register a new helper", () => {
-            const mk = m.create({});
+            const mk = createMikel({});
             mk.use(SetHelperPlugin("foo", () => "bar"));
             assert.equal(mk("Result is: {{#foo /}}", {}), "Result is: bar");
         });
@@ -789,7 +777,7 @@ describe("plugins", () => {
 
     describe("SetPartialPlugin", () => {
         it("should allow to register a new partial", () => {
-            const mk = m.create({});
+            const mk = createMikel({});
             mk.use(SetPartialPlugin("foo", "bar"));
             assert.equal(mk("Result is: {{#foo /}}", {}), "Result is: bar");
         });

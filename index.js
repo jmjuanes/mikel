@@ -6,7 +6,10 @@ const escapedChars = {
     "'": "&#039;",
 };
 
-const escape = s => s.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
+// tiny utility method to escape html content
+export const escape = str => {
+    return str.toString().replace(/[&<>\"']/g, m => escapedChars[m]);
+};
 
 // @description get the value in the provided object and the given path string
 const get = (data, path = ".") => {
@@ -17,12 +20,12 @@ const get = (data, path = ".") => {
 };
 
 // @description tokenize the provided string
-const tokenize = (str = "") => {
+export const tokenize = (str = "") => {
     return str.replace(/\{\{!--[\s\S]*?--}}/g, "").split(/\{\{|\}\}/);
-}
+};
 
 // @description untokenize the provided tokens array and get a string
-const untokenize = (ts = [], s = "{{", e = "}}") => {
+export const untokenize = (ts = [], s = "{{", e = "}}") => {
     return ts.length > 0 ? ts.reduce((p, t, i) => p + (i % 2 === 0 ? e : s) + t) : "";
 };
 
@@ -48,7 +51,7 @@ const parseArgs = (str = "", data = {}, state = {}, fns = {}, argv = [], opt = {
 };
 
 // @description parse a string value to a native type
-const parse = (v, data = {}, state = {}, fns = {}) => {
+export const parse = (v, data = {}, state = {}) => {
     if ((v.startsWith(`"`) && v.endsWith(`"`)) || (v.startsWith(`'`) && v.endsWith(`'`)) || /^-?\d+\.?\d*$/.test(v) || v === "true" || v === "false" || v === "null") {
         const normalized = (v.startsWith(`'`) && v.endsWith(`'`)) ? `"${v.slice(1, -1).replace(/"/g, '\\"')}"` : v;
         return JSON.parse(normalized);
@@ -230,8 +233,9 @@ const defaultDirectives = {
 };
 
 // @description internal method to create a hooks manager
-export const createHooksManager = (hooks = {}) => {
+export const createHooks = (hooks = {}) => {
     return {
+        _hooks: hooks, // private copy of the hooks
         register: (name, listener) => {
             if (typeof hooks[name] === "undefined") {
                 hooks[name] = [];
@@ -239,16 +243,16 @@ export const createHooksManager = (hooks = {}) => {
             hooks[name].push(listener);
         },
         dispatch: (name, value, context) => {
-            return (hooks[name] || []).reduce((prevValue, fn) => fn(prevValue, context), value);
+            return (hooks[name] || []).reduce((prev, fn) => fn(prev, context), value);
         },
     };
 };
 
 // @description create a new instance of mikel
-const create = (options = {}) => {
+export const createMikel = (options = {}) => {
     // 0. initialize internal context
     const directives = Object.assign({}, defaultDirectives); // map to save directives (helpers and partials)
-    const hooks = createHooksManager({}); // internal object to save hooks
+    const hooks = createHooks({}); // internal object to save hooks
     const initialState = {}; // Object.assign({}, options?.initialState || {});
     // 1. entry method to compile the template with the provided data object
     const mk = (template, data = {}, output = []) => {
@@ -289,11 +293,6 @@ const create = (options = {}) => {
     return mk;
 };
 
-// @description main compiler function
-const mikel = (template = "", data = {}, options = {}) => {
-    return create(options)(template, data);
-};
-
 // @description plugin to define a new state variable
 export const SetStatePlugin = (name, value) => {
     return {
@@ -321,11 +320,14 @@ export const SetPartialPlugin = (partialName, partialContent) => {
     };
 };
 
-// assign plugins
-mikel.SetStatePlugin = SetStatePlugin;
+// @description main compiler function
+const mikel = (template = "", data = {}, options = {}) => {
+    return createMikel(options)(template, data);
+};
 
 // @description assign utilities
-mikel.create = create;
+// DEPRECATED - use named exports instead
+mikel.create = createMikel;
 mikel.escape = escape;
 mikel.get = get;
 mikel.parse = parse;

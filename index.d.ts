@@ -25,6 +25,7 @@ export type MikelPartial = string | {
 export type MikelHook = (value: any, context?: any) => any; 
 
 export type MikelHookManager = {
+    _hooks: Record<string, MikelHook[]>;
     register: (name: string, listener: MikelHook) => void;
     dispatch: (name: string, value: any, context?: any) => any;
 };
@@ -43,8 +44,7 @@ export type Mikel = {
     use(plugin: MikelPlugin): void;
 };
 
-export type MikelSetStatePlugin = (name: string, value: any) => MikelPlugin;
-
+// DEPRECATED
 declare const mikel: {
     (template: string, data?: any, options?: Partial<MikelOptions>): string;
     create(options?: Partial<MikelOptions>): Mikel;
@@ -53,13 +53,22 @@ declare const mikel: {
     parse(value: string, context?: any, vars?: any): any;
     tokenize(str: string): string[];
     untokenize(tokens: string[], start?: string, end?: string): string;
-    SetStatePlugin: MikelSetStatePlugin;
 };
 
+// default mikel instance
 export default mikel;
 
-export declare const createHooksManager : (hooks?: any) => MikelHookManager;
+// factory
+export declare const createMikel : (options?: Partial<MikelOptions>) => mikel;
+export declare const createHooks : (hooks?: any) => MikelHookManager;
 
-export declare const SetStatePlugin : MikelSetStatePlugin;
+// plugins
+export declare const SetStatePlugin : (name: string, value: any) => MikelPlugin;
 export declare const SetHelperPlugin : (name: string, helper: MikelHelper) => MikelPlugin;
 export declare const SetPartialPlugin : (name: string, partial: MikelPartial) => MikelPlugin;
+
+// utilities
+export declare const parse: (value: string, context?: any, state?: any) => any;
+export declare const escape: (str: string) => string;
+export declare const tokenize: (str: string) => string[];
+export declare const untokenize: (tokens: string[], start?: string, end?: string) => string;
